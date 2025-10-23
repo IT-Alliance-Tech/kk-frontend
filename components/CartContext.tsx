@@ -1,8 +1,7 @@
-// components/CartContext.tsx
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type CartItem = {
+export type CartItem = {
   id: string;
   name: string;
   price: number;
@@ -13,9 +12,10 @@ type CartItem = {
 type CartContextValue = {
   items: CartItem[];
   count: number;
-  addItem: (item: CartItem) => void;
+  addItem: (item: CartItem, qty?: number) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
+  updateQty: (id: string, qty: number) => void;
 };
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -42,15 +42,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("kk_cart", JSON.stringify(items));
   }, [items]);
 
-  const addItem = (item: CartItem) => {
+  const addItem = (item: CartItem, qty: number = 1) => {
     setItems((prev) => {
       const idx = prev.findIndex((p) => p.id === item.id);
       if (idx > -1) {
         const copy = [...prev];
-        copy[idx].qty = (copy[idx].qty || 1) + (item.qty || 1);
+        copy[idx].qty = (copy[idx].qty || 1) + qty;
         return copy;
       }
-      return [...prev, { ...item, qty: item.qty ?? 1 }];
+      return [...prev, { ...item, qty }];
     });
   };
 
@@ -60,12 +60,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => setItems([]);
 
+  const updateQty = (id: string, qty: number) => {
+    setItems((prev) => prev.map((p) => (p.id === id ? { ...p, qty } : p)));
+  };
+
   const value: CartContextValue = {
     items,
     count: items.reduce((s, it) => s + (it.qty || 0), 0),
     addItem,
     removeItem,
     clearCart,
+    updateQty,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

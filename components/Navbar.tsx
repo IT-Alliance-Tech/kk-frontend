@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import CartButton from "./CartButton";
 import { useRouter } from "next/navigation";
+import kitchenkettlesLogo from "../app/assets/images/logo.png"
 
-export default function Navbar() {
+export default function Navbar({ logo = "/LOGO_PATH" }: { logo?: string }) {
   const supabase = createClientComponentClient();
   const router = useRouter();
   const [q, setQ] = useState("");

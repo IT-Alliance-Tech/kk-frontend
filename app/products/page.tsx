@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { supabase, Product } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { ShoppingCart, Package, Search } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase, Product } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ShoppingCart, Package, Search } from "lucide-react";
+import { useCart } from "@/components/CartContext";
+import { useRouter } from "next/navigation";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const { addToCart } = useCart();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { addItem } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     fetchProducts();
@@ -23,25 +25,39 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
-        .from('products')
-        .select('*, brand:brands(*), category:categories(*)')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .from("products")
+        .select("*, brand:brands(*), category:categories(*)")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.brand?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.brand?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const addAndGoToCart = (product: Product) => {
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.images?.[0] || "",
+      },
+      1
+    );
+    router.push("/cart");
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -92,7 +108,7 @@ export default function ProductsPage() {
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
                       {product.images && product.images.length > 0 ? (
                         <img
-                          src={product.images }
+                          src={product.images[0]}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
@@ -112,9 +128,7 @@ export default function ProductsPage() {
                         {product.name}
                       </CardTitle>
                     </Link>
-                    {product.brand && (
-                      <p className="text-sm text-slate-500">{product.brand.name}</p>
-                    )}
+                    {product.brand && <p className="text-sm text-slate-500">{product.brand.name}</p>}
                   </CardHeader>
                   <CardContent className="pb-3">
                     <div className="flex items-center gap-2">
@@ -129,11 +143,11 @@ export default function ProductsPage() {
                   <CardFooter>
                     <Button
                       className="w-full"
-                      onClick={() => addToCart(product.id, 1)}
+                      onClick={() => addAndGoToCart(product)}
                       disabled={product.quantity === 0}
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
-                      {product.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      {product.quantity === 0 ? "Out of Stock" : "Add to Cart"}
                     </Button>
                   </CardFooter>
                 </Card>

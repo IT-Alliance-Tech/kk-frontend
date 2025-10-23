@@ -1,10 +1,9 @@
-// app/layout.tsx
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
-import { SupabaseCartProvider } from "@/components/SupabaseCartContext";
-import { ToastProvider } from "@/components/ToastContext"; // ✅ Add this
+import { CartProvider } from "@/components/CartContext"; // Use local CartProvider
+import { ToastProvider } from "@/components/ToastContext";
 
 export const metadata = {
   title: "KitchenKettles",
@@ -15,15 +14,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <ClientProviders>
-          <SupabaseCartProvider>
-            <ToastProvider> {/* ✅ Wrap App with ToastProvider */}
+        <CartProvider>
+          <ClientProviders>
+            <ToastProvider>
               <Navbar logo="/LOGO_PATH" />
               <main className="min-h-screen bg-gray-50">{children}</main>
               <Footer />
             </ToastProvider>
-          </SupabaseCartProvider>
-        </ClientProviders>
+          </ClientProviders>
+        </CartProvider>
       </body>
     </html>
   );
