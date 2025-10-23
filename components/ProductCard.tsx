@@ -26,6 +26,7 @@ export default function ProductCard({ product }: any) {
 
   return (
     <div className="bg-white border rounded-lg overflow-hidden flex flex-col">
+      {/* added comment */}
       <Link href={`/products/${product.slug}`}>
         <div className="h-48 w-full overflow-hidden bg-gray-100">
           {product.images ? <Image src={product?.images} alt={product.name} width={100} height={100}  className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center">No Image</div>}
