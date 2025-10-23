@@ -3,14 +3,13 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import CartButton from "./CartButton";
-<<<<<<< HEAD
 import kitchenkettlesLogo from "../app/assets/images/logo.png"
-export default function Navbar({ logo = "/LOGO_PATH" }: { logo?: string }) {
-=======
+
+
 import { useRouter } from "next/navigation";
 
-export default function Navbar() {
->>>>>>> 4e75c22b85ef3e429ba3c8dfd2bc34085b40b6c1
+export default function Navbar({ logo = "/LOGO_PATH" }: { logo?: string }) {
+
   const supabase = createClientComponentClient();
   const router = useRouter();
   const [q, setQ] = useState("");
