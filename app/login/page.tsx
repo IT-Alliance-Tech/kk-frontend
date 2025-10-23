@@ -1,82 +1,76 @@
-// app/login/page.tsx
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const next = searchParams?.get("next") ?? "/";
-
+  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const signInEmail = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { error: signErr } = await supabase.auth.signInWithPassword({
+  const handleLogin = async (e: any) => {
+    e.preventDefault();
+    setError("");
+
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      password: pass,
+      password,
     });
-    setLoading(false);
-    if (signErr) {
-      setError(signErr.message);
-      return;
-    }
-    router.push(next);
-  };
 
-  const signInGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        // redirect to current origin
-        redirectTo: `${window.location.origin}${next}`,
-      },
-    });
+    if (error) {
+      setError(error.message);
+    } else {
+      router.push("/"); // redirect to homepage
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 mt-12 bg-white rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
-      {error && <div className="text-red-600 mb-3">{error}</div>}
-      <form onSubmit={signInEmail} className="space-y-4">
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="w-full border px-3 py-2 rounded"
-          type="email"
-          required
-        />
-        <input
-          value={pass}
-          onChange={(e) => setPass(e.target.value)}
-          placeholder="Password"
-          className="w-full border px-3 py-2 rounded"
-          type="password"
-          required
-        />
-        <button disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded">
-          {loading ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+        <h1 className="text-2xl font-semibold text-gray-800 text-center mb-6">
+          Welcome to <span className="text-blue-600">Kitchen Kettles</span>
+        </h1>
 
-      <div className="my-4 text-center">OR</div>
+        {error && <p className="text-red-500 text-center mb-3">{error}</p>}
 
-      <button onClick={signInGoogle} className="w-full border py-2 rounded flex items-center justify-center gap-2">
-        <img src="/google-icon.png" alt="Google" className="h-5" />
-        Continue with Google
-      </button>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+            required
+          />
 
-      <p className="mt-4 text-sm">
-       {`Don't have an account?`} <a href="/signup" className="text-blue-600">Sign up</a>
-      </p>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
+        </form>
+
+        <div className="flex justify-between mt-4 text-sm">
+          <Link href="/register" className="text-blue-600 hover:underline">
+            New user? Register
+          </Link>
+          <Link href="/forgot-password" className="text-blue-600 hover:underline">
+            Forgot Password?
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

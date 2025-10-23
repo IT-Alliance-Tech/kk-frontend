@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/SupabaseCartContext";
 import { useToast } from "@/components/ToastContext";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function ProductCard({ product }: any) {
   const { addItem } = useCart();
@@ -27,7 +28,7 @@ export default function ProductCard({ product }: any) {
     <div className="bg-white border rounded-lg overflow-hidden flex flex-col">
       <Link href={`/products/${product.slug}`}>
         <div className="h-48 w-full overflow-hidden bg-gray-100">
-          {product.images?.[0] ? <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center">No Image</div>}
+          {product.images ? <Image src={product?.images} alt={product.name} width={100} height={100}  className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center">No Image</div>}
         </div>
       </Link>
       <div className="p-3 flex flex-col flex-1">

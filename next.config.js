@@ -1,23 +1,36 @@
-// next.config.js
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    config.ignoreWarnings = config.ignoreWarnings || [];
-    config.ignoreWarnings.push((warn) =>
-      /Critical dependency: the request of a dependency is an expression/.test(warn.message || '')
-    );
-    return config;
-  }
-};
-module.exports = nextConfig;
+  // Enable experimental features
+  experimental: {
+    serverActions: true, // Needed for "use server"
+  },
 
-// next.config.js
-module.exports = {
-  webpack: (config) => {
-    config.ignoreWarnings = [
+  // Allow remote images from Supabase storage
+  images: {
+    remotePatterns: [
       {
-        message: /the request of a dependency is an expression/,
+        protocol: 'https',
+        hostname: 'prgkwuilcdaxujjflnbb.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
       },
-    ];
+    ],
+  },
+
+  // Custom webpack configuration
+  webpack: (config) => {
+    // Ensure ignoreWarnings array exists
+    config.ignoreWarnings = config.ignoreWarnings || [];
+
+    // Add your specific warning ignore rule
+    config.ignoreWarnings.push((warn) =>
+      /Critical dependency: the request of a dependency is an expression/.test(
+        warn.message || ''
+      )
+    );
+
     return config;
   },
 };
+
+module.exports = nextConfig;
