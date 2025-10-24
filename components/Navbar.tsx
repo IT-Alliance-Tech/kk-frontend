@@ -1,22 +1,20 @@
 "use client";
-import Link from "next/link";
+
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import CartButton from "./CartButton";
-import kitchenkettlesLogo from "../app/assets/images/logo.png"
 
-
-import { useRouter } from "next/navigation";
-
-export default function Navbar({ logo = "/LOGO_PATH" }: { logo?: string }) {
-
-  const supabase = createClientComponentClient();
+export default function Navbar() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
+
   const [q, setQ] = useState("");
   const [user, setUser] = useState<any>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // ✅ Fetch current user
+  // Fetch Supabase user
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
@@ -30,121 +28,133 @@ export default function Navbar({ logo = "/LOGO_PATH" }: { logo?: string }) {
     return () => sub.subscription.unsubscribe();
   }, [supabase]);
 
-  // ✅ Logout function
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
-
-  // ✅ Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (q.trim()) router.push(`/search?q=${encodeURIComponent(q)}`);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
   return (
-    <header className="bg-white sticky top-0 z-40 border-b shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-        {/* Hamburger (mobile) */}
-        <button
-          className="md:hidden p-2"
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <path
-              d="M4 6h16M4 12h16M4 18h16"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
+    <header className="w-full sticky top-0 z-50 shadow">
+      {/* ===== Top Header ===== */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3">
+            <img
+              src="https://prgkwuilcdaxujjflnbb.supabase.co/storage/v1/object/public/Kitchen%20kettles/Kitchen%20kettles%20product/Screenshot%202025-10-23%20120734.png"
+              alt="Kitchen Kettles Logo"
+              className="h-16 w-auto object-contain"
             />
-          </svg>
-        </button>
+          </Link>
 
-        {/* ✅ Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <img
-            src="https://prgkwuilcdaxujjflnbb.supabase.co/storage/v1/object/public/Kitchen%20kettles/Kitchen%20kettles%20product/Screenshot%202025-10-23%20120734.png"
-            alt="Kitchen Kettles Logo"
-            className="h-20 md:h-30 w-auto object-contain transition-all duration-300"
-          />
-          <span className="hidden sm:inline text-xl font-bold text-emerald-600">
-            KitchenKettles
-          </span>
-        </Link>
-
-        {/* ✅ Search bar */}
-        <form onSubmit={handleSearch} className="flex-1">
-          <div className="relative">
+          {/* Search */}
+          <form
+            onSubmit={handleSearch}
+            className="flex-1 max-w-xl w-full relative"
+          >
             <input
+              type="text"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search for products, brands, or categories"
-              className="w-full rounded-full border px-4 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              placeholder="Search Product / Service"
+              className="w-full border rounded-full py-2 pl-5 pr-12 focus:ring-2 focus:ring-emerald-500 outline-none"
             />
             <button
               type="submit"
-              className="absolute right-1 top-1 bottom-1 px-4 rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-emerald-600 text-white rounded-full p-2 hover:bg-emerald-700"
             >
-              Search
+              🔍
             </button>
-          </div>
-        </form>
+          </form>
 
-        {/* ✅ Right side actions */}
-        <div className="hidden md:flex items-center gap-4">
-          {user ? (
-            <>
-              <div className="text-sm text-gray-700">{user.email}</div>
-              <button
-                onClick={handleLogout}
-                className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="text-sm text-emerald-600 font-medium">
-              Login
-            </Link>
-          )}
-          <CartButton />
-          <Link
-            href="/become-seller"
-            className="hidden lg:inline text-sm text-gray-600 hover:text-emerald-600"
-          >
-            Become Best Customer
-          </Link>
+          {/* Contact + Auth */}
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-sm text-gray-700">
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span>{user.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Link href="/login" className="text-emerald-600 flex items-center gap-1">
+                  <span>Login</span> 
+                </Link>
+                <span>|</span>
+                <Link href="/register" className="text-emerald-600 flex items-center gap-1">
+                  <span>Register</span> 
+                </Link>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <span>📧 info@kitchenkettles.com</span>
+              <span>📞 8989889880</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ✅ Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden px-4 pb-4 flex flex-col gap-2">
-          {user ? (
-            <>
-              <div className="text-sm text-gray-700">{user.email}</div>
-              <button
-                onClick={handleLogout}
-                className="py-2 border rounded px-3 text-red-600 border-red-500 hover:bg-red-50"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="py-2 border rounded px-3 text-emerald-600">
-              Login
-            </Link>
-          )}
-          <Link href="/cart" className="py-2 border rounded px-3">
-            Cart
-          </Link>
+      {/* ===== Second Header ===== */}
+      <nav className="bg-gray-200">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between py-3">
+          {/* Mobile Hamburger */}
+          <button
+            className="md:hidden text-gray-700"
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            ☰
+          </button>
+
+          {/* Menu Links */}
+          <ul className="hidden md:flex items-center gap-8 text-gray-800 font-medium">
+            <li>
+              <Link href="/" className="hover:text-emerald-600">Home</Link>
+            </li>
+            <li>
+              <Link href="/categories" className="hover:text-emerald-600">Categories</Link>
+            </li>
+            <li>
+              <Link href="/brands" className="hover:text-emerald-600">Brands</Link>
+            </li>
+            <li>
+              <Link href="/services" className="hover:text-emerald-600">Services</Link>
+            </li>
+            <li>
+              <Link href="/about" className="hover:text-emerald-600">About us</Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-emerald-600">Contact us</Link>
+            </li>
+          </ul>
+
+          {/* Cart */}
+          <div className="flex items-center gap-2">
+            <CartButton />
+          </div>
         </div>
-      )}
+
+        {/* ===== Mobile Menu ===== */}
+        {mobileOpen && (
+          <div className="md:hidden bg-gray-100 border-t px-4 py-2 space-y-2">
+            <Link href="/" className="block py-1 hover:text-emerald-600">Home</Link>
+            <Link href="/categories" className="block py-1 hover:text-emerald-600">Categories</Link>
+            <Link href="/brands" className="block py-1 hover:text-emerald-600">Brands</Link>
+            <Link href="/services" className="block py-1 hover:text-emerald-600">Services</Link>
+            <Link href="/about" className="block py-1 hover:text-emerald-600">About us</Link>
+            <Link href="/contact" className="block py-1 hover:text-emerald-600">Contact us</Link>
+          </div>
+        )}
+      </nav>
     </header>
   );
 }

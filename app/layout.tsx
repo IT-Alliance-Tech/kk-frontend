@@ -2,7 +2,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
-import { CartProvider } from "@/components/CartContext"; // Use local CartProvider
+import { CartProvider } from "@/components/CartContext";
 import { ToastProvider } from "@/components/ToastContext";
 
 export const metadata = {

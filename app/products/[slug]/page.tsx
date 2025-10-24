@@ -1,38 +1,60 @@
 // app/products/[slug]/page.tsx
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+"use client";
 
-type Props = { params: { slug: string } };
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-export default async function ProductPage({ params }: Props) {
-  const supabase = createServerComponentClient({ cookies });
+export default function ProductPage() {
+  const params = useParams();
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!params?.slug) return <div>Invalid product URL</div>;
-console.log(params)
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("*, brands(*), categories(*)")
-    .eq("slug", params.slug.replace(/%20/g, " "))
-    .single();
+  useEffect(() => {
+    if (params?.slug) fetchProduct();
+  }, [params?.slug]);
 
-  if (error || !product) return <div>Product not found</div>;
-  
+  async function fetchProduct() {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, brands(*), categories(*)")
+        .eq("slug", decodeURIComponent(params.slug))
+        .single();
+
+      if (error) throw error;
+      setProduct(data);
+    } catch (err) {
+      console.error("Error loading product:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) return <div className="text-center py-20">Loading...</div>;
+  if (!product) return <div className="text-center py-20">Product not found</div>;
+
+  const handleGoToCart = () => {
+    router.push("/cart");
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded shadow">
       {/* LEFT: Product Image */}
       <div className="flex flex-col items-center">
         <img
-          src={product.images || "/placeholder.png"}
+          src={product.images?.[0] || "/placeholder.png"}
           alt={product.name}
           className="w-80 h-80 object-contain border rounded p-4"
         />
-        <div className="mt-4 flex gap-4">
-          <button className="bg-orange-500 text-white px-6 py-2 rounded font-medium">
-            Buy Now
-          </button>
-          <button className="bg-yellow-400 text-black px-6 py-2 rounded font-medium">
-            Add to Cart
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={handleGoToCart}
+            className="bg-emerald-600 text-white px-6 py-2 rounded font-medium hover:bg-emerald-700"
+          >
+            Go to Cart
           </button>
         </div>
       </div>
@@ -58,7 +80,9 @@ console.log(params)
             <li>Brand: {product.brands?.name}</li>
             <li>Category: {product.categories?.name}</li>
             <li>Price: ₹{product.price}</li>
-            <li>Available: {product.is_active ? "In Stock" : "Out of Stock"}</li>
+            <li>
+              Available: {product.is_active ? "In Stock" : "Out of Stock"}
+            </li>
           </ul>
         </div>
       </div>

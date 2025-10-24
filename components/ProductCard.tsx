@@ -1,8 +1,7 @@
-// components/ProductCard.tsx
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/components/SupabaseCartContext";
+import { useCart } from "@/components/CartContext"; // ✅ fixed import
 import { useToast } from "@/components/ToastContext";
 import { useState } from "react";
 import Image from "next/image";
@@ -16,7 +15,13 @@ export default function ProductCard({ product }: any) {
     e.stopPropagation();
     setAdding(true);
     try {
-      await addItem({ id: product.id, name: product.name, price: product.price, image_url: product.images?.[0] ?? null }, 1);
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.images?.[0] ?? null,
+      });
+      toast.push({ message: "Added to cart!", type: "success" });
     } catch (err) {
       toast.push({ message: "Failed to add", type: "error" });
     } finally {
@@ -26,10 +31,21 @@ export default function ProductCard({ product }: any) {
 
   return (
     <div className="bg-white border rounded-lg overflow-hidden flex flex-col">
-      {/* added comment */}
       <Link href={`/products/${product.slug}`}>
         <div className="h-48 w-full overflow-hidden bg-gray-100">
-          {product.images ? <Image src={product?.images} alt={product.name} width={100} height={100}  className="w-full h-full object-cover" /> : <div className="h-full flex items-center justify-center">No Image</div>}
+          {product.images ? (
+            <Image
+              src={product?.images}
+              alt={product.name}
+              width={100}
+              height={100}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              No Image
+            </div>
+          )}
         </div>
       </Link>
       <div className="p-3 flex flex-col flex-1">
@@ -38,7 +54,11 @@ export default function ProductCard({ product }: any) {
         </Link>
         <div className="mt-2 flex items-center justify-between">
           <div className="text-lg font-bold">₹{product.price}</div>
-          <button onClick={onAdd} disabled={adding} className="bg-emerald-600 text-white px-3 py-1 rounded">
+          <button
+            onClick={onAdd}
+            disabled={adding}
+            className="bg-emerald-600 text-white px-3 py-1 rounded"
+          >
             {adding ? "Adding..." : "Add"}
           </button>
         </div>
