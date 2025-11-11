@@ -152,6 +152,8 @@ export default function Navbar() {
             <Link href="/services" className="block py-1 hover:text-emerald-600">Services</Link>
             <Link href="/about" className="block py-1 hover:text-emerald-600">About us</Link>
             <Link href="/contact" className="block py-1 hover:text-emerald-600">Contact us</Link>
+           
+
           </div>
         )}
       </nav>
