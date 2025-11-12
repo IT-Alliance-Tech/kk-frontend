@@ -28,7 +28,7 @@ export default function SearchPage() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }, [q]);
 
@@ -90,7 +90,7 @@ export default function SearchPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {categories.map((c) => (
                   <Link
-                    key={c.id}
+                    key={c.z}
                     href={`/categories/${c.slug}`}
                     className="p-4 bg-emerald-50 rounded shadow text-center font-medium"
                   >
