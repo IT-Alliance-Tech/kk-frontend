@@ -36,6 +36,9 @@ export default function ProductsPage() {
         const data = await apiGet("/products");
 setProducts(data.items || []); // ✅ always use array
 
+
+
+
       } catch (err) {
         console.error("Failed to load products", err);
       } finally {
