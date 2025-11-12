@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getMyOrders, type ApiError } from '@/lib/api/orders.api';
@@ -16,11 +16,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -39,7 +35,11 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -188,7 +188,7 @@ export default function OrdersPage() {
           <div className="bg-white rounded-lg shadow-lg p-12 text-center">
             <div className="text-6xl mb-4">📦</div>
             <h2 className="text-2xl font-bold mb-2 text-slate-900">No Orders Yet</h2>
-            <p className="text-slate-600 mb-6">You haven't placed any orders. Start shopping!</p>
+            <p className="text-slate-600 mb-6">You haven&apos;t placed any orders. Start shopping!</p>
             
             <Link
               href="/products"
