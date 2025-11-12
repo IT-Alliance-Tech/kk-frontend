@@ -2,14 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase, Product } from "@/lib/supabase";
+import { apiGet } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Package, Search } from "lucide-react";
+import { Package, Search, ShoppingCart } from "lucide-react";
 import { useCart } from "@/components/CartContext";
 import { useRouter } from "next/navigation";
+
+interface Product {
+  _id: string;
+  title: string;
+  slug: string;
+  price: number;
+  mrp?: number;
+  images?: string[];
+  brand?: { name: string };
+  category?: { name: string };
+  stock: number;
+}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,38 +31,30 @@ export default function ProductsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchProducts();
+    (async () => {
+      try {
+        const data = await apiGet("/products");
+        setProducts(data.items || []); // ✅ always use array
+      } catch (err) {
+        console.error("Failed to load products", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*, brand:brands(*), category:categories(*)")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
+  const filtered = Array.isArray(products)
+    ? products.filter((p) =>
+        p.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const addAndGoToCart = (product: Product) => {
     addItem(
       {
-        id: product.id,
-        name: product.name,
+        id: product._id,
+        name: product.title,
         price: product.price,
         image_url: product.images?.[0] || "",
       },
@@ -64,7 +68,9 @@ export default function ProductsPage() {
       <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">All Products</h1>
-          <p className="text-slate-600 mb-6">Browse our complete collection of kitchen essentials</p>
+          <p className="text-slate-600 mb-6">
+            Browse our complete collection of kitchen essentials
+          </p>
 
           <div className="max-w-md">
             <div className="relative">
@@ -83,7 +89,7 @@ export default function ProductsPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           {loading ? (
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
                   <div className="h-48 bg-slate-200" />
@@ -94,23 +100,21 @@ export default function ProductsPage() {
                 </Card>
               ))}
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-900 mb-2">No products found</h3>
-              <p className="text-slate-600">Try adjusting your search criteria</p>
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <Card key={product.id} className="group hover:shadow-lg transition-shadow">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filtered.map((product) => (
+                <Card key={product._id} className="group hover:shadow-lg transition-shadow">
                   <Link href={`/products/${product.slug}`}>
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
-                      {product.images && product.images.length > 0 ? (
-                        /* TODO: replace with next/image if src is static */
+                      {product.images?.[0] ? (
                         <img
                           src={product.images[0]}
-                          alt={product.name}
+                          alt={product.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
@@ -118,26 +122,28 @@ export default function ProductsPage() {
                           <Package className="h-16 w-16 text-slate-300" />
                         </div>
                       )}
-                      {product.compare_at_price && product.compare_at_price > product.price && (
+                      {product.mrp && product.mrp > product.price && (
                         <Badge className="absolute top-2 right-2 bg-red-500">Sale</Badge>
                       )}
                     </div>
                   </Link>
-                  <CardHeader className="pb-3">
+                  <CardHeader>
                     <Link href={`/products/${product.slug}`}>
-                      <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600 transition-colors">
-                        {product.name}
+                      <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600">
+                        {product.title}
                       </CardTitle>
                     </Link>
-                    {product.brand && <p className="text-sm text-slate-500">{product.brand.name}</p>}
+                    {product.brand && (
+                      <p className="text-sm text-slate-500">{product.brand.name}</p>
+                    )}
                   </CardHeader>
-                  <CardContent className="pb-3">
+                  <CardContent>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-slate-900">${product.price}</span>
-                      {product.compare_at_price && product.compare_at_price > product.price && (
-                        <span className="text-sm text-slate-500 line-through">
-                          ${product.compare_at_price}
-                        </span>
+                      <span className="text-2xl font-bold text-slate-900">
+                        ₹{product.price}
+                      </span>
+                      {product.mrp && product.mrp > product.price && (
+                        <span className="text-sm text-slate-500 line-through">₹{product.mrp}</span>
                       )}
                     </div>
                   </CardContent>
@@ -145,10 +151,10 @@ export default function ProductsPage() {
                     <Button
                       className="w-full"
                       onClick={() => addAndGoToCart(product)}
-                      disabled={product.quantity === 0}
+                      disabled={product.stock === 0}
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
-                      {product.quantity === 0 ? "Out of Stock" : "Add to Cart"}
+                      {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                     </Button>
                   </CardFooter>
                 </Card>

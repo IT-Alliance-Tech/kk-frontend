@@ -1,57 +1,44 @@
-import React from "react";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import ProductList from "../../../components/Products";
-import { Product } from "@/lib/supabase"; // ✅ use your existing Product type
+"use client";
 
-type Props = { params: { slug: string } };
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import ProductList from "@/components/Products";
 
-export default async function CategoryPage({ params }: Props) {
-  const supabase = createServerComponentClient({ cookies });
-  const { slug } = params;
+export default function CategoryPage() {
+  const { slug } = useParams();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      id,
-      name,
-      price,
-      images,
-      slug,
-      category:categories (
-        id,
-        name,
-        slug,
-        image_url
-      )
-    `)
-    .eq("category.slug", slug);
+  useEffect(() => {
+    if (!slug) return;
 
-  if (error) {
-    console.error("Supabase error:", error);
-    return <p>{`Failed to load products.`}</p>;
-  }
+    async function fetchProducts() {
+      try {
+        const res = await fetch(`/api/products?category=${slug}`);
+        if (!res.ok) throw new Error(`Failed: ${res.status}`);
+        const data = await res.json();
+        setProducts(data.items || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  if (!data || data.length === 0) {
-    return <p>No products found in this category.</p>;
-  }
+    fetchProducts();
+  }, [slug]);
 
-  // Map products so UI gets clean structure
-  const formatted = data.map((item) => ({
-    id: item.id,
-    name: item.name,
-    price: item.price,
-    slug: item.slug,
-    image_url: item.images??  "",
-    // category_name:item.category!== null ? item.category?.name: "",
-  }));
-    console.log(data)
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-red-500">Error: {error}</p>;
+  if (products.length === 0) return <p>No products found for "{slug}".</p>;
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">
-        {`Products in "{slug}" category`}
+        Products in “{slug}” category
       </h1>
-      <ProductList products={formatted} />
+      <ProductList products={products} />
     </div>
   );
 }
