@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CartProvider>
           <ClientProviders>
             <ToastProvider>
-              <Navbar logo="/LOGO_PATH" />
+              <Navbar />
               <main className="min-h-screen bg-gray-50">{children}</main>
               <Footer />
             </ToastProvider>

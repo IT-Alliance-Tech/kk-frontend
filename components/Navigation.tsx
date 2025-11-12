@@ -13,9 +13,9 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,9 +31,10 @@ export default function Navigation() {
   const { cartCount } = useCart();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const supabase = createClientComponentClient();
 
   const handleSignOut = async () => {
-    await signOut();
+    await supabase.auth.signOut();
     router.push('/');
   };
 

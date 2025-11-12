@@ -6,6 +6,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
+      {/* TODO: replace with next/image if src is static */}
       <img
         src={product.image_url || "/placeholder.png"}
         alt={product.name}

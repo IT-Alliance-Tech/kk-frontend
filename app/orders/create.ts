@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const orderItems = items.map((it: { product_id: any; quantity: any; }) => ({
       order_id: order.id,
       product_id: it.product_id,
-      price:products !== undefined? products?.find((p) => p?.id === it?.product_id).price:"",
+      price:products !== undefined? products?.find((p) => p?.id === it?.product_id)?.price ?? "":"",
       quantity: it.quantity
     }));
 

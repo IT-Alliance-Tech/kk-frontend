@@ -4,16 +4,33 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Package, ShoppingCart, TrendingUp, Plus } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default function SellerDashboard() {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!loading && !profile) {
+      router.push('/login');
+    }
+  }, [profile, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!profile) {
-    router.push('/login');
     return null;
   }
 

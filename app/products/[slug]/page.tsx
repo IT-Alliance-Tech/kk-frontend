@@ -1,7 +1,7 @@
 // app/products/[slug]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -12,16 +12,13 @@ export default function ProductPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (params?.slug) fetchProduct();
-  }, [params?.slug]);
-
-  async function fetchProduct() {
+  const fetchProduct = useCallback(async () => {
     try {
+      const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
       const { data, error } = await supabase
         .from("products")
         .select("*, brands(*), categories(*)")
-        .eq("slug", decodeURIComponent(params.slug))
+        .eq("slug", decodeURIComponent(slug))
         .single();
 
       if (error) throw error;
@@ -31,7 +28,11 @@ export default function ProductPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [params.slug, supabase]);
+
+  useEffect(() => {
+    if (params?.slug) fetchProduct();
+  }, [params?.slug, fetchProduct]);
 
   if (loading) return <div className="text-center py-20">Loading...</div>;
   if (!product) return <div className="text-center py-20">Product not found</div>;
@@ -44,6 +45,7 @@ export default function ProductPage() {
     <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded shadow">
       {/* LEFT: Product Image */}
       <div className="flex flex-col items-center">
+        {/* TODO: replace with next/image if src is static */}
         <img
           src={product.images?.[0] || "/placeholder.png"}
           alt={product.name}

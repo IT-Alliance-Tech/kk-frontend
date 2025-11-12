@@ -83,7 +83,7 @@ export default function ProductsPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
                   <div className="h-48 bg-slate-200" />
@@ -101,12 +101,13 @@ export default function ProductsPage() {
               <p className="text-slate-600">Try adjusting your search criteria</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
                 <Card key={product.id} className="group hover:shadow-lg transition-shadow">
                   <Link href={`/products/${product.slug}`}>
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
                       {product.images && product.images.length > 0 ? (
+                        /* TODO: replace with next/image if src is static */
                         <img
                           src={product.images[0]}
                           alt={product.name}

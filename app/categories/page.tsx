@@ -43,7 +43,7 @@ export default function CategoriesPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse h-48" />
               ))}
@@ -55,6 +55,7 @@ export default function CategoriesPage() {
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden group">
                     <div className="p-5 bg-white rounded-xl shadow-lg hover:scale-105 transition">
                       {category.image_url ? (
+                        /* TODO: replace with next/image if src is static */
                         <img
                           src={category.image_url}
                           alt={category.name}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
@@ -9,16 +9,12 @@ import Link from "next/link";
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
-  const [products, setProducts] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (q.trim()) fetchSearchResults();
-  }, [q]);
-
-  async function fetchSearchResults() {
+  const fetchSearchResults = useCallback(async () => {
     setLoading(true);
     try {
       const [pRes, bRes, cRes] = await Promise.all([
@@ -34,7 +30,11 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [q]);
+
+  useEffect(() => {
+    if (q.trim()) fetchSearchResults();
+  }, [q, fetchSearchResults]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -68,6 +68,7 @@ export default function SearchPage() {
                     className="p-4 bg-white rounded shadow flex items-center justify-center"
                   >
                     {b.logo_url ? (
+                      /* TODO: replace with next/image if src is static */
                       <img
                         src={b.logo_url}
                         alt={b.name}
