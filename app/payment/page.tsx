@@ -1,7 +1,7 @@
 // app/payment/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -19,11 +19,7 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (orderId) fetchOrder();
-  }, [orderId]);
-
-  async function fetchOrder() {
+  const fetchOrder = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     if (error || !data) {
@@ -33,7 +29,11 @@ export default function PaymentPage() {
     }
     setOrder(data);
     setLoading(false);
-  }
+  }, [supabase, orderId]);
+
+  useEffect(() => {
+    if (orderId) fetchOrder();
+  }, [orderId, fetchOrder]);
 
   async function handlePay() {
     if (!order) return;
@@ -53,13 +53,13 @@ export default function PaymentPage() {
         amount: data.amount,
         currency: data.currency,
         name: "KitchenKettles",
-        description: Order ${order.id},
+        description: `Order ${order.id}`,
         order_id: data.id,
         handler: async function (response: any) {
           // response contains razorpay_payment_id, razorpay_order_id, razorpay_signature
           // Update order status in Supabase
           await supabase.from("orders").update({ status: "paid", payment_info: response }).eq("id", order.id);
-          router.push(/confirmation?orderId=${order.id});
+          router.push(`/confirmation?orderId=${order.id}`);
         },
         prefill: {
           name: order.shipping_address?.name || "",

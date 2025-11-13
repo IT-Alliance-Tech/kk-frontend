@@ -11,22 +11,23 @@ export default function CategoryBar({ categories = [] }: { categories: any[] }) 
       ];
 
   return (
-    <div className="py-6 bg-white shadow-md mb-6 rounded-xl">
-      <div className="flex gap-8 items-center overflow-x-auto no-scrollbar px-6">
+    <div className="py-4 sm:py-6 bg-white shadow-md mb-4 sm:mb-6 rounded-lg sm:rounded-xl">
+      <div className="flex gap-4 sm:gap-6 md:gap-8 items-center overflow-x-auto no-scrollbar px-3 sm:px-6">
         {items.map((c) => (
           <Link
             key={c.id}
             href={`/categories/${c.slug}`}
-            className="flex flex-col items-center text-sm min-w-[130px] hover:scale-105 transition-transform duration-200"
+            className="flex flex-col items-center text-xs sm:text-sm min-w-[80px] sm:min-w-[100px] md:min-w-[130px] hover:scale-105 transition-transform duration-200"
           >
-            <div className="bg-gray-100 hover:bg-gray-200 transition rounded-2xl p-5 shadow-lg w-28 h-28 flex items-center justify-center">
+            <div className="bg-gray-100 hover:bg-gray-200 transition rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 shadow-lg w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 flex items-center justify-center">
+              {/* TODO: replace with next/image if src is static */}
               <img
                 src={c.image_url}
                 alt={c.name}
-                className="w-16 h-16 object-contain"
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain"
               />
             </div>
-            <span className="mt-3 font-medium text-gray-800 truncate w-28 text-center text-base">
+            <span className="mt-2 sm:mt-3 font-medium text-gray-800 truncate w-16 sm:w-20 md:w-28 text-center text-xs sm:text-sm md:text-base">
               {c.name}
             </span>
           </Link>

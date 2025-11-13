@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentProfile, onAuthStateChange } from '@/lib/auth';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Profile } from '@/lib/supabase';
 
 interface AuthContextType {
@@ -22,14 +22,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
 
   const refreshProfile = async () => {
     try {
-      const profileData = await getCurrentProfile();
-      setProfile(profileData);
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        setProfile(profileData);
+        setUser(currentUser);
+      } else {
+        setProfile(null);
+        setUser(null);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);
+      setUser(null);
     }
   };
 
@@ -44,15 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })();
 
-    onAuthStateChange(async (user) => {
-      setUser(user);
-      if (user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
         await refreshProfile();
       } else {
         setProfile(null);
       }
       setLoading(false);
     });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (

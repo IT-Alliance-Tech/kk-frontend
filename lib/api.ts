@@ -1,38 +1,82 @@
-// lib/api.ts
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
+/**
+ * lib/api.ts
+ * Centralized API helper for calling your backend
+ */
 
-export async function apiGet(path: string) {
+
+
+
+
+export async function apiGet<T = any>(path: string): Promise<T> {
+  const url = `${API_BASE}${path}`;
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(url, {
       method: "GET",
       credentials: "include",
+      cache: "no-store",
     });
     if (!res.ok) {
-      console.error(`❌ API GET failed: ${res.status} ${res.statusText} (${path})`);
-      throw new Error(`GET ${path} failed`);
+      const text = await res.text().catch(() => "");
+      console.error(`❌ API GET failed: ${res.status} ${res.statusText} (${path})`, text);
+      throw new Error(`GET ${path} failed (${res.status})`);
     }
-    return await res.json();
+    return (await res.json()) as T;
   } catch (err) {
     console.error("❌ Network error in apiGet:", err);
     throw err;
   }
 }
 
-export async function apiPost(path: string, body: any) {
+export async function apiPost<T = any>(path: string, body: any): Promise<T> {
+  const url = `${API_BASE}${path}`;
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      console.error(`❌ API POST failed: ${res.status} ${res.statusText} (${path})`);
-      throw new Error(`POST ${path} failed`);
+      const text = await res.text().catch(() => "");
+      console.error(`❌ API POST failed: ${res.status} ${res.statusText} (${path})`, text);
+      throw new Error(`POST ${path} failed (${res.status})`);
     }
-    return await res.json();
+    return (await res.json()) as T;
   } catch (err) {
     console.error("❌ Network error in apiPost:", err);
     throw err;
   }
+}
+
+/** Optional helpers */
+export async function apiPut<T = any>(path: string, body: any): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
+  return res.json();
+}
+
+export async function apiDelete<T = any>(path: string): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, { method: "DELETE", credentials: "include" });
+  if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
+  return res.json();
+}
+
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
+
+
+export function buildQueryString(params: Record<string, any>): string {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") searchParams.append(k, String(v));
+  });
+  const q = searchParams.toString();
+  return q ? `?${q}` : "";
 }

@@ -60,13 +60,13 @@ export default function ProductList({
   };
 
   if (!localProducts || localProducts.length === 0) {
-    return <p className="p-6 text-center text-gray-500">No products found.</p>;
+    return <p className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base">No products found.</p>;
   }
 
   return (
     <div>
       {/* Grid */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {localProducts.slice(0, visibleCount).map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
@@ -74,11 +74,11 @@ export default function ProductList({
 
       {/* Load more */}
       {visibleCount < localProducts.length && (
-        <div className="flex justify-center mt-6">
+        <div className="flex justify-center mt-4 sm:mt-6">
           <button
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
+            className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60 text-sm sm:text-base transition"
           >
             {loadingMore ? "Loading..." : "Show more products"}
           </button>

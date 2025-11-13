@@ -10,8 +10,12 @@ export default function ProductPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
+  useEffect() => {
+
+    (async () => 
+
+    const fetchProduct = async () => {
+
       try {
         const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
         const data = await apiGet(`/products/${slug}`);
@@ -22,6 +26,13 @@ export default function ProductPage() {
         setLoading(false);
       }
     })();
+
+    };
+
+    if (params?.slug) {
+    
+    }
+
   }, [params.slug]);
 
   if (loading) return <div className="text-center py-20">Loading...</div>;
@@ -30,6 +41,7 @@ export default function ProductPage() {
   return (
     <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded shadow">
       <div className="flex flex-col items-center">
+        {/* TODO: replace with next/image if src is static */}
         <img
           src={product.images?.[0] || "/placeholder.png"}
           alt={product.title}
@@ -69,4 +81,3 @@ export default function ProductPage() {
       </div>
     </div>
   );
-}

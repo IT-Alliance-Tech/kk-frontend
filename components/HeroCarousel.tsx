@@ -36,9 +36,9 @@ export default function HeroCarousel() {
   }, []);
 
   return (
-    <div className="relative mt-4">
+    <div className="relative mt-2 sm:mt-4">
       {/* Banner Container */}
-      <div className="relative h-64 md:h-[28rem] rounded overflow-hidden bg-gray-100">
+      <div className="relative h-48 sm:h-64 md:h-80 lg:h-[28rem] rounded-lg sm:rounded-xl overflow-hidden bg-gray-100">
         {slides.map((s, i) => (
           <div
             key={s.id}
@@ -46,6 +46,7 @@ export default function HeroCarousel() {
               i === idx ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
+            {/* TODO: replace with next/image if src is static */}
             <img
               src={s.image}
               alt={s.title}
@@ -54,11 +55,11 @@ export default function HeroCarousel() {
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/40"></div>
             {/* Text */}
-            <div className="absolute left-8 top-1/3 text-white">
-              <h2 className="text-3xl md:text-5xl font-bold drop-shadow-lg">
+            <div className="absolute left-4 sm:left-6 md:left-8 top-1/3 text-white max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
+              <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg">
                 {s.title}
               </h2>
-              <p className="mt-2 text-lg md:text-2xl drop-shadow-md">
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base md:text-lg lg:text-2xl drop-shadow-md">
                 {s.subtitle}
               </p>
             </div>
@@ -67,12 +68,12 @@ export default function HeroCarousel() {
       </div>
 
       {/* Indicators */}
-      <div className="flex gap-2 justify-center mt-3">
+      <div className="flex gap-1.5 sm:gap-2 justify-center mt-2 sm:mt-3">
         {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => setIdx(i)}
-            className={`w-3 h-3 rounded-full transition-all ${
+            className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${
               i === idx ? "bg-orange-600 scale-110" : "bg-gray-300"
             }`}
           />

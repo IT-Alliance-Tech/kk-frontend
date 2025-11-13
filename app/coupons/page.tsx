@@ -25,6 +25,8 @@ export default function CouponCodePage() {
       setLoading(false);
     }
     fetchCoupons();
+    // supabase client is stable, safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

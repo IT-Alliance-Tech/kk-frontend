@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+export const dynamic = 'force-dynamic';
 
 // ✅ Make sure your environment variables are set in .env.local
 const supabase = createClient(

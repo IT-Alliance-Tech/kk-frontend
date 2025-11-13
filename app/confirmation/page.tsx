@@ -1,7 +1,7 @@
 // app/confirmation/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -13,11 +13,7 @@ export default function ConfirmationPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (orderId) fetchOrder();
-  }, [orderId]);
-
-  async function fetchOrder() {
+  const fetchOrder = useCallback(async () => {
     const { data, error } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     if (error) {
       console.error(error);
@@ -25,7 +21,11 @@ export default function ConfirmationPage() {
       setOrder(data);
     }
     setLoading(false);
-  }
+  }, [supabase, orderId]);
+
+  useEffect(() => {
+    if (orderId) fetchOrder();
+  }, [orderId, fetchOrder]);
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
   if (!order) return <div className="p-8 text-center">Order not found</div>;

@@ -10,13 +10,13 @@ export default function TopPicksSection() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Top Picks for You</h2>
-        <button className="text-red-500 hover:underline">View all</button>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Top Picks for You</h2>
+        <button className="text-red-500 hover:underline text-xs sm:text-sm md:text-base">View all</button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
