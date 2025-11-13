@@ -11,6 +11,8 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!params?.slug) return;
+
     const fetchProduct = async () => {
       try {
         const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -26,17 +28,25 @@ export default function ProductPage() {
     if (params?.slug) {
       fetchProduct();
     }
+    fetchProduct();
   }, [params.slug]);
 
   if (loading) return <div className="text-center py-20">Loading...</div>;
   if (!product) return <div className="text-center py-20">Product not found</div>;
 
+  // Determine safe image URL
+  const imageUrl = product.images?.[0]
+    ? product.images[0].includes("via.placeholder.com")
+      ? product.images[0].replace("via.placeholder.com", "placehold.co")
+      : product.images[0]
+    : `https://placehold.co/400x400?text=${encodeURIComponent(product.title)}`;
+
   return (
     <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded shadow">
       <div className="flex flex-col items-center">
-        {/* TODO: replace with next/image if src is static */}
+        {/* Product Image */}
         <img
-          src={product.images?.[0] || "/placeholder.png"}
+          src={imageUrl}
           alt={product.title}
           className="w-80 h-80 object-contain border rounded p-4"
         />
