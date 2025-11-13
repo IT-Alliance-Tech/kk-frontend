@@ -15,18 +15,34 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Fetch Supabase user
+  // Fetch Supabase user and subscribe to auth changes
   useEffect(() => {
+    let subscription: any;
+
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user ?? null);
+      try {
+        const { data } = await supabase.auth.getUser();
+        setUser(data.user ?? null);
+      } catch (err) {
+        console.error("Failed to get supabase user", err);
+      }
     })();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
-    return () => sub.subscription.unsubscribe();
+    // Grab subscription object safely (structure: { data: { subscription } } in some versions)
+    // Try common shapes to be robust:
+    subscription = sub?.subscription ?? sub;
+
+    return () => {
+      try {
+        subscription?.unsubscribe?.();
+      } catch (err) {
+        // best-effort cleanup
+      }
+    };
   }, [supabase]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -35,8 +51,13 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      router.push("/login");
+    }
   };
 
   return (
@@ -80,7 +101,9 @@ export default function Navbar() {
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 lg:gap-4 text-xs sm:text-sm text-gray-700 order-2 lg:order-3">
             {user ? (
               <div className="flex items-center gap-1 sm:gap-2">
-                <span className="hidden sm:inline truncate max-w-[120px] md:max-w-none">{user.email}</span>
+                <span className="hidden sm:inline truncate max-w-[120px] md:max-w-none">
+                  {user.email}
+                </span>
                 <button
                   onClick={handleLogout}
                   className="bg-red-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs hover:bg-red-600"
@@ -91,11 +114,11 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center gap-1">
                 <Link href="/login" className="text-emerald-600 flex items-center gap-1">
-                  <span>Login</span> 
+                  <span>Login</span>
                 </Link>
                 <span>|</span>
                 <Link href="/register" className="text-emerald-600 flex items-center gap-1">
-                  <span>Register</span> 
+                  <span>Register</span>
                 </Link>
               </div>
             )}
@@ -115,6 +138,7 @@ export default function Navbar() {
           <button
             className="lg:hidden text-gray-700 text-xl sm:text-2xl"
             onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Toggle menu"
           >
             ☰
           </button>
@@ -123,22 +147,34 @@ export default function Navbar() {
           {/* Mobile fix: menu now scrolls horizontally on small screens. Original classes preserved. */}
           <ul className="flex gap-6 overflow-x-auto whitespace-nowrap px-2 sm:px-4 -mx-2 sm:mx-0 items-center xl:gap-8 text-sm xl:text-base text-gray-800 font-medium">
             <li>
-              <Link href="/" className="hover:text-emerald-600">Home</Link>
+              <Link href="/" className="hover:text-emerald-600">
+                Home
+              </Link>
             </li>
             <li>
-              <Link href="/categories" className="hover:text-emerald-600">Categories</Link>
+              <Link href="/categories" className="hover:text-emerald-600">
+                Categories
+              </Link>
             </li>
             <li>
-              <Link href="/brands" className="hover:text-emerald-600">Brands</Link>
+              <Link href="/brands" className="hover:text-emerald-600">
+                Brands
+              </Link>
             </li>
             <li>
-              <Link href="/services" className="hover:text-emerald-600">Services</Link>
+              <Link href="/services" className="hover:text-emerald-600">
+                Services
+              </Link>
             </li>
             <li>
-              <Link href="/about" className="hover:text-emerald-600">About us</Link>
+              <Link href="/about" className="hover:text-emerald-600">
+                About us
+              </Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-emerald-600">Contact us</Link>
+              <Link href="/contact" className="hover:text-emerald-600">
+                Contact us
+              </Link>
             </li>
           </ul>
 
@@ -150,13 +186,25 @@ export default function Navbar() {
 
         {/* ===== Mobile Menu ===== */}
         {mobileOpen && (
-          <div className="lg:hidden bg-gray-100 border-t px-4 py-2 space-y-2">
-            <Link href="/" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">Home</Link>
-            <Link href="/categories" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">Categories</Link>
-            <Link href="/brands" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">Brands</Link>
-            <Link href="/services" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">Services</Link>
-            <Link href="/about" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">About us</Link>
-            <Link href="/contact" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">Contact us</Link>
+          <div className="md:hidden bg-gray-100 border-t px-4 py-2 space-y-2">
+            <Link href="/" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">
+              Home
+            </Link>
+            <Link href="/categories" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">
+              Categories
+            </Link>
+            <Link href="/brands" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">
+              Brands
+            </Link>
+            <Link href="/services" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">
+              Services
+            </Link>
+            <Link href="/about" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">
+              About us
+            </Link>
+            <Link href="/contact" className="block py-2 hover:text-emerald-600 text-sm sm:text-base">
+              Contact us
+            </Link>
           </div>
         )}
       </nav>

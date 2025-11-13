@@ -10,8 +10,12 @@ export default function ProductPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useEffect() => {
+
+    (async () => 
+
     const fetchProduct = async () => {
+
       try {
         const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
         const data = await apiGet(`/products/${slug}`);
@@ -21,11 +25,14 @@ export default function ProductPage() {
       } finally {
         setLoading(false);
       }
+    })();
+
     };
 
     if (params?.slug) {
-      fetchProduct();
+    
     }
+
   }, [params.slug]);
 
   if (loading) return <div className="text-center py-20">Loading...</div>;
@@ -74,4 +81,3 @@ export default function ProductPage() {
       </div>
     </div>
   );
-}
