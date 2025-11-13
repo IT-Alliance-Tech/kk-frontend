@@ -41,7 +41,7 @@ export default function ProductsPage() {
     (async () => {
       try {
         const data = await apiGet("/products");
-        setProducts(data.items || []); // ✅ always an array
+        setProducts(data.items || []); // always an array
       } catch (err) {
         console.error("Failed to load products", err);
       } finally {
@@ -101,7 +101,7 @@ export default function ProductsPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           {loading ? (
-            // 🌀 Skeleton loader
+            // Skeleton loader
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
@@ -114,7 +114,7 @@ export default function ProductsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            // 🚫 No products found
+            // No products found
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-900 mb-2">
@@ -122,7 +122,7 @@ export default function ProductsPage() {
               </h3>
             </div>
           ) : (
-            // ✅ Product list
+            // Product list
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filtered.map((product) => (
                 <Card
@@ -133,15 +133,27 @@ export default function ProductsPage() {
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
                       {product.images?.[0] ? (
                         <img
-                          src={product.images[0]}
+                          src={
+                            product.images[0].includes("via.placeholder.com")
+                              ? product.images[0].replace(
+                                  "via.placeholder.com",
+                                  "placehold.co"
+                                )
+                              : product.images[0]
+                          }
                           alt={product.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="h-16 w-16 text-slate-300" />
-                        </div>
+                        <img
+                          src={`https://placehold.co/400x400?text=${encodeURIComponent(
+                            product.title
+                          )}`}
+                          alt={product.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
                       )}
+
                       {product.mrp && product.mrp > product.price && (
                         <Badge className="absolute top-2 right-2 bg-red-500">
                           Sale
@@ -156,9 +168,7 @@ export default function ProductsPage() {
                       </CardTitle>
                     </Link>
                     {product.brand && (
-                      <p className="text-sm text-slate-500">
-                        {product.brand.name}
-                      </p>
+                      <p className="text-sm text-slate-500">{product.brand.name}</p>
                     )}
                   </CardHeader>
                   <CardContent>
