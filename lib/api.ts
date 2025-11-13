@@ -3,9 +3,33 @@
  * Centralized API helper for calling your backend
  */
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
 
-
-
+/**
+ * Generic fetch wrapper for API calls
+ */
+export async function apiFetch<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  try {
+    const res = await fetch(url, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error(`❌ API request failed: ${res.status} ${res.statusText} (${path})`, text);
+      throw new Error(`API ${path} failed (${res.status})`);
+    }
+    return (await res.json()) as T;
+  } catch (err) {
+    console.error("❌ Network error in apiFetch:", err);
+    throw err;
+  }
+}
 
 export async function apiGet<T = any>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
@@ -67,10 +91,6 @@ export async function apiDelete<T = any>(path: string): Promise<T> {
   if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
   return res.json();
 }
-
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
-
 
 export function buildQueryString(params: Record<string, any>): string {
   const searchParams = new URLSearchParams();
