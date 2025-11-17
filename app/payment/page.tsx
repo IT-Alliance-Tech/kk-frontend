@@ -25,26 +25,38 @@ export default function PaymentPage() {
 
   async function fetchOrder() {
     setLoading(true);
-    const { data, error } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .maybeSingle();
+
     if (error || !data) {
       alert("Order not found");
       setLoading(false);
       return;
     }
+
     setOrder(data);
     setLoading(false);
   }
 
   async function handlePay() {
     if (!order) return;
-    // Create Razorpay order server-side
+
     try {
-      const amountPaise = Math.round(order.total * 100); // paise
+      const amountPaise = Math.round(order.total * 100); // convert to paise
+
       const resp = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: order.id }),
+        body: JSON.stringify({
+          amount: amountPaise,
+          currency: "INR",
+          receipt: order.id,
+        }),
       });
+
       const data = await resp.json();
       if (!resp.ok) throw data;
 
@@ -53,23 +65,31 @@ export default function PaymentPage() {
         amount: data.amount,
         currency: data.currency,
         name: "KitchenKettles",
-        description: Order ${order.id},
+        description: `Order ${order.id}`, // FIXED
         order_id: data.id,
+
         handler: async function (response: any) {
-          // response contains razorpay_payment_id, razorpay_order_id, razorpay_signature
-          // Update order status in Supabase
-          await supabase.from("orders").update({ status: "paid", payment_info: response }).eq("id", order.id);
-          router.push(/confirmation?orderId=${order.id});
+          // Save payment details
+          await supabase
+            .from("orders")
+            .update({ status: "paid", payment_info: response })
+            .eq("id", order.id);
+
+          router.push(`/confirmation?orderId=${order.id}`); // FIXED
         },
+
         prefill: {
           name: order.shipping_address?.name || "",
           email: order.shipping_address?.email || "",
           contact: order.shipping_address?.phone || "",
         },
-        theme: { color: "#059669" },
+
+        theme: {
+          color: "#059669",
+        },
       };
 
-      // Load Razorpay script if not present
+      // Load Razorpay SDK
       if (!window.Razorpay) {
         await loadRazorpayScript();
       }
@@ -92,28 +112,40 @@ export default function PaymentPage() {
     });
   }
 
-  if (loading) return <div className="p-8 text-center">Loading order...</div>;
-  if (!order) return <div className="p-8 text-center">Order not found</div>;
+  if (loading)
+    return <div className="p-8 text-center">Loading order...</div>;
+
+  if (!order)
+    return <div className="p-8 text-center">Order not found</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto p-6 bg-white rounded shadow">
         <h2 className="text-xl font-semibold mb-4">Payment</h2>
+
         <div className="mb-4">
           <div className="flex justify-between">
             <span>Order ID</span>
             <span>{order.id}</span>
           </div>
+
           <div className="flex justify-between">
             <span>Amount</span>
             <span>₹{order.total.toFixed(2)}</span>
           </div>
         </div>
 
-        <button onClick={handlePay} className="bg-emerald-600 text-white px-4 py-2 rounded">
+        <button
+          onClick={handlePay}
+          className="bg-emerald-600 text-white px-4 py-2 rounded"
+        >
           Pay Now
         </button>
-        <button onClick={() => router.push("/cart")} className="ml-2 border px-4 py-2 rounded">
+
+        <button
+          onClick={() => router.push("/cart")}
+          className="ml-2 border px-4 py-2 rounded"
+        >
           Back to Cart
         </button>
       </div>

@@ -4,10 +4,14 @@ import { Phone, Mail, MapPin, User, MessageSquare, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
+// ⭐ Image Imports (add your images inside /public/assets/images)
+import contactMainImg from "../../assets/images/contact.png";
+
+
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center py-10">
-      {/* Title */}
+
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -19,6 +23,7 @@ export default function ContactPage() {
 
       {/* Contact Info Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl px-6 mb-16">
+
         {/* Phone */}
         <motion.div
           whileHover={{ scale: 1.03 }}
@@ -62,9 +67,10 @@ export default function ContactPage() {
         </motion.div>
       </div>
 
-      {/* Contact Form + Image Section */}
+      {/* Contact Form + Image */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl w-full px-6">
-        {/* Left Side Image */}
+
+        {/* Left Image */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -72,7 +78,7 @@ export default function ContactPage() {
           className="overflow-hidden rounded-2xl border-2 border-red-500"
         >
           <Image
-            src="/contact-image.png" // <-- replace this with your uploaded image path (e.g. /kitchen-contact.png)
+            src={contactMainImg}
             alt="Contact Image"
             width={600}
             height={400}
@@ -80,70 +86,38 @@ export default function ContactPage() {
           />
         </motion.div>
 
-        {/* Right Side Form */}
+        {/* Form */}
         <motion.form
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
           className="flex flex-col gap-4 bg-white shadow-md rounded-2xl p-8 border border-gray-200"
         >
-          {/* Name */}
           <div className="flex items-center border rounded-md px-3 py-2">
             <User className="text-red-600 w-5 h-5 mr-2" />
-            <input
-              type="text"
-              placeholder="Your Name *"
-              className="w-full focus:outline-none"
-              required
-            />
+            <input type="text" placeholder="Your Name *" className="w-full focus:outline-none" required />
           </div>
 
-          {/* Mobile */}
           <div className="flex items-center border rounded-md px-3 py-2">
             <Phone className="text-red-600 w-5 h-5 mr-2" />
-            <input
-              type="tel"
-              placeholder="Mobile *"
-              className="w-full focus:outline-none"
-              required
-            />
+            <input type="tel" placeholder="Mobile *" className="w-full focus:outline-none" required />
           </div>
 
-          {/* Email */}
           <div className="flex items-center border rounded-md px-3 py-2">
             <Mail className="text-red-600 w-5 h-5 mr-2" />
-            <input
-              type="email"
-              placeholder="Email Address *"
-              className="w-full focus:outline-none"
-              required
-            />
+            <input type="email" placeholder="Email Address *" className="w-full focus:outline-none" required />
           </div>
 
-          {/* Subject */}
           <div className="flex items-center border rounded-md px-3 py-2">
             <Info className="text-red-600 w-5 h-5 mr-2" />
-            <input
-              type="text"
-              placeholder="Subject"
-              className="w-full focus:outline-none"
-            />
+            <input type="text" placeholder="Subject" className="w-full focus:outline-none" />
           </div>
 
-          {/* Message */}
           <div className="border rounded-md px-3 py-2">
-            <textarea
-              placeholder="Additional Information..."
-              rows={4}
-              className="w-full focus:outline-none resize-none"
-            ></textarea>
+            <textarea placeholder="Additional Information..." rows={4} className="w-full focus:outline-none resize-none"></textarea>
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="bg-red-600 text-white font-semibold py-2 rounded-md hover:bg-red-700 transition"
-          >
+          <button type="submit" className="bg-red-600 text-white font-semibold py-2 rounded-md hover:bg-red-700 transition">
             Send Query →
           </button>
         </motion.form>

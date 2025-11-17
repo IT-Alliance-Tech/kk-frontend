@@ -1,6 +1,10 @@
 import { Metadata } from 'next';
+import Image from "next/image";
 import { Truck, Shield, RefreshCcw, Headphones as HeadphonesIcon, CreditCard, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// ⭐ Import Repair Service Image
+import repairImage from "../../assets/images/service .png";
 
 export const metadata: Metadata = {
   title: 'Our Services - Kitchen Kettels',
@@ -79,6 +83,8 @@ export default function ServicesPage() {
 
   return (
     <div className="bg-white">
+
+      {/* ---- HERO ---- */}
       <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
@@ -90,6 +96,7 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* ---- SERVICE CARDS ---- */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -121,10 +128,12 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* ---- DELIVERY INFO ---- */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Delivery Information</h2>
+
             <div className="bg-white rounded-lg p-8 space-y-6">
               <div>
                 <h3 className="text-xl font-semibold mb-3">Standard Delivery</h3>
@@ -133,6 +142,7 @@ export default function ServicesPage() {
                   24 hours of placement, and you'll receive tracking information via email.`}
                 </p>
               </div>
+
               <div>
                 <h3 className="text-xl font-semibold mb-3">Express Delivery</h3>
                 <p className="text-slate-600">
@@ -140,6 +150,7 @@ export default function ServicesPage() {
                   Express delivery is available for an additional fee.`}
                 </p>
               </div>
+
               <div>
                 <h3 className="text-xl font-semibold mb-3">International Shipping</h3>
                 <p className="text-slate-600">
@@ -152,6 +163,58 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* ⭐⭐⭐ ---- NEW ADDED SECTION (Your Required UI) ---- ⭐⭐⭐ */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+
+            {/* Left Image */}
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <Image
+                src={repairImage}
+                alt="Repair Service"
+                className="w-full h-auto object-cover"
+              />
+            </div>
+
+            {/* Right Content */}
+            <div>
+              <h2 className="text-4xl font-bold text-red-600 mb-4">
+                Our Expert Appliance Repair Services
+              </h2>
+
+              <p className="text-slate-700 mb-6 leading-relaxed">
+                Your kitchen deserves to run smoothly — and we're here to make sure it does!
+                From kettles to mixers and everything in between, our expert technicians
+                provide fast, reliable, and affordable appliance repair services right at
+                your doorstep.
+              </p>
+
+              <h3 className="text-2xl font-semibold text-red-600 mb-3">We Repair:</h3>
+
+              <ul className="space-y-2 text-slate-700 text-lg">
+                <li>→ Electric Kettles</li>
+                <li>→ Microwave Ovens</li>
+                <li>→ Induction Cooktops</li>
+                <li>→ Mixers & Grinders</li>
+                <li>→ Toasters & Sandwich Makers</li>
+                <li>→ Blenders & Juicers</li>
+                <li>→ Coffee Machines</li>
+              </ul>
+
+              <a
+                href="/contact"
+                className="inline-block mt-8 px-8 py-3 border border-slate-300 rounded-full hover:bg-slate-100 transition"
+              >
+                CONTACT US
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ---- NEED HELP ---- */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-12 text-center">
@@ -167,7 +230,7 @@ export default function ServicesPage() {
                 Contact Support
               </a>
               <a
-                href="tel:+15551234567"
+                href="tel:+916444449"
                 className="inline-flex items-center justify-center px-6 py-3 bg-white text-slate-900 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
               >
                 {`Call +91 916444449`}
@@ -176,6 +239,7 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
+
     </div>
   );
 }
