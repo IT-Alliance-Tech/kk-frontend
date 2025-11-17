@@ -78,5 +78,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Header top padding is managed dynamically by Navbar to avoid layout jumps — do not set a large fixed padding here. */
+    padding-top: 0;
+    margin: 0;
+    background: white; /* or your --background variable if used */
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

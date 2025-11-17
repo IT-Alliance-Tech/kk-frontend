@@ -227,3 +227,11 @@ export async function getOrder(id: string): Promise<Order | null> {
     throw error;
   }
 }
+
+/**
+ * Alias for getOrder() to match naming convention
+ * Fetch a single order by ID
+ */
+export async function getOrderById(id: string): Promise<Order | null> {
+  return getOrder(id);
+}

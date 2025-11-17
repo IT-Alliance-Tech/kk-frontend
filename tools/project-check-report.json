@@ -1,0 +1,456 @@
+{
+  "timestamp": "2025-11-14T12:13:44.111Z",
+  "summary": {
+    "totalChecks": 20,
+    "found": 12,
+    "missing": 8
+  },
+  "frontend": {
+    "appRouterPages": {
+      "description": "App Router root page (app/page.tsx)",
+      "status": "found",
+      "paths": [
+        "kk-frontend/app/page.tsx"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/app/page.tsx",
+          "sample": "\"use client\";\n\nimport { useEffect, useState } from \"react\";\nimport Link from \"next/link\";\nimport { supabase, Product, Brand, Category } from \"@/lib/supabase\";"
+        }
+      ]
+    },
+    "authPages": {
+      "description": "Auth/Account related pages",
+      "status": "found",
+      "paths": [
+        "kk-frontend/app/auth/request/page.tsx",
+        "kk-frontend/app/auth/verify/page.tsx",
+        "kk-frontend/app/login/page.duplicate.tsx",
+        "kk-frontend/app/orders/CreateOrderClient.tsx",
+        "kk-frontend/app/orders/[id]/page.tsx",
+        "kk-frontend/app/orders/create.ts",
+        "kk-frontend/app/orders/create/page.tsx",
+        "kk-frontend/app/orders/page.tsx",
+        "kk-frontend/app/register/page.tsx",
+        "kk-frontend/app/signup/page.tsx"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/app/auth/request/page.tsx",
+          "sample": "// kk-frontend/app/auth/request/page.tsx\nimport { redirect } from \"next/navigation\";\n\nexport default function AuthRequestRedirect({\n  searchParams,"
+        },
+        {
+          "file": "kk-frontend/app/auth/verify/page.tsx",
+          "sample": "// kk-frontend/app/auth/verify/page.tsx\nimport { redirect } from \"next/navigation\";\n\nexport default function AuthVerifyRedirect({\n  searchParams,"
+        },
+        {
+          "file": "kk-frontend/app/orders/CreateOrderClient.tsx",
+          "sample": "/**\n * Create Order Client Component\n * Client-side form for creating new orders\n */\n"
+        }
+      ]
+    },
+    "dashboardLayout": {
+      "description": "DashboardLayout component",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    },
+    "protectedRoute": {
+      "description": "ProtectedRoute component",
+      "status": "found",
+      "paths": [
+        "kk-frontend/components/ProtectedRoute.tsx"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/components/ProtectedRoute.tsx",
+          "sample": "/**\n * Protected Route Component\n * Wrapper that requires authentication to access child components\n * \n * Usage:"
+        }
+      ]
+    },
+    "cartComponents": {
+      "description": "Cart components (CartButton, FloatingCart, CartContext)",
+      "status": "found",
+      "paths": [
+        "kk-frontend/components/CartButton.tsx",
+        "kk-frontend/components/CartContext.tsx",
+        "kk-frontend/components/FloatingCart.tsx",
+        "kk-frontend/components/SupabaseCartContext.tsx"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/components/CartButton.tsx",
+          "sample": "\"use client\";\nimport { useCart } from \"@/components/CartContext\";\n\nexport default function CartButton() {\n  const { items, total, clearCart } = useCart();"
+        },
+        {
+          "file": "kk-frontend/components/FloatingCart.tsx",
+          "sample": ""
+        },
+        {
+          "file": "kk-frontend/components/CartContext.tsx",
+          "sample": "\"use client\";\nimport React, { createContext, useContext, useEffect, useState } from \"react\";\n\nexport type CartItem = {\n  id: string;"
+        }
+      ]
+    },
+    "heroComponents": {
+      "description": "Hero components (HeroBanner, HeroCarousel)",
+      "status": "found",
+      "paths": [
+        "kk-frontend/components/HeroBanner.tsx",
+        "kk-frontend/components/HeroCarousel.tsx"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/components/HeroBanner.tsx",
+          "sample": "\"use client\";\nimport { useEffect, useState } from \"react\";\nimport { createClientComponentClient } from \"@supabase/auth-helpers-nextjs\";\n\nexport default function HeroBanner() {"
+        },
+        {
+          "file": "kk-frontend/components/HeroCarousel.tsx",
+          "sample": "// components/HeroCarousel.tsx\n\"use client\";\n\nimport { useEffect, useState } from \"react\";\n"
+        }
+      ]
+    },
+    "ordersComponents": {
+      "description": "Orders components (OrdersList, OrderDetail)",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    },
+    "profileComponents": {
+      "description": "User profile components",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    },
+    "apiUtilities": {
+      "description": "API utility files (lib/api/*.api.ts)",
+      "status": "found",
+      "paths": [
+        "kk-frontend/lib/api/auth.api.ts",
+        "kk-frontend/lib/api/brands.api.ts",
+        "kk-frontend/lib/api/categories.api.ts",
+        "kk-frontend/lib/api/orders.api.ts"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/lib/api/auth.api.ts",
+          "sample": "/**\n * Authentication API client\n * Handles login, logout, and profile fetching\n */\n"
+        },
+        {
+          "file": "kk-frontend/lib/api/brands.api.ts",
+          "sample": "/**\n * Brands API client\n * Handles all brand-related API calls\n */\n"
+        },
+        {
+          "file": "kk-frontend/lib/api/categories.api.ts",
+          "sample": "import { apiGet } from \"@/lib/api\";\n\nexport async function getCategories() {\n  return apiGet(\"/categories\");\n}"
+        }
+      ]
+    },
+    "adapters": {
+      "description": "Data adapters (lib/adapters/*.adapter.ts)",
+      "status": "found",
+      "paths": [
+        "kk-frontend/lib/adapters/auth.adapter.ts",
+        "kk-frontend/lib/adapters/brand.adapter.ts",
+        "kk-frontend/lib/adapters/order.adapter.ts"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-frontend/lib/adapters/auth.adapter.ts",
+          "sample": "/**\n * Authentication Response Adapter\n * Normalizes backend auth responses to frontend-expected shapes\n * Generated: 2025-11-10\n */"
+        },
+        {
+          "file": "kk-frontend/lib/adapters/brand.adapter.ts",
+          "sample": "/**\n * Brand Response Adapter\n * Normalizes backend brand responses to frontend-expected shapes\n * Generated: 2025-11-10\n */"
+        },
+        {
+          "file": "kk-frontend/lib/adapters/order.adapter.ts",
+          "sample": "/**\n * Order Response Adapter\n * Normalizes backend order responses to frontend-expected shapes\n * Generated: 2025-11-10\n */"
+        }
+      ]
+    },
+    "brandPlaceholder": {
+      "description": "Brand placeholder images",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    },
+    "tailwindConfig": {
+      "description": "Tailwind configuration",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    },
+    "typescriptConfig": {
+      "description": "TypeScript configuration (tsconfig.json, next-env.d.ts)",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    },
+    "appApiRoutes": {
+      "description": "Next.js App Router API routes (app/api/*/route.ts)",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    }
+  },
+  "backend": {
+    "brandRoutes": {
+      "description": "Brand routes (brand.routes.js)",
+      "status": "found",
+      "paths": [
+        "kk-backend/src/routes/brand.routes.js"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-backend/src/routes/brand.routes.js",
+          "sample": "import { Router } from 'express';\nimport { protect } from '../middlewares/auth.js';\nimport { allowRoles } from '../middlewares/roles.js';\nimport { ROLES } from '../constants/roles.js';\nimport { valida"
+        }
+      ]
+    },
+    "controllers": {
+      "description": "Main controllers (brand, order, product, auth)",
+      "status": "found",
+      "paths": [
+        "kk-backend/src/controllers/auth.controller.js",
+        "kk-backend/src/controllers/brand.controller.js",
+        "kk-backend/src/controllers/order.controller.js",
+        "kk-backend/src/controllers/product.controller.js"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-backend/src/controllers/auth.controller.js",
+          "sample": "import { z } from 'zod';\nimport * as authService from '../services/auth.service.js';\n\nconst requestOtpSchema = z.object({\n  body: z.object({"
+        },
+        {
+          "file": "kk-backend/src/controllers/brand.controller.js",
+          "sample": "import { z } from 'zod';\nimport Brand from '../models/Brand.js';\n\nconst createSchema = z.object({ body: z.object({\n  name: z.string().min(1),"
+        },
+        {
+          "file": "kk-backend/src/controllers/order.controller.js",
+          "sample": "import { z } from 'zod';\nimport * as orderService from '../services/order.service.js';\n\nconst createSchema = z.object({\n  body: z.object({"
+        }
+      ]
+    },
+    "models": {
+      "description": "Data models (Brand, Order, Product, User)",
+      "status": "found",
+      "paths": [
+        "kk-backend/src/models/Brand.js",
+        "kk-backend/src/models/Order.js",
+        "kk-backend/src/models/Product.js",
+        "kk-backend/src/models/User.js"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-backend/src/models/Brand.js",
+          "sample": "import mongoose from 'mongoose';\nconst brandSchema = new mongoose.Schema({\n  name: { type: String, required: true, unique: true, trim: true },\n  slug: { type: String, required: true, unique: true },\n "
+        },
+        {
+          "file": "kk-backend/src/models/Order.js",
+          "sample": "import mongoose from 'mongoose';\n\nconst orderItem = new mongoose.Schema({\n  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },\n  title: String,"
+        },
+        {
+          "file": "kk-backend/src/models/Product.js",
+          "sample": "import mongoose from 'mongoose';\nconst productSchema = new mongoose.Schema({\n  title: { type: String, required: true, trim: true },\n  slug: { type: String, required: true, unique: true },\n  brand: { t"
+        }
+      ]
+    },
+    "services": {
+      "description": "Business logic services",
+      "status": "found",
+      "paths": [
+        "kk-backend/src/services/order.service.js",
+        "kk-backend/src/services/product.service.js"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-backend/src/services/order.service.js",
+          "sample": "import Order from '../models/Order.js';\nimport Product from '../models/Product.js';\nimport createError from 'http-errors';\n\nexport const create = async ({ userId, items, shippingAddress }) => {"
+        },
+        {
+          "file": "kk-backend/src/services/product.service.js",
+          "sample": "import Product from '../models/Product.js';\nimport Brand from '../models/Brand.js';\nimport Category from '../models/Category.js';\nimport createError from 'http-errors';\n"
+        }
+      ]
+    },
+    "databaseConfig": {
+      "description": "Database configuration and seed files",
+      "status": "found",
+      "paths": [
+        "kk-backend/src/config/db.js",
+        "kk-backend/src/seed/seed.js"
+      ],
+      "sampleMatches": [
+        {
+          "file": "kk-backend/src/config/db.js",
+          "sample": "import mongoose from 'mongoose';\n\nconst MONGO_URI = process.env.MONGO_URI;\nmongoose.set('strictQuery', true);\n"
+        },
+        {
+          "file": "kk-backend/src/seed/seed.js",
+          "sample": "import dotenv from 'dotenv';\r\ndotenv.config();\r\nimport mongoose from 'mongoose';\r\nimport User from '../models/User.js';\r\nimport Brand from '../models/Brand.js';\r"
+        }
+      ]
+    },
+    "envFiles": {
+      "description": "Environment configuration files",
+      "status": "missing",
+      "paths": [],
+      "sampleMatches": []
+    }
+  },
+  "keywordSearches": {
+    "getOrders\\(": {
+      "keyword": "getOrders\\(",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "createOrder\\(": {
+      "keyword": "createOrder\\(",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "POST /orders": {
+      "keyword": "POST /orders",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "fetch\\(['\"]/(api/)?brands": {
+      "keyword": "fetch\\(['\"]/(api/)?brands",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "getBrands\\(": {
+      "keyword": "getBrands\\(",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "ProtectedRoute": {
+      "keyword": "ProtectedRoute",
+      "count": 3,
+      "files": [
+        "kk-frontend/components/ProtectedRoute.tsx"
+      ],
+      "samples": [
+        {
+          "file": "kk-frontend/components/ProtectedRoute.tsx",
+          "line": 7,
+          "snippet": "* <ProtectedRoute>"
+        },
+        {
+          "file": "kk-frontend/components/ProtectedRoute.tsx",
+          "line": 9,
+          "snippet": "* </ProtectedRoute>"
+        },
+        {
+          "file": "kk-frontend/components/ProtectedRoute.tsx",
+          "line": 20,
+          "snippet": "interface ProtectedRouteProps {"
+        }
+      ]
+    },
+    "FloatingCart": {
+      "keyword": "FloatingCart",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "CartContext": {
+      "keyword": "CartContext",
+      "count": 15,
+      "files": [
+        "kk-frontend/app/cart/page.tsx",
+        "kk-frontend/app/checkout/page.tsx",
+        "kk-frontend/app/layout.tsx",
+        "kk-frontend/app/products/page.tsx",
+        "kk-frontend/components/CartButton.tsx",
+        "kk-frontend/components/CartContext.tsx",
+        "kk-frontend/components/ClientProviders.tsx",
+        "kk-frontend/components/Navigation.tsx",
+        "kk-frontend/components/ProductCard.jsx",
+        "kk-frontend/components/ProductCard.tsx",
+        "kk-frontend/components/SupabaseCartContext.tsx"
+      ],
+      "samples": [
+        {
+          "file": "kk-frontend/app/cart/page.tsx",
+          "line": 6,
+          "snippet": "import { useCart } from \"@/components/CartContext\";"
+        },
+        {
+          "file": "kk-frontend/app/checkout/page.tsx",
+          "line": 5,
+          "snippet": "import { useCart } from \"@/components/CartContext\";"
+        },
+        {
+          "file": "kk-frontend/app/layout.tsx",
+          "line": 5,
+          "snippet": "import { CartProvider } from \"@/components/CartContext\";"
+        }
+      ]
+    },
+    "SupabaseCartContext": {
+      "keyword": "SupabaseCartContext",
+      "count": 1,
+      "files": [
+        "kk-frontend/components/SupabaseCartContext.tsx"
+      ],
+      "samples": [
+        {
+          "file": "kk-frontend/components/SupabaseCartContext.tsx",
+          "line": 1,
+          "snippet": "// // components/SupabaseCartContext.tsx"
+        }
+      ]
+    },
+    "\\botp\\b": {
+      "keyword": "\\botp\\b",
+      "count": 0,
+      "files": [],
+      "samples": []
+    },
+    "otpToken": {
+      "keyword": "otpToken",
+      "count": 4,
+      "files": [
+        "kk-backend/src/models/OtpToken.js",
+        "kk-backend/src/services/auth.service.js"
+      ],
+      "samples": [
+        {
+          "file": "kk-backend/src/models/OtpToken.js",
+          "line": 13,
+          "snippet": "export default mongoose.model('OtpToken', otpSchema);"
+        },
+        {
+          "file": "kk-backend/src/services/auth.service.js",
+          "line": 4,
+          "snippet": "import OtpToken from '../models/OtpToken.js';"
+        },
+        {
+          "file": "kk-backend/src/services/auth.service.js",
+          "line": 4,
+          "snippet": "import OtpToken from '../models/OtpToken.js';"
+        }
+      ]
+    },
+    "verify.*otp": {
+      "keyword": "verify.*otp",
+      "count": 0,
+      "files": [],
+      "samples": []
+    }
+  },
+  "suggestions": [
+    "Create DashboardLayout component for user account pages",
+    "Create OrdersList and OrderDetail components",
+    "Create UserProfileForm component",
+    "Implement GET /api/orders endpoint",
+    "Create .env.example file in backend with required variables"
+  ]
+}

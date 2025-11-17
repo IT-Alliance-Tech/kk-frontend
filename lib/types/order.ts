@@ -49,6 +49,7 @@ export type OrderUser = {
  */
 export type Order = {
   _id?: string;
+  id?: string; // Some APIs might use 'id' instead of '_id'
   user?: string | OrderUser;
   items: OrderItem[];
   shippingAddress?: ShippingAddress;
