@@ -4,27 +4,29 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
+// ⭐ Local Image Imports
+import img1 from "../assets/images/hero1.png";
+import img2 from "../assets/images/hero2.png";
+import img3 from "../assets/images/hero3.png";
+
 const slides = [
   {
     id: 1,
     title: "Big Bang Sale",
     subtitle: "Up to 70% off on premium cookware",
-    image:
-      "https://prgkwuilcdaxujjflnbb.supabase.co/storage/v1/object/public/Kitchen%20kettles/Kitchen%20kettles%20product/3bf3098cd2428bc67db31e057b4ec0c4.jpg",
+    image: img1,
   },
   {
     id: 2,
     title: "Exclusive Kettles",
     subtitle: "Shop our best-selling range today",
-    image:
-      "https://prgkwuilcdaxujjflnbb.supabase.co/storage/v1/object/public/Kitchen%20kettles/Kitchen%20kettles%20product/fab9ecd3d3b39a7ee39ef3e87e083713.jpg",
+    image: img2,
   },
   {
     id: 3,
     title: "Cookware Collections",
     subtitle: "Durable, stylish, and affordable",
-    image:
-      "https://prgkwuilcdaxujjflnbb.supabase.co/storage/v1/object/public/Kitchen%20kettles/Kitchen%20kettles%20product/bb9381033ddf761710bf8bc8835a243b.jpg",
+    image: img3,
   },
 ];
 
@@ -47,15 +49,16 @@ export default function HeroCarousel() {
               i === idx ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
-            {/* TODO: replace with next/image if src is static */}
             <Image
               src={s.image}
               alt={s.title}
               fill
               className="w-full h-full object-cover"
             />
+
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/40"></div>
+
             {/* Text */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white max-w-[85%] sm:max-w-[75%] md:max-w-[65%]">
