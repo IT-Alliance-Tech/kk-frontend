@@ -1,9 +1,9 @@
 "use client";
 
-import { Phone, Mail, MapPin, User, MessageSquare, Info } from "lucide-react";
+import { Phone, Mail, MapPin, User, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ⭐ Image Imports
 import contactMainImg from "../../assets/images/contact.png";
@@ -11,7 +11,29 @@ import contactMainImg from "../../assets/images/contact.png";
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
 
-  // ✅ Handle Form Submit — API CALL FIXED HERE
+  // ⭐ Contact Info State (Dynamic)
+  const [contactData, setContactData] = useState({
+    phone: "",
+    email: "",
+    address: "",
+  });
+
+  // ⭐ Fetch Contact Info From Backend
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/contact-info"); 
+        const data = await res.json();
+        setContactData(data);
+      } catch (error) {
+        console.error("Failed to load contact info", error);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
+
+  // ⭐ Form Submit Handler
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -58,7 +80,7 @@ export default function ContactPage() {
         CONTACT US
       </motion.h1>
 
-      {/* Contact Info Section */}
+      {/* ⭐ Contact Info Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl px-6 mb-16">
 
         {/* Phone */}
@@ -70,7 +92,7 @@ export default function ContactPage() {
             <Phone className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-semibold mb-2">Phone Number</h2>
-          <p className="text-gray-700">+91 8989889880</p>
+          <p className="text-gray-700">{contactData.phone}</p>
         </motion.div>
 
         {/* Email */}
@@ -83,7 +105,7 @@ export default function ContactPage() {
           </div>
           <h2 className="text-lg font-semibold mb-2">E-mail</h2>
           <p className="text-gray-700 text-center">
-            saleskitchenkittles@gmail.com
+            {contactData.email}
           </p>
         </motion.div>
 
@@ -97,19 +119,20 @@ export default function ContactPage() {
           </div>
           <h2 className="text-lg font-semibold mb-2">Address</h2>
           <p className="text-gray-700 text-center leading-relaxed">
-            Ground floor & First floor, No. 305, Shop No. 9,
-            <br />
-            Varthur Main Road, Opp. Shani Mahatma Temple,
-            <br />
-            Gunjur, Bengaluru – 560087
+            {contactData.address.split("\n").map((line, i) => (
+              <span key={i}>
+                {line}
+                <br />
+              </span>
+            ))}
           </p>
         </motion.div>
       </div>
 
-      {/* Contact Form + Image */}
+      {/* ⭐ Contact Form + Image */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl w-full px-6">
 
-        {/* Left Image */}
+        {/* Image */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -125,7 +148,7 @@ export default function ContactPage() {
           />
         </motion.div>
 
-        {/* Form WITH API CALL */}
+        {/* Form */}
         <motion.form
           onSubmit={handleSubmit}
           initial={{ opacity: 0, x: 40 }}
