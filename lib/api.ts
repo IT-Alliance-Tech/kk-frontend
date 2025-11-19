@@ -1,17 +1,9 @@
-/**
- * lib/api.ts
- * Centralized API helper for calling your backend
- */
-
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
 
-/**
- * Generic fetch wrapper for API calls
- */
 export async function apiFetch<T = any>(
   path: string,
-  options: RequestInit = {},
+  options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
   try {
@@ -20,18 +12,17 @@ export async function apiFetch<T = any>(
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...options.headers,
+        ...(options.headers || {}),
       },
     });
+
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error(
-        `❌ API request failed: ${res.status} ${res.statusText} (${path})`,
-        text,
-      );
+      const errText = await res.text().catch(() => "");
+      console.error(`❌ API request failed: ${res.status} ${url}`, errText);
       throw new Error(`API ${path} failed (${res.status})`);
     }
-    return (await res.json()) as T;
+
+    return (await res.json().catch(() => ({}))) as T;
   } catch (err) {
     console.error("❌ Network error in apiFetch:", err);
     throw err;
@@ -46,15 +37,14 @@ export async function apiGet<T = any>(path: string): Promise<T> {
       credentials: "include",
       cache: "no-store",
     });
+
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error(
-        `❌ API GET failed: ${res.status} ${res.statusText} (${path})`,
-        text,
-      );
+      const body = await res.text().catch(() => "");
+      console.error(`❌ API GET failed ${res.status} ${url}`, body);
       throw new Error(`GET ${path} failed (${res.status})`);
     }
-    return (await res.json()) as T;
+
+    return (await res.json().catch(() => ({}))) as T;
   } catch (err) {
     console.error("❌ Network error in apiGet:", err);
     throw err;
@@ -70,22 +60,20 @@ export async function apiPost<T = any>(path: string, body: any): Promise<T> {
       credentials: "include",
       body: JSON.stringify(body),
     });
+
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error(
-        `❌ API POST failed: ${res.status} ${res.statusText} (${path})`,
-        text,
-      );
+      const msg = await res.text().catch(() => "");
+      console.error(`❌ API POST failed ${res.status} ${url}`, msg);
       throw new Error(`POST ${path} failed (${res.status})`);
     }
-    return (await res.json()) as T;
+
+    return (await res.json().catch(() => ({}))) as T;
   } catch (err) {
     console.error("❌ Network error in apiPost:", err);
     throw err;
   }
 }
 
-/** Optional helpers */
 export async function apiPut<T = any>(path: string, body: any): Promise<T> {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
@@ -94,23 +82,24 @@ export async function apiPut<T = any>(path: string, body: any): Promise<T> {
     credentials: "include",
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
+
+  if (!res.ok) throw new Error(`PUT ${path} failed (${res.status})`);
   return res.json();
 }
 
 export async function apiDelete<T = any>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, { method: "DELETE", credentials: "include" });
-  if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
+
+  if (!res.ok) throw new Error(`DELETE ${path} failed (${res.status})`);
   return res.json();
 }
 
 export function buildQueryString(params: Record<string, any>): string {
-  const searchParams = new URLSearchParams();
+  const sp = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== "")
-      searchParams.append(k, String(v));
+      sp.append(k, String(v));
   });
-  const q = searchParams.toString();
-  return q ? `?${q}` : "";
+  return sp.toString() ? `?${sp.toString()}` : "";
 }

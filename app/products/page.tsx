@@ -36,12 +36,21 @@ export default function ProductsPage() {
   const { addItem } = useCart();
   const router = useRouter();
 
-  // Fetch products from backend API
+  // Fetch products
   useEffect(() => {
     (async () => {
       try {
-        const data = await apiGet("/products");
-        setProducts(data.items || []); // always an array
+        const data = await apiGet("/products?limit=50");
+
+        // Normalize backend response
+        const items =
+          data?.items ??
+          data?.data ??
+          data?.results ??
+          data?.products ??
+          [];
+
+        setProducts(Array.isArray(items) ? items : []);
       } catch (err) {
         console.error("Failed to load products", err);
       } finally {
@@ -50,14 +59,10 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // Filter by search
-  const filtered = Array.isArray(products)
-    ? products.filter((p) =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    : [];
+  const filtered = products.filter((p) =>
+    p.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Add to cart and redirect
   const addAndGoToCart = (product: Product) => {
     addItem(
       {
@@ -66,14 +71,14 @@ export default function ProductsPage() {
         price: product.price,
         image_url: product.images?.[0] || "",
       },
-      1,
+      1
     );
     router.push("/cart");
   };
 
   return (
     <div className="bg-white min-h-screen">
-      {/* ===== Header Section ===== */}
+      {/* Header */}
       <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
@@ -85,7 +90,7 @@ export default function ProductsPage() {
 
           <div className="max-w-md">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search products..."
                 value={searchQuery}
@@ -97,11 +102,11 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* ===== Products Section ===== */}
+      {/* Products */}
       <section className="py-12">
         <div className="container mx-auto px-4">
+          {/* Loading Skeleton */}
           {loading ? (
-            // Skeleton loader
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
@@ -114,7 +119,6 @@ export default function ProductsPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            // No products found
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-900 mb-2">
@@ -122,7 +126,6 @@ export default function ProductsPage() {
               </h3>
             </div>
           ) : (
-            // Product list
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filtered.map((product) => (
                 <Card
@@ -131,28 +134,24 @@ export default function ProductsPage() {
                 >
                   <Link href={`/products/${product.slug}`}>
                     <div className="relative h-48 bg-slate-100 overflow-hidden">
-                      {product.images?.[0] ? (
-                        <img
-                          src={
-                            product.images[0].includes("via.placeholder.com")
+                      <img
+                        src={
+                          product.images?.[0]
+                            ? product.images[0].includes(
+                                "via.placeholder.com"
+                              )
                               ? product.images[0].replace(
                                   "via.placeholder.com",
-                                  "placehold.co",
+                                  "placehold.co"
                                 )
                               : product.images[0]
-                          }
-                          alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <img
-                          src={`https://placehold.co/400x400?text=${encodeURIComponent(
-                            product.title,
-                          )}`}
-                          alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      )}
+                            : `https://placehold.co/400x400?text=${encodeURIComponent(
+                                product.title
+                              )}`
+                        }
+                        alt={product.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
 
                       {product.mrp && product.mrp > product.price && (
                         <Badge className="absolute top-2 right-2 bg-red-500">

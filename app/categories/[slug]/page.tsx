@@ -9,36 +9,96 @@ export default function CategoryPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categoryName, setCategoryName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
 
-    async function fetchProducts() {
+    let cancelled = false;
+
+    async function fetchProductsForCategory() {
       try {
-        const res = await fetch(`/api/products?category=${slug}`);
-        if (!res.ok) throw new Error(`Failed: ${res.status}`);
-        const data = await res.json();
-        setProducts(data.items || []);
+        setLoading(true);
+        setError(null);
+
+        // 1) Fetch categories so we can map slug -> _id
+        const catRes = await fetch("/api/categories");
+        if (!catRes.ok) throw new Error(`Failed to load categories (${catRes.status})`);
+        const categories = await catRes.json();
+
+        // Find category by slug (support both string and possible array)
+        const normalizedSlug = Array.isArray(slug) ? slug[0] : slug;
+        const category = Array.isArray(categories)
+          ? categories.find((c: any) => c.slug === normalizedSlug || c._id === normalizedSlug)
+          : null;
+
+        if (!category) {
+          // If we can't find a matching category, show helpful message
+          throw new Error(`Category "${normalizedSlug}" not found`);
+        }
+
+        // Save pretty name for UI
+        if (!cancelled) setCategoryName(category.name ?? normalizedSlug);
+
+        // 2) Use the category _id to fetch products (backend expects id)
+        const productsRes = await fetch(`/api/products?category=${encodeURIComponent(category._id)}`);
+        if (!productsRes.ok) {
+          // Try to provide a useful message (server may return 404/500)
+          throw new Error(`Failed to load products (${productsRes.status})`);
+        }
+        const data = await productsRes.json();
+
+        if (!cancelled) {
+          setProducts(Array.isArray(data.items) ? data.items : data.items ?? data?.items ?? []);
+        }
       } catch (err: any) {
-        setError(err.message);
+        console.error("Category page error:", err);
+        if (!cancelled) setError(err.message || "Unknown error");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
-    fetchProducts();
+    fetchProductsForCategory();
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500">Error: {error}</p>;
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-4">Loading products...</h1>
+        <p>Fetching products for category…</p>
+      </div>
+    );
+  }
 
-  if (products.length === 0)
-    return <p>No products found for &quot;{slug}&quot;.</p>;
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-4">Error</h1>
+        <p className="text-red-500 mb-4">{error}</p>
+      </div>
+    );
+  }
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="container mx-auto py-8">
+        <h1 className="text-2xl font-bold mb-4">
+          Products in "{categoryName ?? slug}" category
+        </h1>
+        <p>No products found for "{categoryName ?? slug}".</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">
-        Products in &quot;{slug}&quot; category
+        Products in "{categoryName ?? slug}" category
       </h1>
       <ProductList products={products} />
     </div>
