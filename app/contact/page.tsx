@@ -3,13 +3,14 @@
 import { Phone, Mail, MapPin, User, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // ⭐ Image Imports
 import contactMainImg from "../../assets/images/contact.png";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   // ⭐ Contact Info State (Dynamic)
   const [contactData, setContactData] = useState({
@@ -22,7 +23,7 @@ export default function ContactPage() {
   useEffect(() => {
     const fetchContactInfo = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/contact-info"); 
+        const res = await fetch("http://localhost:5001/api/contact-info"); 
         const data = await res.json();
         setContactData(data);
       } catch (error) {
@@ -38,7 +39,7 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(formRef.current!);
     const data = {
       name: formData.get("name"),
       phone: formData.get("phone"),
@@ -48,7 +49,7 @@ export default function ContactPage() {
     };
 
     try {
-      const res = await fetch("/api/contact", {
+      const res = await fetch("http://localhost:5001/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -56,7 +57,7 @@ export default function ContactPage() {
 
       if (res.ok) {
         alert("Your message has been sent successfully!");
-        e.currentTarget.reset();
+        formRef.current?.reset(); // ⭐ FIXED reset error
       } else {
         alert("Something went wrong. Please try again.");
       }
@@ -119,12 +120,14 @@ export default function ContactPage() {
           </div>
           <h2 className="text-lg font-semibold mb-2">Address</h2>
           <p className="text-gray-700 text-center leading-relaxed">
-            {contactData.address.split("\n").map((line, i) => (
-              <span key={i}>
-                {line}
-                <br />
-              </span>
-            ))}
+            {contactData.address
+              ? contactData.address.split("\n").map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    <br />
+                  </span>
+                ))
+              : "Loading..."}
           </p>
         </motion.div>
       </div>
@@ -140,6 +143,7 @@ export default function ContactPage() {
           className="overflow-hidden rounded-2xl border-2 border-red-500"
         >
           <Image
+            priority
             src={contactMainImg}
             alt="Contact Image"
             width={600}
@@ -150,6 +154,7 @@ export default function ContactPage() {
 
         {/* Form */}
         <motion.form
+          ref={formRef}
           onSubmit={handleSubmit}
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
