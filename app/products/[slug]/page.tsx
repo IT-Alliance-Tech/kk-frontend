@@ -118,8 +118,6 @@ export default function ProductPage() {
     const newQty = qty - 1;
     setQty(newQty);
     removeItem(product._id);
-
-    if (newQty === 0) setQty(0);
   };
 
   return (
@@ -139,8 +137,7 @@ export default function ProductPage() {
           </div>
 
           <div className="mt-6 flex gap-3">
-
-            {/* ✅ CHANGE #1 → Renamed "Go to Cart" → "Add to Cart" */}
+            {/* ADD TO CART BUTTON */}
             <button
               onClick={increaseQty}
               className="bg-emerald-600 text-white px-6 py-2 rounded-lg shadow hover:bg-emerald-700"
@@ -155,6 +152,27 @@ export default function ProductPage() {
               Back
             </button>
           </div>
+
+          {/* NEW QTY BUTTONS — RED — CLOSE SPACING */}
+          {qty > 0 && (
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                onClick={decreaseQty}
+                className="bg-red-500 text-white w-10 h-10 rounded-full text-xl shadow"
+              >
+                -
+              </button>
+
+              <span className="text-xl font-bold">{qty}</span>
+
+              <button
+                onClick={increaseQty}
+                className="bg-red-500 text-white w-10 h-10 rounded-full text-xl shadow"
+              >
+                +
+              </button>
+            </div>
+          )}
         </div>
 
         {/* RIGHT DETAILS SECTION */}
@@ -182,29 +200,7 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* ADD TO CART / QTY */}
-          <div className="mt-8">
-
-            {/* ✅ CHANGE #2 → Removed the standalone big "Add to Cart" button */}
-
-            <div className="flex items-center gap-5">
-              <button
-                onClick={decreaseQty}
-                className="bg-red-500 text-white w-12 h-12 rounded-full text-2xl shadow"
-              >
-                -
-              </button>
-
-              <span className="text-2xl font-bold">{qty}</span>
-
-              <button
-                onClick={increaseQty}
-                className="bg-emerald-600 text-white w-12 h-12 rounded-full text-2xl shadow"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          {/* ❌ DELETED OLD QTY SECTION FROM HERE */}
 
           <div className="mt-10">
             <h2 className="text-xl font-semibold border-b pb-2">Description</h2>
