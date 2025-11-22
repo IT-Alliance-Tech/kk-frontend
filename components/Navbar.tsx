@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { ShoppingCart } from "lucide-react";
 
-
 export default function Navbar() {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -18,7 +17,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
-  // === FIX MAIN PADDING (KEEP SAME) ======================================
+  // === FIX MAIN PADDING ========================================================
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -32,14 +31,13 @@ export default function Navbar() {
 
     update();
     window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("resize", update);
-    };
+    return () => window.removeEventListener("resize", update);
   }, []);
 
-  // === SUPABASE AUTH SYNC ==================================================
+  // === SUPABASE AUTH SYNC ======================================================
   useEffect(() => {
     let unsub: any;
+
     (async () => {
       try {
         const { data } = await supabase.auth.getUser();
@@ -50,6 +48,7 @@ export default function Navbar() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
     });
+
     unsub = sub?.subscription ?? sub;
 
     return () => unsub?.unsubscribe?.();
@@ -70,7 +69,6 @@ export default function Navbar() {
       {/* ================== TOP HEADER AREA ================== */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row items-center justify-between gap-5">
-          
           {/* LOGO */}
           <Link href="/" className="flex items-center gap-3">
             {!logoError ? (
@@ -122,7 +120,6 @@ export default function Navbar() {
 
           {/* AUTH + CONTACT */}
           <div className="flex items-center gap-5 text-base font-medium">
-
             {user ? (
               <>
                 <span className="hidden sm:inline text-gray-700 max-w-[180px] truncate">
@@ -149,24 +146,25 @@ export default function Navbar() {
             )}
 
             <a
-  href="mailto:info@kitchenkettles.com"
-  className="hidden lg:inline-flex items-center gap-2 text-base text-gray-700 whitespace-nowrap"
-  aria-label="Email Kitchen Kettles"
->
-  <svg
-    className="h-5 w-5 flex-shrink-0"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    aria-hidden="true"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8" />
-    <rect x="3" y="6" width="18" height="12" rx="2" />
-  </svg>
-  <span className="leading-none">info@kitchenkettles.com</span>
-</a>
-
+              href="mailto:info@kitchenkettles.com"
+              className="hidden lg:inline-flex items-center gap-2 text-base text-gray-700 whitespace-nowrap"
+              aria-label="Email Kitchen Kettles"
+            >
+              <svg
+                className="h-5 w-5 flex-shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8" />
+                <rect x="3" y="6" width="18" height="12" rx="2" />
+              </svg>
+              <span className="leading-none">info@kitchenkettles.com</span>
+            </a>
           </div>
         </div>
       </div>
@@ -174,9 +172,9 @@ export default function Navbar() {
       {/* ================== NAVBAR MENU ================== */}
       <nav className="bg-gray-100 border-b">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-
-          {/* DESKTOP MENU */}
-          <ul className="hidden lg:flex items-center gap-10 text-lg font-semibold text-gray-800">
+          
+          {/* DESKTOP MENU — SMALLER SIZE ADDED HERE */}
+          <ul className="hidden lg:flex items-center gap-6 text-base font-semibold text-gray-800">
             <li><Link href="/" className="hover:text-emerald-600">Home</Link></li>
             <li><Link href="/products" className="hover:text-emerald-600">Products</Link></li>
             <li><Link href="/categories" className="hover:text-emerald-600">Categories</Link></li>
@@ -188,15 +186,13 @@ export default function Navbar() {
 
           {/* RIGHT SIDE CART */}
           <Link
-  href="/cart"
-  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-200 rounded text-lg font-semibold"
->
-  <ShoppingCart className="h-6 w-6" aria-hidden="true" />
-  <span className="hidden sm:inline">Cart</span>
-</Link>
-
+            href="/cart"
+            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-200 rounded text-lg font-semibold"
+          >
+            <ShoppingCart className="h-6 w-6" />
+            <span className="hidden sm:inline">Cart</span>
+          </Link>
         </div>
-
       </nav>
     </header>
   );

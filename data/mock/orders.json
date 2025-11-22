@@ -1,208 +1,32 @@
 [
   {
-    "id": "ORD-001",
-    "customer": "John Smith",
-    "email": "john.smith@email.com",
-    "date": "2025-11-16T10:30:00Z",
-    "status": "pending",
-    "total": 159.97,
-    "items": [
-      {
-        "productId": "1",
-        "productName": "Stainless Steel Kettle",
-        "quantity": 2,
-        "price": 49.99
-      },
-      {
-        "productId": "2",
-        "productName": "Glass Electric Kettle",
-        "quantity": 1,
-        "price": 59.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "123 Main St",
-      "city": "San Francisco",
-      "state": "CA",
-      "zip": "94102"
-    }
-  },
-  {
-    "id": "ORD-002",
-    "customer": "Sarah Johnson",
-    "email": "sarah.j@email.com",
-    "date": "2025-11-16T09:15:00Z",
-    "status": "processing",
+    "id": "1",
+    "orderId": "ORD-2024-001",
+    "customer": "John Doe",
+    "email": "john.doe@example.com",
+    "date": "2024-11-20T10:00:00Z",
+    "status": "delivered",
     "total": 89.99,
-    "items": [
-      {
-        "productId": "4",
-        "productName": "Variable Temperature Kettle",
-        "quantity": 1,
-        "price": 89.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "456 Oak Ave",
-      "city": "Los Angeles",
-      "state": "CA",
-      "zip": "90001"
-    }
+    "items": 3
   },
   {
-    "id": "ORD-003",
-    "customer": "Michael Chen",
-    "email": "m.chen@email.com",
-    "date": "2025-11-15T18:45:00Z",
-    "status": "shipped",
-    "total": 219.96,
-    "items": [
-      {
-        "productId": "7",
-        "productName": "Smart WiFi Kettle",
-        "quantity": 2,
-        "price": 99.99
-      },
-      {
-        "productId": "8",
-        "productName": "Eco-Friendly Bamboo Kettle",
-        "quantity": 1,
-        "price": 44.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "789 Pine Rd",
-      "city": "Seattle",
-      "state": "WA",
-      "zip": "98101"
-    }
-  },
-  {
-    "id": "ORD-004",
-    "customer": "Emily Davis",
-    "email": "emily.davis@email.com",
-    "date": "2025-11-15T14:20:00Z",
-    "status": "delivered",
-    "total": 79.99,
-    "items": [
-      {
-        "productId": "6",
-        "productName": "Copper Kettle",
-        "quantity": 1,
-        "price": 79.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "321 Elm St",
-      "city": "Portland",
-      "state": "OR",
-      "zip": "97201"
-    }
-  },
-  {
-    "id": "ORD-005",
-    "customer": "Robert Wilson",
-    "email": "r.wilson@email.com",
-    "date": "2025-11-15T11:10:00Z",
-    "status": "delivered",
-    "total": 134.97,
-    "items": [
-      {
-        "productId": "3",
-        "productName": "Ceramic Tea Kettle",
-        "quantity": 1,
-        "price": 39.99
-      },
-      {
-        "productId": "9",
-        "productName": "Vintage Enamel Kettle",
-        "quantity": 1,
-        "price": 34.99
-      },
-      {
-        "productId": "2",
-        "productName": "Glass Electric Kettle",
-        "quantity": 1,
-        "price": 59.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "555 Maple Dr",
-      "city": "Austin",
-      "state": "TX",
-      "zip": "78701"
-    }
-  },
-  {
-    "id": "ORD-006",
-    "customer": "Jennifer Martinez",
-    "email": "j.martinez@email.com",
-    "date": "2025-11-14T16:30:00Z",
-    "status": "cancelled",
-    "total": 29.99,
-    "items": [
-      {
-        "productId": "5",
-        "productName": "Travel Kettle",
-        "quantity": 1,
-        "price": 29.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "888 Cedar Ln",
-      "city": "Denver",
-      "state": "CO",
-      "zip": "80201"
-    }
-  },
-  {
-    "id": "ORD-007",
-    "customer": "David Brown",
-    "email": "d.brown@email.com",
-    "date": "2025-11-14T13:55:00Z",
+    "id": "2",
+    "orderId": "ORD-2024-002",
+    "customer": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "date": "2024-11-21T14:30:00Z",
     "status": "pending",
-    "total": 119.99,
-    "items": [
-      {
-        "productId": "10",
-        "productName": "Professional Barista Kettle",
-        "quantity": 1,
-        "price": 119.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "222 Birch Ct",
-      "city": "Boston",
-      "state": "MA",
-      "zip": "02101"
-    }
+    "total": 149.50,
+    "items": 5
   },
   {
-    "id": "ORD-008",
-    "customer": "Lisa Anderson",
-    "email": "lisa.a@email.com",
-    "date": "2025-11-14T10:20:00Z",
-    "status": "processing",
-    "total": 199.98,
-    "items": [
-      {
-        "productId": "1",
-        "productName": "Stainless Steel Kettle",
-        "quantity": 2,
-        "price": 49.99
-      },
-      {
-        "productId": "7",
-        "productName": "Smart WiFi Kettle",
-        "quantity": 1,
-        "price": 99.99
-      }
-    ],
-    "shippingAddress": {
-      "street": "999 Willow Way",
-      "city": "Miami",
-      "state": "FL",
-      "zip": "33101"
-    }
+    "id": "3",
+    "orderId": "ORD-2024-003",
+    "customer": "Bob Johnson",
+    "email": "bob.johnson@example.com",
+    "date": "2024-11-22T09:15:00Z",
+    "status": "shipped",
+    "total": 234.75,
+    "items": 7
   }
 ]
