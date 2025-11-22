@@ -23,8 +23,7 @@ export default function ContactPage() {
   useEffect(() => {
     const fetchContactInfo = async () => {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
-        const res = await fetch(`${apiBaseUrl}/api/contact/contact-info`); 
+        const res = await fetch("http://localhost:5001/api/contact-info"); 
         const data = await res.json();
         setContactData(data);
       } catch (error) {
@@ -50,24 +49,21 @@ export default function ContactPage() {
     };
 
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
-      const res = await fetch(`${apiBaseUrl}/api/contact`, {
+      const res = await fetch("http://localhost:5001/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      const result = await res.json();
-
       if (res.ok) {
-        alert(result.message || "Your message has been sent successfully!");
-        formRef.current?.reset();
+        alert("Your message has been sent successfully!");
+        formRef.current?.reset(); // ⭐ FIXED reset error
       } else {
-        alert(result.error || "Something went wrong. Please try again.");
+        alert("Something went wrong. Please try again.");
       }
     } catch (error) {
       console.error(error);
-      alert("Failed to send message. Please try again later.");
+      alert("Failed to send message");
     } finally {
       setLoading(false);
     }
