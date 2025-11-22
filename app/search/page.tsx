@@ -3,13 +3,14 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
+import { apiGet } from "@/lib/api"; // ← your existing apiGet function
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
+
   const [products, setProducts] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -18,16 +19,18 @@ export default function SearchPage() {
   const fetchSearchResults = useCallback(async () => {
     setLoading(true);
     try {
+      // ---- Call your backend APIs ----
       const [pRes, bRes, cRes] = await Promise.all([
-        supabase.from("products").select("*").ilike("name", `%${q}%`),
-        supabase.from("brands").select("*").ilike("name", `%${q}%`),
-        supabase.from("categories").select("*").ilike("name", `%${q}%`),
+        apiGet(`/search/products?q=${q}`),
+        apiGet(`/search/brands?q=${q}`),
+        apiGet(`/search/categories?q=${q}`),
       ]);
-      setProducts(pRes.data ?? []);
-      setBrands(bRes.data ?? []);
-      setCategories(cRes.data ?? []);
+
+      setProducts(pRes?.data || []);
+      setBrands(bRes?.data || []);
+      setCategories(cRes?.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Search error:", err);
     } finally {
       setLoading(false);
     }
@@ -69,7 +72,6 @@ export default function SearchPage() {
                     className="p-4 bg-white rounded shadow flex items-center justify-center"
                   >
                     {b.logo_url ? (
-                      /* TODO: replace with next/image if src is static */
                       <Image
                         src={b.logo_url}
                         alt={b.name}
@@ -93,7 +95,7 @@ export default function SearchPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {categories.map((c) => (
                   <Link
-                    key={c.z}
+                    key={c.id}
                     href={`/categories/${c.slug}`}
                     className="p-4 bg-emerald-50 rounded shadow text-center font-medium"
                   >
