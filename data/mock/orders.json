@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "orderId": "ORD-2024-001",
+    "customer": "John Doe",
+    "email": "john.doe@example.com",
+    "date": "2024-11-20T10:00:00Z",
+    "status": "delivered",
+    "total": 89.99,
+    "items": 3
+  },
+  {
+    "id": "2",
+    "orderId": "ORD-2024-002",
+    "customer": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "date": "2024-11-21T14:30:00Z",
+    "status": "pending",
+    "total": 149.50,
+    "items": 5
+  },
+  {
+    "id": "3",
+    "orderId": "ORD-2024-003",
+    "customer": "Bob Johnson",
+    "email": "bob.johnson@example.com",
+    "date": "2024-11-22T09:15:00Z",
+    "status": "shipped",
+    "total": 234.75,
+    "items": 7
+  }
+]

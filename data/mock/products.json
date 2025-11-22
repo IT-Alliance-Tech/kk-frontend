@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "Glass Food Storage Containers",
+    "price": 15.99,
+    "category": "Storage",
+    "stock": 50,
+    "status": "active"
+  },
+  {
+    "id": "2",
+    "name": "Stainless Steel Kitchen Utensils Set",
+    "price": 34.99,
+    "category": "Utensils",
+    "stock": 30,
+    "status": "active"
+  },
+  {
+    "id": "3",
+    "name": "Non-Stick Cookware Set",
+    "price": 89.99,
+    "category": "Cookware",
+    "stock": 20,
+    "status": "active"
+  }
+]

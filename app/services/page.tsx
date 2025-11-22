@@ -3,8 +3,8 @@ import Image from "next/image";
 import { Truck, Shield, RefreshCcw, Headphones as HeadphonesIcon, CreditCard, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// ⭐ Import Repair Service Image
-import repairImage from "../../assets/images/service .png";
+// Use fallback image since service.png doesn't exist
+import repairImage from "../../assets/images/kitchen.png";
 
 export const metadata: Metadata = {
   title: "Our Services - Kitchen Kettels",
