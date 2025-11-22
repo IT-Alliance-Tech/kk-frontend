@@ -30,7 +30,6 @@ export default function CategoriesPage() {
         setLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
@@ -64,31 +63,25 @@ export default function CategoriesPage() {
   }
 
   if (error) return <p className="text-red-500">Error: {error}</p>;
-
-  if (!categories || categories.length === 0)
-    return <p>No categories found.</p>;
+  if (!categories.length) return <p>No categories found.</p>;
 
   return (
     <div className="bg-white min-h-screen">
-      {/* HEADER SECTION */}
       <section className="bg-gradient-to-br from-emerald-200 via-emerald-100 to-teal-100 py-16 shadow-inner">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
             Shop by Category
           </h1>
-          <p className="text-slate-700">
-            Find the perfect kitchen tools for your needs
-          </p>
+          <p className="text-slate-700">Find the perfect kitchen tools for your needs</p>
         </div>
       </section>
 
-      {/* CATEGORY GRID */}
       <section className="py-14">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {categories.map((category) => (
               <Link
-                key={category._id || category.slug}
+                key={category._id}
                 href={`/categories/${category.slug}`}
                 className="group"
               >
@@ -106,8 +99,6 @@ export default function CategoriesPage() {
                         height={600}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-
-                      {/* Small overlay badge */}
                       <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-slate-700 shadow">
                         {category.slug}
                       </div>

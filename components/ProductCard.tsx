@@ -1,7 +1,7 @@
 "use client";
+
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCart } from "@/components/CartContext"; // ✅ fixed import
+import { useCart } from "@/components/CartContext";
 import { useToast } from "@/components/ToastContext";
 import { useState } from "react";
 import Image from "next/image";
@@ -13,33 +13,31 @@ export default function ProductCard({ product }: any) {
   const { showToast } = useToast();
   const [adding, setAdding] = useState(false);
 
-  // Find current quantity in cart
   const cartItem = items.find((item) => item.id === product.id);
   const currentQty = cartItem?.qty || 0;
+
+  const imgSrc = normalizeSrc(product.images);
 
   const handleQuantityChange = (newQty: number) => {
     try {
       if (newQty === 0) {
-        // Remove from cart
         removeItem(product.id);
         showToast("Removed from cart", "success");
       } else if (currentQty === 0) {
-        // Add to cart for first time
         addItem(
           {
             id: product.id,
             name: product.name,
             price: product.price,
-            image_url: product.images?.[0] ?? null,
+            image_url: imgSrc,
           },
-          newQty,
+          newQty
         );
         showToast("Added to cart!", "success");
       } else {
-        // Update quantity
         updateQty(product.id, newQty);
       }
-    } catch (err) {
+    } catch {
       showToast("Failed to update cart", "error");
     }
   };
@@ -47,15 +45,16 @@ export default function ProductCard({ product }: any) {
   const onAdd = async (e: any) => {
     e.stopPropagation();
     setAdding(true);
+
     try {
       addItem({
         id: product.id,
         name: product.name,
         price: product.price,
-        image_url: product.images?.[0] ?? null,
+        image_url: imgSrc,
       });
       showToast("Added to cart!", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to add", "error");
     } finally {
       setAdding(false);
@@ -64,34 +63,32 @@ export default function ProductCard({ product }: any) {
 
   return (
     <div className="bg-white border rounded-lg overflow-hidden flex flex-col h-full min-h-[320px] md:min-h-[360px] hover:shadow-lg transition-shadow">
+
       <Link href={`/products/${product.slug}`}>
         <div className="h-36 sm:h-40 md:h-48 w-full overflow-hidden bg-gray-100">
-          {product.images ? (
-            <Image
-              src={normalizeSrc(product.images)}
-              alt={product.name ?? "Product image"}
-              width={300}
-              height={300}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              unoptimized={product.images?.startsWith("http")}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center text-xs sm:text-sm text-gray-400">
-              No Image
-            </div>
-          )}
+          <Image
+            src={imgSrc}
+            alt={product.name ?? "Product image"}
+            width={300}
+            height={300}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            unoptimized={imgSrc.startsWith("http")}
+          />
         </div>
       </Link>
+
       <div className="p-2 sm:p-3 flex flex-col flex-1">
         <Link href={`/products/${product.slug}`} className="flex-1">
           <h3 className="font-medium line-clamp-2 text-xs sm:text-sm md:text-base">
             {product.name}
           </h3>
         </Link>
+
         <div className="mt-4 flex items-center justify-between gap-2">
           <div className="text-sm sm:text-base md:text-lg font-bold text-emerald-600">
             ₹{product.price}
           </div>
+
           {currentQty > 0 ? (
             <QuantitySelector
               value={currentQty}

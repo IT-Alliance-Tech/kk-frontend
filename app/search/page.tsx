@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import { apiGet } from "@/lib/api"; // ← your existing apiGet function
+import { apiGet } from "@/lib/api";
+import { normalizeSrc } from "@/lib/normalizeSrc";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -18,8 +19,8 @@ export default function SearchPage() {
 
   const fetchSearchResults = useCallback(async () => {
     setLoading(true);
+
     try {
-      // ---- Call your backend APIs ----
       const [pRes, bRes, cRes] = await Promise.all([
         apiGet(`/search/products?q=${q}`),
         apiGet(`/search/brands?q=${q}`),
@@ -42,13 +43,14 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Search results for “{q}”</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Search results for “{q}”
+      </h1>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         <>
-          {/* Products */}
           {products.length > 0 && (
             <>
               <h2 className="text-xl font-semibold mb-3">Products</h2>
@@ -60,7 +62,6 @@ export default function SearchPage() {
             </>
           )}
 
-          {/* Brands */}
           {brands.length > 0 && (
             <>
               <h2 className="text-xl font-semibold mb-3">Brands</h2>
@@ -71,24 +72,19 @@ export default function SearchPage() {
                     href={`/brands/${b.slug}`}
                     className="p-4 bg-white rounded shadow flex items-center justify-center"
                   >
-                    {b.logo_url ? (
-                      <Image
-                        src={b.logo_url}
-                        alt={b.name}
-                        width={48}
-                        height={48}
-                        className="h-12 object-contain"
-                      />
-                    ) : (
-                      <span>{b.name}</span>
-                    )}
+                    <Image
+                      src={normalizeSrc(b.logo_url)}
+                      alt={b.name}
+                      width={48}
+                      height={48}
+                      className="h-12 object-contain"
+                    />
                   </Link>
                 ))}
               </div>
             </>
           )}
 
-          {/* Categories */}
           {categories.length > 0 && (
             <>
               <h2 className="text-xl font-semibold mb-3">Categories</h2>
