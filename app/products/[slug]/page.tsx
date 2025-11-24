@@ -136,14 +136,18 @@ export default function ProductPage() {
             />
           </div>
 
+          {/* ➤ ADD TO CART OR QTY CONTROLLER */}
           <div className="mt-6 flex gap-3">
-            {/* ADD TO CART BUTTON */}
-            <button
-              onClick={increaseQty}
-              className="bg-emerald-600 text-white px-6 py-2 rounded-lg shadow hover:bg-emerald-700"
-            >
-              Add to Cart
-            </button>
+
+            {/* ADD TO CART BUTTON TURNS INTO QTY UI */}
+            {qty === 0 ? (
+              <button
+                onClick={increaseQty}
+                className="bg-emerald-600 text-white px-6 py-2 rounded-full shadow hover:bg-emerald-700"
+              >
+                Add to Cart
+              </button>
+            ) : null}
 
             <button
               onClick={() => router.push("/products")}
@@ -153,24 +157,31 @@ export default function ProductPage() {
             </button>
           </div>
 
-          {/* NEW QTY BUTTONS — RED — CLOSE SPACING */}
+          {/* ⭐ NEW QTY UI EXACTLY LIKE YOUR IMAGE */}
           {qty > 0 && (
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                onClick={decreaseQty}
-                className="bg-red-500 text-white w-10 h-10 rounded-full text-xl shadow"
-              >
-                -
-              </button>
+            <div className="mt-4">
+              <div className="
+                flex items-center 
+                bg-white border rounded-full 
+                px-4 py-2 
+                shadow-sm gap-4
+              ">
+                <button
+                  onClick={decreaseQty}
+                  className="text-red-500 text-2xl font-bold"
+                >
+                  −
+                </button>
 
-              <span className="text-xl font-bold">{qty}</span>
+                <span className="text-lg font-semibold">{qty}</span>
 
-              <button
-                onClick={increaseQty}
-                className="bg-red-500 text-white w-10 h-10 rounded-full text-xl shadow"
-              >
-                +
-              </button>
+                <button
+                  onClick={increaseQty}
+                  className="text-red-500 text-2xl font-bold"
+                >
+                  +
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -183,15 +194,22 @@ export default function ProductPage() {
 
           <div className="mt-3 text-slate-600 space-y-1">
             {product.brand?.name && (
-              <p>Brand: <span className="font-medium">{product.brand.name}</span></p>
+              <p>
+                Brand: <span className="font-medium">{product.brand.name}</span>
+              </p>
             )}
             {product.category?.name && (
-              <p>Category: <span className="font-medium">{product.category.name}</span></p>
+              <p>
+                Category:{" "}
+                <span className="font-medium">{product.category.name}</span>
+              </p>
             )}
           </div>
 
           <div className="mt-6 flex items-end gap-3">
-            <p className="text-4xl font-bold text-emerald-600">₹{product.price}</p>
+            <p className="text-4xl font-bold text-emerald-600">
+              ₹{product.price}
+            </p>
 
             {product.mrp && product.mrp > product.price && (
               <span className="line-through text-slate-400 text-xl">
@@ -200,17 +218,19 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* ❌ DELETED OLD QTY SECTION FROM HERE */}
-
           <div className="mt-10">
-            <h2 className="text-xl font-semibold border-b pb-2">Description</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Description
+            </h2>
             <p className="text-slate-700 mt-3 leading-relaxed">
               {product.description ?? "No description available."}
             </p>
           </div>
 
           <div className="mt-10">
-            <h2 className="text-xl font-semibold border-b pb-2">Specifications</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Specifications
+            </h2>
             <ul className="list-disc ml-6 mt-3 space-y-1 text-slate-700">
               <li>Brand: {product.brand?.name ?? "—"}</li>
               <li>Category: {product.category?.name ?? "—"}</li>
@@ -226,7 +246,6 @@ export default function ProductPage() {
               {product.mrp !== undefined && <li>MRP: ₹{product.mrp}</li>}
             </ul>
           </div>
-
         </div>
       </div>
     </div>
