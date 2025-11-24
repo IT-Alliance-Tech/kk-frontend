@@ -37,14 +37,18 @@ export default function CategoryPage() {
 
         // Fetch products using category._id
         const prodRes = await fetch(
-          `/api/products?category=${encodeURIComponent(category._id)}`
+          `/api/products?category=${encodeURIComponent(category._id)}`,
+          { cache: "no-store" }
         );
-        if (!prodRes.ok) throw new Error(`Failed to load products`);
+        if (!prodRes.ok) {
+          const errorData = await prodRes.json().catch(() => ({ error: "Failed to load products" }));
+          throw new Error(errorData.error || `Failed to load products`);
+        }
 
         const data = await prodRes.json();
 
-        // Backend returns:  { items: [...] }
-        const items = Array.isArray(data.items) ? data.items : [];
+        // Backend returns:  { items: [...], total, page, pages }
+        const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
 
         setProducts(items);
       } catch (err: any) {

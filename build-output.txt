@@ -1,0 +1,126 @@
+   Creating an optimized production build...
+ ✓ Compiled successfully
+   Linting and checking validity of types...
+
+./app/admin/products/page.tsx
+51:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+51:17  Warning: img elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data...
+   Generating static pages (0/41)...
+   Generating static pages (10/41)
+
+ ⚠ Entire page /confirmation deopted into client-side rendering. https://nextjs.org/docs/messages/deopted-into-client-rendering /confirmation
+   Generating static pages (20/41)
+
+ ⚠ Entire page /checkout deopted into client-side rendering. https://nextjs.org/docs/messages/deopted-into-client-rendering /checkout
+❌ Network error in apiFetch: TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1134:18)
+      at afterConnectMultiple (node:net:1715:7)
+      at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
+Failed to fetch brands: TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1134:18)
+      at afterConnectMultiple (node:net:1715:7)
+      at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
+ ⚠ Entire page /search deopted into client-side rendering. https://nextjs.org/docs/messages/deopted-into-client-rendering /search
+ ⚠ Entire page /products deopted into client-side rendering. https://nextjs.org/docs/messages/deopted-into-client-rendering /products
+   Generating static pages (30/41)
+
+❌ Network error in apiFetch: TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1134:18)
+      at afterConnectMultiple (node:net:1715:7)
+      at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
+Failed to fetch brands: TypeError: fetch failed
+    at node:internal/deps/undici/undici:14900:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1134:18)
+      at afterConnectMultiple (node:net:1715:7)
+      at TCPConnectWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
+ ✓ Generating static pages (41/41)
+   Finalizing page optimization...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    3.25 kB         153 kB
+├ ○ /_not-found                          873 B          83.6 kB
+├ ○ /about                               1.27 kB          89 kB
+├ ○ /account                             1.78 kB        98.4 kB
+├ ○ /account/addresses                   941 B          97.5 kB
+├ ○ /account/orders                      3.28 kB        99.9 kB
+├ λ /account/orders/[id]                 4.22 kB         101 kB
+├ ○ /account/profile                     2.26 kB        98.8 kB
+├ ○ /account/wishlist                    704 B          97.3 kB
+├ ○ /admin                               175 B          89.6 kB
+├ ○ /admin/login                         3.04 kB        85.8 kB
+├ ○ /admin/orders                        3.38 kB        86.1 kB
+├ ○ /admin/products                      2.93 kB        92.4 kB
+├ ○ /admin/users                         2.65 kB        85.4 kB
+├ λ /api/categories                      0 B                0 B
+├ λ /api/products                        0 B                0 B
+├ λ /api/razorpay/order                  0 B                0 B
+├ λ /api/razorpay/verify                 0 B                0 B
+├ ○ /auth/request                        393 B          83.1 kB
+├ ○ /auth/verify                         393 B          83.1 kB
+├ ○ /brands                              188 B          94.6 kB
+├ λ /brands/[slug]                       456 B          88.2 kB
+├ ○ /cart                                5.11 kB        92.8 kB
+├ ○ /categories                          4.13 kB         106 kB
+├ λ /categories/[slug]                   2.89 kB         101 kB
+├ ○ /checkout                            3.63 kB         148 kB
+├ ○ /confirmation                        1.15 kB         141 kB
+├ ○ /contact                             40.2 kB         128 kB
+├ ○ /coupons                             965 B           140 kB
+├ λ /login                               138 B          86.7 kB
+├ ○ /login/forgot-password               886 B           147 kB
+├ ○ /orders                              5.04 kB        94.5 kB
+├ λ /orders/[id]                         7.83 kB        97.9 kB
+├ ○ /orders/create                       7.49 kB        97.5 kB
+├ ○ /payment                             8.69 kB        98.1 kB
+├ ○ /privacy-policy                      152 B          82.9 kB
+├ ○ /products                            7.28 kB         109 kB
+├ λ /products/[slug]                     12 kB           117 kB
+├ ○ /register                            138 B          86.7 kB
+├ λ /request                             138 B          86.7 kB
+├ ○ /search                              3.35 kB         101 kB
+├ ○ /seller                              3.77 kB         150 kB
+├ ○ /services                            669 B          88.4 kB
+├ ○ /shipping-policy                     152 B          82.9 kB
+├ ○ /signup                              138 B          86.7 kB
+├ ○ /terms-and-conditions                152 B          82.9 kB
+└ λ /verify                              4.32 kB          87 kB
++ First Load JS shared by all            82.7 kB
+  ├ chunks/1179-e06d93a0bf14fcfe.js      27.1 kB
+  ├ chunks/bf6a786c-4fc5610f064c3fba.js  53.6 kB
+  ├ chunks/main-app-014be7676fb0dc31.js  222 B
+  └ chunks/webpack-40305053f4004019.js   1.75 kB
+
+
+λ  (Server)  server-side renders at runtime (uses getInitialProps or getServerSideProps)
+○  (Static)  automatically rendered as static HTML (uses no initial props)
+
