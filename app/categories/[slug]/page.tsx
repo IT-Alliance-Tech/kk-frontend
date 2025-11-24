@@ -6,6 +6,7 @@ import ProductList from "@/components/Products";
 
 export default function CategoryPage() {
   const { slug } = useParams();
+
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,63 +15,53 @@ export default function CategoryPage() {
   useEffect(() => {
     if (!slug) return;
 
-    let cancelled = false;
-
-    async function fetchProductsForCategory() {
+    async function loadCategoryProducts() {
       try {
         setLoading(true);
         setError(null);
 
-        // 1) Fetch categories so we can map slug -> _id
-        const catRes = await fetch("/api/categories");
-        if (!catRes.ok) throw new Error(`Failed to load categories (${catRes.status})`);
-        const categories = await catRes.json();
-
-        // Find category by slug (support both string and possible array)
         const normalizedSlug = Array.isArray(slug) ? slug[0] : slug;
-        const category = Array.isArray(categories)
-          ? categories.find((c: any) => c.slug === normalizedSlug || c._id === normalizedSlug)
-          : null;
 
-        if (!category) {
-          // If we can't find a matching category, show helpful message
-          throw new Error(`Category "${normalizedSlug}" not found`);
-        }
+        // Fetch category list to get _id
+        const catRes = await fetch("/api/categories");
+        if (!catRes.ok) throw new Error(`Failed to load categories`);
+        const categoryList = await catRes.json();
 
-        // Save pretty name for UI
-        if (!cancelled) setCategoryName(category.name ?? normalizedSlug);
+        const category = categoryList.find(
+          (c: any) => c.slug === normalizedSlug
+        );
 
-        // 2) Use the category _id to fetch products (backend expects id)
-        const productsRes = await fetch(`/api/products?category=${encodeURIComponent(category._id)}`);
-        if (!productsRes.ok) {
-          // Try to provide a useful message (server may return 404/500)
-          throw new Error(`Failed to load products (${productsRes.status})`);
-        }
-        const data = await productsRes.json();
+        if (!category) throw new Error(`Category "${normalizedSlug}" not found`);
 
-        if (!cancelled) {
-          setProducts(Array.isArray(data.items) ? data.items : data.items ?? data?.items ?? []);
-        }
+        setCategoryName(category.name);
+
+        // Fetch products using category._id
+        const prodRes = await fetch(
+          `/api/products?category=${encodeURIComponent(category._id)}`
+        );
+        if (!prodRes.ok) throw new Error(`Failed to load products`);
+
+        const data = await prodRes.json();
+
+        // Backend returns:  { items: [...] }
+        const items = Array.isArray(data.items) ? data.items : [];
+
+        setProducts(items);
       } catch (err: any) {
-        console.error("Category page error:", err);
-        if (!cancelled) setError(err.message || "Unknown error");
+        setError(err.message || "Unknown error");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     }
 
-    fetchProductsForCategory();
-
-    return () => {
-      cancelled = true;
-    };
+    loadCategoryProducts();
   }, [slug]);
 
   if (loading) {
     return (
       <div className="container mx-auto py-8">
         <h1 className="text-2xl font-bold mb-4">Loading products...</h1>
-        <p>Fetching products for category…</p>
+        <p>Fetching products for this category…</p>
       </div>
     );
   }
@@ -79,18 +70,7 @@ export default function CategoryPage() {
     return (
       <div className="container mx-auto py-8">
         <h1 className="text-2xl font-bold mb-4">Error</h1>
-        <p className="text-red-500 mb-4">{error}</p>
-      </div>
-    );
-  }
-
-  if (!products || products.length === 0) {
-    return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold mb-4">
-          Products in &quot;{categoryName ?? slug}&quot; category
-        </h1>
-        <p>No products found for &quot;{categoryName ?? slug}&quot;.</p>
+        <p className="text-red-500">{error}</p>
       </div>
     );
   }
@@ -100,7 +80,12 @@ export default function CategoryPage() {
       <h1 className="text-2xl font-bold mb-4">
         Products in &quot;{categoryName ?? slug}&quot; category
       </h1>
-      <ProductList products={products} />
+
+      {products.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <ProductList products={products} />
+      )}
     </div>
   );
 }

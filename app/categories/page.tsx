@@ -30,30 +30,29 @@ export default function CategoriesPage() {
         setLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
   if (loading) {
     return (
       <div className="bg-white min-h-screen">
-        <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
+        <section className="bg-gradient-to-br from-emerald-200 via-emerald-100 to-teal-100 py-16 shadow-inner">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            <h1 className="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
               Shop by Category
             </h1>
-            <p className="text-slate-600">
+            <p className="text-slate-700">
               Find the perfect kitchen tools for your needs
             </p>
           </div>
         </section>
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="animate-pulse h-48 bg-gray-200 rounded-xl"
+                  className="animate-pulse h-56 bg-gray-200 rounded-2xl shadow"
                 />
               ))}
             </div>
@@ -64,53 +63,59 @@ export default function CategoriesPage() {
   }
 
   if (error) return <p className="text-red-500">Error: {error}</p>;
-
-  if (!categories || categories.length === 0)
-    return <p>No categories found.</p>;
+  if (!categories.length) return <p>No categories found.</p>;
 
   return (
     <div className="bg-white min-h-screen">
-      <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
+      <section className="bg-gradient-to-br from-emerald-200 via-emerald-100 to-teal-100 py-16 shadow-inner">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+          <h1 className="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
             Shop by Category
           </h1>
-          <p className="text-slate-600">
-            Find the perfect kitchen tools for your needs
-          </p>
+          <p className="text-slate-700">Find the perfect kitchen tools for your needs</p>
         </div>
       </section>
 
-      <section className="py-12">
+      <section className="py-14">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {categories.map((category) => (
               <Link
-                key={category._id || category.slug}
+                key={category._id}
                 href={`/categories/${category.slug}`}
+                className="group"
               >
-                <div className="border p-6 rounded-xl hover:shadow-lg transition-shadow cursor-pointer bg-white">
+                <div className="
+                  bg-white border border-gray-100 rounded-2xl shadow-sm 
+                  hover:shadow-xl hover:-translate-y-1 hover:border-emerald-300 
+                  transition-all duration-300 cursor-pointer overflow-hidden
+                ">
                   {category.image_url && (
-                    <div className="mb-4 h-48 overflow-hidden rounded-lg">
+                    <div className="relative h-52 w-full overflow-hidden">
                       <Image
                         src={category.image_url}
                         alt={category.name}
-                        width={600}
-                        height={400}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform"
-                        style={{ width: "100%", height: "auto" }} // fix aspect ratio warning
+                        width={800}
+                        height={600}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
+                      <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-slate-700 shadow">
+                        {category.slug}
+                      </div>
                     </div>
                   )}
-                  <h2 className="text-xl font-semibold text-slate-900 mb-2 hover:text-emerald-600 transition-colors">
-                    {category.name}
-                  </h2>
-                  {category.description && (
-                    <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-                      {category.description}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-400">{category.slug}</p>
+
+                  <div className="p-6">
+                    <h2 className="text-2xl font-semibold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                      {category.name}
+                    </h2>
+
+                    {category.description && (
+                      <p className="text-sm text-slate-600 line-clamp-2">
+                        {category.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
