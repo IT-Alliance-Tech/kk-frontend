@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { apiGetAuth } from "@/lib/api";
+import { apiGet } from "@/lib/api";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -22,7 +22,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     async function loadOrders() {
       try {
-        const res = await apiGetAuth("/admin/orders");
+        const res = await apiGet("/admin/orders");
 
         // Backend gives: { ok: true, data: [...] }
         const ordersList = res.data || [];

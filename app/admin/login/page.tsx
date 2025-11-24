@@ -1,8 +1,9 @@
+// kk-frontend/app/admin/login/page.tsx
 "use client";
 
-import { useState } from "react";
-import { adminLogin } from "@/lib/admin";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { adminLogin } from "@/lib/admin";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -11,49 +12,68 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      await adminLogin(email, password);
-      router.push("/admin/products");
-    } catch (err) {
-      setError("Invalid email or password");
+      const res = await adminLogin(email.trim(), password);
+      if (res && res.token) {
+        localStorage.setItem("adminToken", res.token);
+        localStorage.setItem("adminUser", JSON.stringify(res.admin || {}));
+        router.push("/admin");
+        return;
+      }
+      setError("Login failed: no token returned");
+    } catch (err: any) {
+      console.error("Admin login error:", err);
+      setError(err?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-sm mx-auto mt-24 bg-white shadow p-6 rounded">
-      <h2 className="text-xl font-semibold mb-4 text-center">Admin Login</h2>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="w-full py-4 px-6 bg-white shadow-sm">
+        <div className="max-w-6xl mx-auto font-semibold">Kitchen Kettles — Admin</div>
+      </header>
 
-      {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-sm bg-white rounded-md p-6 shadow-md">
+          <h2 className="text-center text-lg font-semibold mb-4">Admin Login</h2>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              type="email"
+              required
+              className="w-full border px-3 py-2 rounded"
+            />
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              type="password"
+              required
+              className="w-full border px-3 py-2 rounded"
+            />
+            {error && <div className="text-sm text-red-600">{error}</div>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-black text-white py-2 rounded mt-2"
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full border p-2 mb-3 rounded"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full border p-2 mb-3 rounded"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button
-          className="w-full bg-black text-white py-2 rounded"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+      <footer className="w-full py-4 px-6 bg-white text-center">
+        <div className="max-w-6xl mx-auto text-sm text-gray-600">© Kitchen Kettles</div>
+      </footer>
     </div>
   );
 }
