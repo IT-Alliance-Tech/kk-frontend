@@ -1,48 +1,129 @@
 // components/AddProductForm.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AddProductForm() {
   const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [brandId, setBrandId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [price, setPrice] = useState("");
+  const [mrp, setMrp] = useState("");
+  const [stock, setStock] = useState("");
+  const [images, setImages] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  
+  const [brands, setBrands] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  
   const [status, setStatus] = useState("");
   const router = useRouter();
 
+  // Fetch brands and categories on mount
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [brandsRes, categoriesRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/brands`),
+          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/categories`)
+        ]);
+        
+        if (brandsRes.ok) {
+          const brandsData = await brandsRes.json();
+          setBrands(brandsData.items || brandsData.brands || []);
+        }
+        
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json();
+          setCategories(categoriesData.items || categoriesData.categories || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch brands/categories:", err);
+      }
+    }
+    fetchData();
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!title.trim()) {
+      setStatus("Title is required");
+      return;
+    }
+    if (!brandId) {
+      setStatus("Brand is required");
+      return;
+    }
+    if (!categoryId) {
+      setStatus("Category is required");
+      return;
+    }
+    if (!price || parseFloat(price) <= 0) {
+      setStatus("Valid price is required");
+      return;
+    }
+    if (!mrp || parseFloat(mrp) <= 0) {
+      setStatus("Valid MRP is required");
+      return;
+    }
+    if (parseFloat(price) > parseFloat(mrp)) {
+      setStatus("Price cannot be greater than MRP");
+      return;
+    }
+    if (stock && parseFloat(stock) < 0) {
+      setStatus("Stock cannot be negative");
+      return;
+    }
+    
     setStatus("Saving...");
     try {
-      // If you need to upload file:
-      const form = new FormData();
-      form.append("title", title);
-      form.append("price", price);
-      form.append("category", category);
-      form.append("description", description);
-      if (file) form.append("image", file);
+      // Parse images (comma-separated URLs or empty)
+      const imageArray = images.trim() 
+        ? images.split(',').map(url => url.trim()).filter(url => url.length > 0)
+        : [];
+      
+      const payload = {
+        title: title.trim(),
+        brandId,
+        categoryId,
+        description: description.trim(),
+        price: parseFloat(price),
+        mrp: parseFloat(mrp),
+        stock: stock ? parseFloat(stock) : 0,
+        images: imageArray,
+        isActive
+      };
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`,
         {
           method: "POST",
-          body: form, // backend should accept multipart/form-data
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         },
       );
 
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "Create failed");
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Create failed");
       }
 
       setStatus("Created");
+      // Reset form
       setTitle("");
-      setPrice("");
-      setCategory("");
       setDescription("");
-      setFile(null);
+      setBrandId("");
+      setCategoryId("");
+      setPrice("");
+      setMrp("");
+      setStock("");
+      setImages("");
+      setIsActive(true);
       router.refresh();
     } catch (err: any) {
       setStatus(err.message || "Error");
@@ -51,41 +132,107 @@ export default function AddProductForm() {
 
   return (
     <form onSubmit={onSubmit} className="mb-6 space-y-2">
-      <div className="flex gap-2">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          required
-          className="border p-2 rounded flex-1"
-        />
-        <input
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="Price"
-          required
-          className="border p-2 rounded w-28"
-        />
-      </div>
-
+      {/* Title */}
       <input
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        placeholder="Category slug"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Title *"
         required
         className="border p-2 rounded w-full"
       />
+
+      {/* Description */}
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Description"
+        rows={3}
         className="border p-2 rounded w-full"
       />
 
+      {/* Brand Dropdown */}
+      <select
+        value={brandId}
+        onChange={(e) => setBrandId(e.target.value)}
+        required
+        className="border p-2 rounded w-full"
+      >
+        <option value="">Select Brand *</option>
+        {brands.map((brand) => (
+          <option key={brand._id} value={brand._id}>
+            {brand.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Category Dropdown */}
+      <select
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+        required
+        className="border p-2 rounded w-full"
+      >
+        <option value="">Select Category *</option>
+        {categories.map((category) => (
+          <option key={category._id} value={category._id}>
+            {category.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Price and MRP */}
+      <div className="flex gap-2">
+        <input
+          type="number"
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="Price *"
+          required
+          className="border p-2 rounded flex-1"
+        />
+        <input
+          type="number"
+          step="0.01"
+          value={mrp}
+          onChange={(e) => setMrp(e.target.value)}
+          placeholder="MRP *"
+          required
+          className="border p-2 rounded flex-1"
+        />
+      </div>
+
+      {/* Stock */}
       <input
-        type="file"
-        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        type="number"
+        step="1"
+        value={stock}
+        onChange={(e) => setStock(e.target.value)}
+        placeholder="Stock (default: 0)"
+        className="border p-2 rounded w-full"
       />
+
+      {/* Images (optional) */}
+      <input
+        value={images}
+        onChange={(e) => setImages(e.target.value)}
+        placeholder="Image URLs (comma-separated, optional)"
+        className="border p-2 rounded w-full"
+      />
+
+      {/* isActive Toggle */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
+          className="w-4 h-4"
+        />
+        <label htmlFor="isActive" className="text-sm">
+          Active
+        </label>
+      </div>
 
       <div>
         <button
