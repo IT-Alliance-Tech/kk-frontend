@@ -120,7 +120,9 @@ export default function ProductsPage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No products found</h3>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                No products found
+              </h3>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -166,33 +168,56 @@ export default function ProductsPage() {
                       <div className="flex items-center gap-2">
                         <span className="text-xl font-bold">₹{product.price}</span>
                         {product.mrp && product.mrp > product.price && (
-                          <span className="text-sm text-slate-500 line-through">₹{product.mrp}</span>
+                          <span className="text-sm text-slate-500 line-through">
+                            ₹{product.mrp}
+                          </span>
                         )}
                       </div>
                     </CardContent>
 
+                    {/* ------------------------------ */}
+                    {/* CUSTOM ADD TO CART + QTY UI   */}
+                    {/* ------------------------------ */}
+
                     <CardFooter>
                       {qty === 0 ? (
-                        <Button
-                          className="w-full"
+                        <button
                           onClick={() => increaseQty(product)}
                           disabled={product.stock === 0}
+                          className="
+                            w-full flex items-center justify-center gap-2 
+                            bg-black text-white py-3 rounded-md 
+                            hover:bg-gray-900 transition
+                          "
                         >
-                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          <ShoppingCart size={18} />
                           {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-                        </Button>
+                        </button>
                       ) : (
-                        <div className="flex items-center justify-between w-full">
+                        <div
+                          className="
+                            flex items-center justify-center gap-6 
+                            bg-white border border-gray-300 
+                            rounded-full px-4 py-2 shadow-sm w-full
+                          "
+                        >
+                          {/* - */}
                           <button
                             onClick={() => decreaseQty(product)}
-                            className="bg-red-500 text-white w-10 h-10 rounded-full text-xl"
+                            className="text-red-500 text-xl px-2"
                           >
-                            -
+                            −
                           </button>
-                          <span className="text-lg font-bold">{qty}</span>
+
+                          {/* QTY */}
+                          <span className="text-gray-900 text-lg font-medium">
+                            {qty}
+                          </span>
+
+                          {/* + */}
                           <button
                             onClick={() => increaseQty(product)}
-                            className="bg-emerald-600 text-white w-10 h-10 rounded-full text-xl"
+                            className="text-red-500 text-xl px-2"
                           >
                             +
                           </button>
