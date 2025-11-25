@@ -12,18 +12,15 @@ import { ShoppingBag, DollarSign, Package, ShoppingCart } from "lucide-react";
 export default function UserDashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDashboard() {
       try {
         setLoading(true);
-        setError(null);
         const dashboardData = await getUserDashboard(1, 5);
         setData(dashboardData);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load dashboard";
-        setError(message);
+        // Error silently handled - no UI display
       } finally {
         setLoading(false);
       }
@@ -43,27 +40,8 @@ export default function UserDashboardClient() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h3 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h3>
-        <p className="text-red-600">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   if (!data) {
-    return (
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-        <p className="text-gray-600">No dashboard data available</p>
-      </div>
-    );
+    return null;
   }
 
   const { profile, stats, recentOrders, cart, recentActivity } = data;
