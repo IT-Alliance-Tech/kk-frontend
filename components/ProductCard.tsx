@@ -13,29 +13,43 @@ export default function ProductCard({ product }: any) {
   const { showToast } = useToast();
   const [adding, setAdding] = useState(false);
 
-  const cartItem = items.find((item) => item.id === product.id);
+  // Support both _id and id for MongoDB compatibility
+  const productId = product._id || product.id;
+  const cartItem = items.find((item) => item.id === productId);
   const currentQty = cartItem?.qty || 0;
 
-  const imgSrc = normalizeSrc(product.images);
+  // Support both title (MongoDB) and name (legacy) fields
+  const productTitle = product.title || product.name || "Untitled Product";
+  const productDescription = product.description || product.desc || "";
+
+  // Handle images - support arrays or single string
+  let imgSrc = "/placeholder.png";
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    imgSrc = normalizeSrc(product.images[0]);
+  } else if (product.images && typeof product.images === "string") {
+    imgSrc = normalizeSrc(product.images);
+  } else if (product.image_url) {
+    imgSrc = normalizeSrc(product.image_url);
+  }
 
   const handleQuantityChange = (newQty: number) => {
     try {
       if (newQty === 0) {
-        removeItem(product.id);
+        removeItem(productId);
         showToast("Removed from cart", "success");
       } else if (currentQty === 0) {
         addItem(
           {
-            id: product.id,
-            name: product.name,
-            price: product.price,
+            id: productId,
+            name: productTitle,
+            price: product.price || 0,
             image_url: imgSrc,
           },
           newQty
         );
         showToast("Added to cart!", "success");
       } else {
-        updateQty(product.id, newQty);
+        updateQty(productId, newQty);
       }
     } catch {
       showToast("Failed to update cart", "error");
@@ -48,9 +62,9 @@ export default function ProductCard({ product }: any) {
 
     try {
       addItem({
-        id: product.id,
-        name: product.name,
-        price: product.price,
+        id: productId,
+        name: productTitle,
+        price: product.price || 0,
         image_url: imgSrc,
       });
       showToast("Added to cart!", "success");
@@ -68,11 +82,14 @@ export default function ProductCard({ product }: any) {
         <div className="h-36 sm:h-40 md:h-48 w-full overflow-hidden bg-gray-100">
           <Image
             src={imgSrc}
-            alt={product.name ?? "Product image"}
+            alt={productTitle}
             width={300}
             height={300}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             unoptimized={imgSrc.startsWith("http")}
+            onError={(e) => {
+              e.currentTarget.src = "/placeholder.png";
+            }}
           />
         </div>
       </Link>
@@ -80,13 +97,13 @@ export default function ProductCard({ product }: any) {
       <div className="p-2 sm:p-3 flex flex-col flex-1">
         <Link href={`/products/${product.slug}`} className="flex-1">
           <h3 className="font-medium line-clamp-2 text-xs sm:text-sm md:text-base">
-            {product.name}
+            {productTitle}
           </h3>
         </Link>
 
         <div className="mt-4 flex items-center justify-between gap-2">
           <div className="text-sm sm:text-base md:text-lg font-bold text-emerald-600">
-            ₹{product.price}
+            ₹{product.price || 0}
           </div>
 
           {currentQty > 0 ? (
