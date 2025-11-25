@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBrands } from "@/lib/api/brands.api";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Package, AlertCircle, Search, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -174,12 +173,6 @@ export default function BrandsPage() {
                         </h3>
                         <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
                       </div>
-                      <Badge
-                        variant="secondary"
-                        className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-xs"
-                      >
-                        View Products
-                      </Badge>
                     </CardContent>
                   </Card>
                 </Link>

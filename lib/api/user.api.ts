@@ -4,9 +4,7 @@
  */
 
 import { getAccessToken } from "@/lib/utils/auth";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+import { API_BASE } from "@/lib/api";
 
 export interface DashboardStats {
   totalOrders: number;
@@ -94,7 +92,8 @@ export async function getUserDashboard(
     throw new Error("Authentication required. Please log in.");
   }
 
-  const url = `${API_BASE_URL}/api/user/dashboard?page=${page}&limit=${limit}`;
+  const url = `${API_BASE}/user/dashboard?page=${page}&limit=${limit}`;
+  console.log("GET USER DASHBOARD URL →", url);
 
   try {
     const response = await fetch(url, {
@@ -145,7 +144,8 @@ export async function getUserOrders(
     throw new Error("Authentication required. Please log in.");
   }
 
-  const url = `${API_BASE_URL}/api/user/orders?page=${page}&limit=${limit}&sort=${sort}`;
+  const url = `${API_BASE}/user/orders?page=${page}&limit=${limit}&sort=${sort}`;
+  console.log("GET USER ORDERS URL →", url);
 
   try {
     const response = await fetch(url, {
@@ -172,6 +172,63 @@ export async function getUserOrders(
     return result.data;
   } catch (error) {
     console.error("Error fetching user orders:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update user profile
+ * Calls PATCH /api/user/profile with authentication
+ *
+ * @param payload - Profile data to update (name, email, phone)
+ * @returns Updated user profile data
+ */
+export async function updateProfile(payload: {
+  name?: string;
+  email?: string;
+  phone?: string;
+}): Promise<any> {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new Error("Authentication required. Please log in.");
+  }
+
+  // Use API_BASE which already includes /api suffix (http://localhost:5001/api)
+  const url = `${API_BASE}/user/profile`;
+  console.log("PROFILE UPDATE FINAL URL =", url);
+
+  try {
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+      }
+      
+      // Try to parse error message from response
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Failed to update profile: ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Failed to update profile");
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error("Error updating user profile:", error);
     throw error;
   }
 }

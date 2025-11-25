@@ -1,13 +1,15 @@
 /**
  * Brand detail page - Server Component
- * Displays a single brand with its information
+ * Displays a single brand with its information and products
  */
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getBrand } from "@/lib/api/brands.api";
+import { getProductsByBrand } from "@/lib/api/products.api";
 import { Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import ProductCard from "@/components/ProductCard";
 
 type Props = {
   params: { slug: string };
@@ -20,6 +22,7 @@ export default async function BrandPage({ params }: Props) {
   }
 
   let brand;
+  let productsData;
 
   try {
     brand = await getBrand(params.slug);
@@ -30,6 +33,15 @@ export default async function BrandPage({ params }: Props) {
 
   if (!brand) {
     notFound();
+  }
+
+  // Fetch products for this brand using the brand's _id
+  try {
+    productsData = await getProductsByBrand(brand._id);
+  } catch (error) {
+    console.error("Error fetching products for brand:", error);
+    // Don't fail the page if products fetch fails, just show empty state
+    productsData = { items: [], total: 0, page: 1, pages: 0 };
   }
 
   return (
@@ -77,20 +89,27 @@ export default async function BrandPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Products Section - Placeholder for future integration */}
+      {/* Products Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-semibold text-slate-900 mb-6">
-              Products by {brand.name}
-            </h2>
+          <h2 className="text-2xl font-semibold text-slate-900 mb-6">
+            Products by {brand.name}
+          </h2>
+          
+          {productsData.items.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {productsData.items.map((product: any) => (
+                <ProductCard key={product._id || product.id} product={product} />
+              ))}
+            </div>
+          ) : (
             <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg p-12 text-center">
               <Package className="h-12 w-12 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500">
-                Product listing will be integrated in the next phase
+                No products available for this brand yet
               </p>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </div>
