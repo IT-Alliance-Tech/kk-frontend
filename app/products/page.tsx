@@ -238,7 +238,7 @@ export default function ProductsPage() {
                 const qty = qtyMap[product._id] || 0;
 
                 return (
-                  <Card key={product._id} className="group hover:shadow-lg transition">
+                  <Card key={product._id} className="group hover:shadow-lg transition flex flex-col h-full">
                     <Link href={`/products/${product.slug}`}>
                       <div className="relative h-40 bg-slate-100 overflow-hidden">
                         <Image
@@ -252,6 +252,9 @@ export default function ProductsPage() {
                           width={400}
                           height={400}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23cbd5e1'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          }}
                         />
 
                         {product.mrp && product.mrp > product.price && (
@@ -260,34 +263,36 @@ export default function ProductsPage() {
                       </div>
                     </Link>
 
-                    <CardHeader>
-                      <Link href={`/products/${product.slug}`}>
-                        <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600">
-                          {product.title}
-                        </CardTitle>
-                      </Link>
+                    <div className="flex-1 flex flex-col">
+                      <CardHeader>
+                        <Link href={`/products/${product.slug}`}>
+                          <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600">
+                            {product.title}
+                          </CardTitle>
+                        </Link>
 
-                      {product.brand?.name && (
-                        <p className="text-sm text-slate-500">{product.brand.name}</p>
-                      )}
-                    </CardHeader>
-
-                    <CardContent>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold">₹{product.price}</span>
-                        {product.mrp && product.mrp > product.price && (
-                          <span className="text-sm text-slate-500 line-through">
-                            ₹{product.mrp}
-                          </span>
+                        {product.brand?.name && (
+                          <p className="text-sm text-slate-500">{product.brand.name}</p>
                         )}
-                      </div>
-                    </CardContent>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold">₹{product.price}</span>
+                          {product.mrp && product.mrp > product.price && (
+                            <span className="text-sm text-slate-500 line-through">
+                              ₹{product.mrp}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </div>
 
                     {/* ------------------------------ */}
                     {/* CUSTOM ADD TO CART + QTY UI   */}
                     {/* ------------------------------ */}
 
-                    <CardFooter>
+                    <CardFooter className="mt-auto">
                       {qty === 0 ? (
                         <button
                           onClick={() => increaseQty(product)}
