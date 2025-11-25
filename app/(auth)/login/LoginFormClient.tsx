@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api/auth.api";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ export default function LoginFormClient({
   redirectTo = "/orders",
 }: LoginFormClientProps) {
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   // Form state
   const [email, setEmail] = useState("");
@@ -106,6 +108,12 @@ export default function LoginFormClient({
       // Store token in localStorage (already done by login function, but being explicit)
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+
+      // Refresh user state in auth context
+      await refreshUser();
+
+      // Notify the provider in the same tab immediately
+      window.dispatchEvent(new Event('auth:update'));
 
       // Success! Redirect to the specified page
       router.push(redirectTo);

@@ -4,16 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { ShoppingCart } from "lucide-react";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function Navbar() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const { user, loading, logout: authLogout, refreshUser } = useAuth();
   const headerRef = useRef<HTMLElement | null>(null);
 
   const [q, setQ] = useState("");
-  const [user, setUser] = useState<any>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
@@ -34,33 +33,20 @@ export default function Navbar() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // === SUPABASE AUTH SYNC ======================================================
+  // === CUSTOM JWT AUTH SYNC ====================================================
   useEffect(() => {
-    let unsub: any;
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        setUser(data?.user ?? null);
-      } catch {}
-    })();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    unsub = sub?.subscription ?? sub;
-
-    return () => unsub?.unsubscribe?.();
-  }, [supabase]);
+    if (typeof refreshUser === "function") {
+      refreshUser();
+    }
+  }, [refreshUser]);
 
   const handleSearch = (e: any) => {
     e.preventDefault();
     if (q.trim()) router.push(`/search?q=${encodeURIComponent(q)}`);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    authLogout();
     router.push("/login");
   };
 
@@ -120,10 +106,12 @@ export default function Navbar() {
 
           {/* AUTH + CONTACT */}
           <div className="flex items-center gap-5 text-base font-medium">
-            {user ? (
+            {loading ? (
+              <span className="text-gray-500">Loading...</span>
+            ) : user ? (
               <>
                 <span className="hidden sm:inline text-gray-700 max-w-[180px] truncate">
-                  {user.email}
+                  {user.name ?? "Account"}
                 </span>
 
                 <button
@@ -144,27 +132,6 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
-
-            <a
-              href="mailto:info@kitchenkettles.com"
-              className="hidden lg:inline-flex items-center gap-2 text-base text-gray-700 whitespace-nowrap"
-              aria-label="Email Kitchen Kettles"
-            >
-              <svg
-                className="h-5 w-5 flex-shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8" />
-                <rect x="3" y="6" width="18" height="12" rx="2" />
-              </svg>
-              <span className="leading-none">info@kitchenkettles.com</span>
-            </a>
           </div>
         </div>
       </div>
