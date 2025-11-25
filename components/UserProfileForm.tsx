@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { updateProfile } from "@/lib/api/user.api";
 import {
   Loader2,
   Save,
@@ -110,14 +111,17 @@ export default function UserProfileForm() {
     setSuccess(false);
 
     try {
-      // TODO: Replace with actual API call when backend endpoint is ready
-      // For now, simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Call real API to update profile
+      await updateProfile({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+      });
 
-      // Simulate successful update
-      // In production, this would be:
-      // await updateProfile(formData);
-      // await refreshUser();
+      // Refresh user data from server to sync auth context
+      if (refreshUser) {
+        await refreshUser();
+      }
 
       setSuccess(true);
 

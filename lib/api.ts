@@ -1,4 +1,4 @@
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
 
 export async function apiFetch<T = any>(
@@ -6,12 +6,14 @@ export async function apiFetch<T = any>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   try {
     const res = await fetch(url, {
       ...options,
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
     });
@@ -31,11 +33,15 @@ export async function apiFetch<T = any>(
 
 export async function apiGet<T = any>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   try {
     const res = await fetch(url, {
       method: "GET",
       credentials: "include",
       cache: "no-store",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
 
     if (!res.ok) {
@@ -53,10 +59,14 @@ export async function apiGet<T = any>(path: string): Promise<T> {
 
 export async function apiPost<T = any>(path: string, body: any): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       credentials: "include",
       body: JSON.stringify(body),
     });
@@ -76,9 +86,13 @@ export async function apiPost<T = any>(path: string, body: any): Promise<T> {
 
 export async function apiPut<T = any>(path: string, body: any): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const res = await fetch(url, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     credentials: "include",
     body: JSON.stringify(body),
   });
@@ -89,7 +103,14 @@ export async function apiPut<T = any>(path: string, body: any): Promise<T> {
 
 export async function apiDelete<T = any>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
-  const res = await fetch(url, { method: "DELETE", credentials: "include" });
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const res = await fetch(url, { 
+    method: "DELETE", 
+    credentials: "include",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
 
   if (!res.ok) throw new Error(`DELETE ${path} failed (${res.status})`);
   return res.json();
