@@ -15,6 +15,8 @@ export default function Navbar() {
   const [q, setQ] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // === FIX MAIN PADDING ========================================================
   useEffect(() => {
@@ -40,6 +42,23 @@ export default function Navbar() {
     }
   }, [refreshUser]);
 
+  // === DROPDOWN CLICK OUTSIDE HANDLER ==========================================
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
   const handleSearch = (e: any) => {
     e.preventDefault();
     if (q.trim()) router.push(`/search?q=${encodeURIComponent(q)}`);
@@ -48,6 +67,21 @@ export default function Navbar() {
   const handleLogout = () => {
     authLogout();
     router.push("/login");
+    setDropdownOpen(false);
+  };
+
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      const parts = name.trim().split(" ");
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+    if (email) {
+      return email.substring(0, 2).toUpperCase();
+    }
+    return "U";
   };
 
   return (
@@ -109,18 +143,45 @@ export default function Navbar() {
             {loading ? (
               <span className="text-gray-500">Loading...</span>
             ) : user ? (
-              <>
-                <span className="hidden sm:inline text-gray-700 max-w-[180px] truncate">
-                  {user.name ?? "Account"}
-                </span>
-
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={handleLogout}
-                  className="bg-red-500 px-4 py-1 text-white rounded hover:bg-red-600"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="w-10 h-10 rounded-full bg-emerald-600 text-white font-semibold flex items-center justify-center hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  aria-haspopup="true"
+                  aria-expanded={dropdownOpen}
+                  title={user.name || user.email || "User menu"}
                 >
-                  Logout
+                  {getInitials(user.name, user.email) || (
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="text-white"
+                    >
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                  )}
                 </button>
-              </>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <Link
+                      href="/account"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center gap-3">
                 <Link href="/login" className="text-emerald-600 hover:underline">
