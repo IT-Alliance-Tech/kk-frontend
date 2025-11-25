@@ -1,32 +1,40 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
-// ✅ Make sure your environment variables are set in .env.local
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    console.log("➡️ API: Fetching products...");
+    // Extract query parameters from the request URL
+    const { searchParams } = new URL(req.url);
+    const queryString = searchParams.toString();
 
-    const { data, error } = await supabase
-      .from("products")
-      .select("*, brand:brands(*), category:categories(*)")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
+    // Build backend URL with query params
+    const backendUrl = `${BACKEND_URL}/api/products${queryString ? `?${queryString}` : ""}`;
 
-    if (error) {
-      console.error("❌ Supabase error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    console.log("➡️ Frontend API: Proxying to backend:", backendUrl);
+
+    const res = await fetch(backendUrl, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: "Failed to fetch products" }));
+      return NextResponse.json(
+        errorData,
+        { status: res.status }
+      );
     }
 
-    console.log(`✅ API: Returned ${data?.length ?? 0} products`);
-    return NextResponse.json(data || []);
-  } catch (err: any) {
-    console.error("❌ Server crash:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const data = await res.json();
+    console.log(`✅ Frontend API: Returned ${data.items?.length ?? data.length ?? 0} products`);
+    
+    return NextResponse.json(data);
+  } catch (error: any) {
+    console.error("❌ Products API error:", error.message);
+    return NextResponse.json(
+      { error: "Backend not available" },
+      { status: 503 }
+    );
   }
 }
