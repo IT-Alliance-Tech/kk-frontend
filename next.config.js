@@ -16,6 +16,8 @@ const nextConfig = {
       },
     ],
     domains: ["via.placeholder.com", "placehold.co"],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; img-src * data: blob:;",
   },
 
   // Custom webpack configuration

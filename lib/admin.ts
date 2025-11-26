@@ -2,12 +2,13 @@ import { apiGet, apiPost, apiPut, apiDelete, apiGetAuth, apiPostAuth, apiPutAuth
 
 // -------------------- AUTH --------------------
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
 
 async function callLogin(url: string, body: any) {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include", // ✅ Enable cookie storage
     body: JSON.stringify(body),
   });
   if (!res.ok) {
