@@ -1,7 +1,7 @@
-// components/AddProductForm.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createProduct, getBrands, getCategories } from "@/lib/admin";
 
 export default function AddProductForm() {
   const [title, setTitle] = useState("");
@@ -24,20 +24,13 @@ export default function AddProductForm() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [brandsRes, categoriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/brands`),
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/categories`)
+        const [brandsData, categoriesData] = await Promise.all([
+          getBrands(),
+          getCategories()
         ]);
         
-        if (brandsRes.ok) {
-          const brandsData = await brandsRes.json();
-          setBrands(brandsData.items || brandsData.brands || []);
-        }
-        
-        if (categoriesRes.ok) {
-          const categoriesData = await categoriesRes.json();
-          setCategories(categoriesData.items || categoriesData.categories || []);
-        }
+        setBrands(brandsData.items || brandsData.brands || brandsData || []);
+        setCategories(categoriesData.items || categoriesData.categories || categoriesData || []);
       } catch (err) {
         console.error("Failed to fetch brands/categories:", err);
       }
@@ -97,20 +90,10 @@ export default function AddProductForm() {
         isActive
       };
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`,
-        {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        },
-      );
+      const result = await createProduct(payload);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Create failed");
+      if (!result.success) {
+        throw new Error(result.message || "Create failed");
       }
 
       setStatus("Created");
