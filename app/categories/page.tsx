@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, ChevronRight, Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
 type Category = {
@@ -199,16 +198,10 @@ export default function CategoriesPage() {
 
                     <CardContent className="pt-0">
                       {category.description && (
-                        <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                        <p className="text-sm text-slate-600 line-clamp-2">
                           {category.description}
                         </p>
                       )}
-                      <Badge
-                        variant="secondary"
-                        className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
-                      >
-                        View Products
-                      </Badge>
                     </CardContent>
                   </Card>
                 </Link>
