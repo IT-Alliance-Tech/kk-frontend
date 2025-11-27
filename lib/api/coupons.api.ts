@@ -216,3 +216,33 @@ export async function applyCoupon(payload: ApplyCouponPayload) {
   const data = await response.json();
   return data.data || data;
 }
+
+/**
+ * Apply coupon for regular users (PUBLIC endpoint)
+ * POST /api/coupons/apply
+ */
+export async function applyCouponForUser(code: string, cartItems: any[]) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE}/coupons/apply`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ code, cartItems }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to apply coupon' }));
+    throw new Error(error.error?.message || error.message || 'Failed to apply coupon');
+  }
+
+  const data = await response.json();
+  return data.data || data;
+}
