@@ -38,7 +38,7 @@ interface PaginationData {
   pages: number;
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 12;
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -69,14 +69,20 @@ export default function ProductsPage() {
           `/products?page=${currentPage}&limit=${ITEMS_PER_PAGE}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ""}`
         );
         
+        // Handle both array response and object with items
+        const items = Array.isArray(data) ? data : (data?.items ?? []);
+        const total = Array.isArray(data) ? data.length : (data?.total ?? 0);
+        const page = Array.isArray(data) ? 1 : (data?.page ?? 1);
+        const pages = Array.isArray(data) ? 1 : (data?.pages ?? 1);
+        
         setPaginationData({
-          items: data?.items ?? [],
-          total: data?.total ?? 0,
-          page: data?.page ?? 1,
-          pages: data?.pages ?? 1,
+          items,
+          total,
+          page,
+          pages,
         });
         
-        setProducts(data?.items ?? []);
+        setProducts(items);
       } catch (err) {
         console.error("Failed to load products", err);
         setPaginationData({ items: [], total: 0, page: 1, pages: 1 });
@@ -211,7 +217,7 @@ export default function ProductsPage() {
         <div className="container mx-auto px-4">
           {/* Loading */}
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
                   <div className="h-40 bg-slate-200" />
@@ -233,14 +239,14 @@ export default function ProductsPage() {
           ) : (
             <>
               {/* Products Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((product) => {
                 const qty = qtyMap[product._id] || 0;
 
                 return (
                   <Card key={product._id} className="group hover:shadow-lg transition flex flex-col h-full">
                     <Link href={`/products/${product.slug}`}>
-                      <div className="relative h-40 bg-slate-100 overflow-hidden">
+                      <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                         <Image
                           src={
                             product.images?.[0] ||
@@ -297,24 +303,24 @@ export default function ProductsPage() {
                         <button
                           onClick={() => increaseQty(product)}
                           disabled={product.stock === 0}
-                          className="w-full flex items-center justify-center gap-2 bg-black text-white py-3 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
                         >
-                          <ShoppingCart size={18} />
+                          <ShoppingCart size={16} />
                           {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                         </button>
                       ) : (
-                        <div className="flex items-center justify-center gap-6 bg-white border border-gray-300 rounded-full px-4 py-2 shadow-sm w-full">
+                        <div className="flex items-center justify-center gap-4 bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-sm w-full">
                           <button
                             onClick={() => decreaseQty(product)}
-                            className="text-red-500 text-xl px-2"
+                            className="text-red-500 text-lg px-1"
                             aria-label="Decrease quantity"
                           >
                             −
                           </button>
-                          <span className="text-gray-900 text-lg font-medium">{qty}</span>
+                          <span className="text-gray-900 text-base font-medium">{qty}</span>
                           <button
                             onClick={() => increaseQty(product)}
-                            className="text-red-500 text-xl px-2"
+                            className="text-red-500 text-lg px-1"
                             aria-label="Increase quantity"
                           >
                             +

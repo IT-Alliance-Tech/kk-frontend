@@ -4,6 +4,7 @@
  */
 
 import { getAccessToken } from "@/lib/utils/auth";
+import { ApiError } from "@/lib/api";
 
 // Base API URL for cart endpoints
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
@@ -28,17 +29,9 @@ export interface BackendCart {
 }
 
 /**
- * Standard backend API response
- */
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-/**
- * Fetch with authentication
- * Adds Authorization Bearer token from localStorage
+ * Fetch with authentication that understands backend envelope
+ * { statusCode, success, error, data }
+ * Returns `data` directly for success, throws ApiError for failures
  */
 async function fetchWithAuth(
   path: string,
@@ -47,7 +40,7 @@ async function fetchWithAuth(
   const token = getAccessToken();
 
   if (!token) {
-    throw new Error("No authentication token found");
+    throw new ApiError("No authentication token found", 401);
   }
 
   const url = `${API_BASE_URL}${path}`;
@@ -62,17 +55,44 @@ async function fetchWithAuth(
     headers,
   });
 
-  if (!response.ok) {
-    let errorBody: any = {};
-    try {
-      errorBody = await response.json();
-    } catch {
-      errorBody = { message: `Request failed with status ${response.status}` };
-    }
-    throw new Error(errorBody.message || `API error: ${response.status}`);
+  // Parse response body
+  const text = await response.text().catch(() => null);
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
   }
 
-  return await response.json();
+  // Handle backend envelope format: { statusCode, success, error, data }
+  if (body && typeof body === "object" && ("statusCode" in body || "success" in body)) {
+    const statusCode = body.statusCode ?? response.status;
+    const okFlag = body.success === true;
+
+    if (!okFlag) {
+      // Extract error message from envelope
+      const errMsg =
+        (body.error && (body.error.message || JSON.stringify(body.error))) ||
+        body.message ||
+        body.error ||
+        `Request failed with status ${statusCode}`;
+      const details = body.error?.details ?? body.details ?? null;
+      throw new ApiError(errMsg, statusCode, details);
+    }
+
+    // Success: return inner data property
+    return body.data;
+  }
+
+  // Fallback for non-envelope responses
+  if (!response.ok) {
+    const errMsg =
+      (body && (body.message || JSON.stringify(body))) ||
+      `API error: ${response.status}`;
+    throw new ApiError(errMsg, response.status, body);
+  }
+
+  return body;
 }
 
 /**
@@ -80,8 +100,8 @@ async function fetchWithAuth(
  * @returns Cart with items and total
  */
 export async function getCart(): Promise<BackendCart> {
-  const response: ApiResponse<BackendCart> = await fetchWithAuth("/api/cart");
-  return response.data || { items: [], total: 0 };
+  const data = await fetchWithAuth("/api/cart");
+  return data || { items: [], total: 0 };
 }
 
 /**
@@ -94,11 +114,10 @@ export async function addToCart(
   productId: string,
   qty: number = 1,
 ): Promise<BackendCart> {
-  const response: ApiResponse<BackendCart> = await fetchWithAuth("/api/cart", {
+  return fetchWithAuth("/api/cart", {
     method: "POST",
     body: JSON.stringify({ productId, qty }),
   });
-  return response.data;
 }
 
 /**
@@ -111,14 +130,10 @@ export async function updateCartItem(
   productId: string,
   qty: number,
 ): Promise<BackendCart> {
-  const response: ApiResponse<BackendCart> = await fetchWithAuth(
-    "/api/cart/item",
-    {
-      method: "PATCH",
-      body: JSON.stringify({ productId, qty }),
-    },
-  );
-  return response.data;
+  return fetchWithAuth("/api/cart/item", {
+    method: "PATCH",
+    body: JSON.stringify({ productId, qty }),
+  });
 }
 
 /**
@@ -127,14 +142,10 @@ export async function updateCartItem(
  * @returns Updated cart
  */
 export async function removeCartItem(productId: string): Promise<BackendCart> {
-  const response: ApiResponse<BackendCart> = await fetchWithAuth(
-    "/api/cart/item",
-    {
-      method: "DELETE",
-      body: JSON.stringify({ productId }),
-    },
-  );
-  return response.data;
+  return fetchWithAuth("/api/cart/item", {
+    method: "DELETE",
+    body: JSON.stringify({ productId }),
+  });
 }
 
 /**
@@ -142,11 +153,7 @@ export async function removeCartItem(productId: string): Promise<BackendCart> {
  * @returns Empty cart
  */
 export async function clearCart(): Promise<BackendCart> {
-  const response: ApiResponse<BackendCart> = await fetchWithAuth(
-    "/api/cart/clear",
-    {
-      method: "POST",
-    },
-  );
-  return response.data;
+  return fetchWithAuth("/api/cart/clear", {
+    method: "POST",
+  });
 }

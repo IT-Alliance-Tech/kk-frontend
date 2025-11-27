@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import { getAdminUsers } from "@/lib/admin";
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     getAdminUsers().then((res) => {
-      // FIX: Correct backend structure
-      const list = res?.data?.users ?? [];
-      setUsers(list);
+      // getAdminUsers now returns array directly via ensureArray
+      setUsers(Array.isArray(res) ? res : []);
     });
   }, []);
 

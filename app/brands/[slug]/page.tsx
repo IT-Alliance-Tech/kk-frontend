@@ -22,7 +22,7 @@ export default async function BrandPage({ params }: Props) {
   }
 
   let brand;
-  let productsData;
+  let productsData: any[] = [];
 
   try {
     brand = await getBrand(params.slug);
@@ -41,7 +41,7 @@ export default async function BrandPage({ params }: Props) {
   } catch (error) {
     console.error("Error fetching products for brand:", error);
     // Don't fail the page if products fetch fails, just show empty state
-    productsData = { items: [], total: 0, page: 1, pages: 0 };
+    productsData = [];
   }
 
   return (
@@ -96,9 +96,9 @@ export default async function BrandPage({ params }: Props) {
             Products by {brand.name}
           </h2>
           
-          {productsData.items.length > 0 ? (
+          {Array.isArray(productsData) && productsData.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {productsData.items.map((product: any) => (
+              {productsData.map((product: any) => (
                 <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>

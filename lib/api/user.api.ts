@@ -4,7 +4,7 @@
  */
 
 import { getAccessToken } from "@/lib/utils/auth";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, unwrapEnvelope, ApiError } from "@/lib/api";
 
 export interface DashboardStats {
   totalOrders: number;
@@ -89,39 +89,41 @@ export async function getUserDashboard(
   const token = getAccessToken();
 
   if (!token) {
-    throw new Error("Authentication required. Please log in.");
+    throw new ApiError("Authentication required. Please log in.", 401);
   }
 
   const url = `${API_BASE}/user/dashboard?page=${page}&limit=${limit}`;
-  console.log("GET USER DASHBOARD URL →", url);
 
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error("Session expired. Please log in again.");
-      }
-      throw new Error(`Failed to fetch dashboard: ${response.statusText}`);
-    }
-
-    const result: DashboardApiResponse = await response.json();
-
-    if (!result.success || !result.data) {
-      throw new Error(result.message || "Invalid dashboard response");
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error("Error fetching user dashboard:", error);
-    throw error;
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
   }
+
+  if (!response.ok && (!body || (typeof body === 'object' && body.success === undefined && body.statusCode === undefined))) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to fetch dashboard: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  
+  if (!data) {
+    throw new ApiError("Invalid dashboard response", 500);
+  }
+
+  return data;
 }
 
 /**
@@ -141,39 +143,41 @@ export async function getUserOrders(
   const token = getAccessToken();
 
   if (!token) {
-    throw new Error("Authentication required. Please log in.");
+    throw new ApiError("Authentication required. Please log in.", 401);
   }
 
   const url = `${API_BASE}/user/orders?page=${page}&limit=${limit}&sort=${sort}`;
-  console.log("GET USER ORDERS URL →", url);
 
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error("Session expired. Please log in again.");
-      }
-      throw new Error(`Failed to fetch orders: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-
-    if (!result.success || !result.data) {
-      throw new Error(result.message || "Invalid orders response");
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error("Error fetching user orders:", error);
-    throw error;
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
   }
+
+  if (!response.ok && (!body || (typeof body === 'object' && body.success === undefined && body.statusCode === undefined))) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to fetch orders: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  
+  if (!data) {
+    throw new ApiError("Invalid orders response", 500);
+  }
+
+  return data;
 }
 
 /**
@@ -191,44 +195,220 @@ export async function updateProfile(payload: {
   const token = getAccessToken();
 
   if (!token) {
-    throw new Error("Authentication required. Please log in.");
+    throw new ApiError("Authentication required. Please log in.", 401);
   }
 
-  // Use API_BASE which already includes /api suffix (http://localhost:5001/api)
   const url = `${API_BASE}/user/profile`;
-  console.log("PROFILE UPDATE FINAL URL =", url);
 
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
   try {
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error("Session expired. Please log in again.");
-      }
-      
-      // Try to parse error message from response
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Failed to update profile: ${response.statusText}`
-      );
-    }
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.message || "Failed to update profile");
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error("Error updating user profile:", error);
-    throw error;
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
   }
+
+  if (!response.ok && (!body || (typeof body === 'object' && body.success === undefined && body.statusCode === undefined))) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to update profile: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  return data;
+}
+
+/**
+ * Get all user addresses
+ * Calls GET /api/user/addresses with authentication
+ * 
+ * @returns Array of user addresses
+ */
+export async function getAddresses(): Promise<any[]> {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new ApiError("Authentication required. Please log in.", 401);
+  }
+
+  const url = `${API_BASE}/user/addresses`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store'
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to fetch addresses: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  return data || [];
+}
+
+/**
+ * Add a new address
+ * Calls POST /api/user/addresses with authentication
+ * 
+ * @param payload - Address data to add
+ * @returns Updated array of user addresses
+ */
+export async function addAddress(payload: {
+  name: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+  isDefault?: boolean;
+}): Promise<any> {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new ApiError("Authentication required. Please log in.", 401);
+  }
+
+  const url = `${API_BASE}/user/addresses`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to add address: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  return data;
+}
+
+/**
+ * Update an existing address
+ * Calls PATCH /api/user/addresses/:index with authentication
+ * 
+ * @param index - Index of address to update
+ * @param payload - Address data to update
+ * @returns Updated array of user addresses
+ */
+export async function updateAddress(index: number, payload: any): Promise<any> {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new ApiError("Authentication required. Please log in.", 401);
+  }
+
+  const url = `${API_BASE}/user/addresses/${index}`;
+
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to update address: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  return data;
+}
+
+/**
+ * Delete an address
+ * Calls DELETE /api/user/addresses/:index with authentication
+ * 
+ * @param index - Index of address to delete
+ * @returns Updated array of user addresses
+ */
+export async function deleteAddress(index: number): Promise<any> {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new ApiError("Authentication required. Please log in.", 401);
+  }
+
+  const url = `${API_BASE}/user/addresses/${index}`;
+
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const text = await response.text().catch(() => null);
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+    throw new ApiError(body?.message || `Failed to delete address: ${response.statusText}`, response.status, body);
+  }
+
+  const data = unwrapEnvelope(body);
+  return data;
 }

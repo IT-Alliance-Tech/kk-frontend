@@ -5,11 +5,12 @@ import { getAdminProducts, deleteProduct } from "@/lib/admin";
 import Link from "next/link";
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   const loadProducts = async () => {
     const data = await getAdminProducts();
-    setProducts(data.items ?? data);
+    // getAdminProducts now returns array directly via ensureArray
+    setProducts(Array.isArray(data) ? data : []);
   };
 
   const handleDelete = async (id: string) => {
