@@ -42,33 +42,33 @@ export default function AboutPage() {
           <div>
             <ul className="space-y-6 text-lg text-slate-700">
               <li className="flex items-start gap-2">
-                <span className="text-red-500 text-2xl">➤</span>
+                <span className="text-emerald-600 text-2xl">➤</span>
                 Experience lightning-fast boiling with our energy-efficient design.
               </li>
 
               <li className="flex items-start gap-2">
-                <span className="text-red-500 text-2xl">➤</span>
+                <span className="text-emerald-600 text-2xl">➤</span>
                 Made with premium food-grade stainless steel for pure taste.
               </li>
 
               <li className="flex items-start gap-2">
-                <span className="text-red-500 text-2xl">➤</span>
+                <span className="text-emerald-600 text-2xl">➤</span>
                 Auto shut-off + dry-boil protection for maximum safety.
               </li>
 
               <li className="flex items-start gap-2">
-                <span className="text-red-500 text-2xl">➤</span>
+                <span className="text-emerald-600 text-2xl">➤</span>
                 Sleek, modern, elegant design enhances any kitchen.
               </li>
 
               <li className="flex items-start gap-2">
-                <span className="text-red-500 text-2xl">➤</span>
+                <span className="text-emerald-600 text-2xl">➤</span>
                 Perfect for tea, coffee, noodles, soups, and quick meals.
               </li>
             </ul>
           </div>
 
-          <div className="rounded-2xl overflow-hidden border-[4px] border-red-500 shadow-lg">
+          <div className="rounded-2xl overflow-hidden border-[4px] border-emerald-500 shadow-lg">
             <Image
               src={kitchenProducts}
               alt="Kitchen appliances"
@@ -97,7 +97,7 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-10 bg-white/10 backdrop-blur-md p-10 rounded-2xl">
 
             <div>
-              <h2 className="text-3xl font-bold text-red-500 mb-4">Our Mission</h2>
+              <h2 className="text-3xl font-bold text-emerald-600 mb-4">Our Mission</h2>
               <p className="text-white text-lg leading-relaxed">
                 At Kitchen Kettles, we believe the kitchen is the heart of every home.
                 What began with a simple goal — to enhance everyday cooking with high-quality
@@ -106,7 +106,7 @@ export default function AboutPage() {
             </div>
 
             <div>
-              <h2 className="text-3xl font-bold text-red-500 mb-4">Our Vision</h2>
+              <h2 className="text-3xl font-bold text-emerald-600 mb-4">Our Vision</h2>
               <p className="text-white text-lg leading-relaxed">
                 To revolutionize modern kitchens by delivering innovative, reliable,
                 and stylish appliances that make everyday cooking faster, safer, and more enjoyable.
@@ -141,27 +141,27 @@ export default function AboutPage() {
             <ul className="space-y-6 text-lg text-slate-700">
 
               <li className="flex items-start gap-3">
-                <span className="text-red-500 text-2xl">✓</span>
+                <span className="text-emerald-600 text-2xl">✓</span>
                 <p><strong>Premium Quality:</strong> Food-grade material built for long-term daily use.</p>
               </li>
 
               <li className="flex items-start gap-3">
-                <span className="text-red-500 text-2xl">✓</span>
+                <span className="text-emerald-600 text-2xl">✓</span>
                 <p><strong>Smart Features:</strong> Auto shut-off, dry-boil protection, and fast-boil technology.</p>
               </li>
 
               <li className="flex items-start gap-3">
-                <span className="text-red-500 text-2xl">✓</span>
+                <span className="text-emerald-600 text-2xl">✓</span>
                 <p><strong>Modern Designs:</strong> Sleek, elegant kettles for every kitchen.</p>
               </li>
 
               <li className="flex items-start gap-3">
-                <span className="text-red-500 text-2xl">✓</span>
+                <span className="text-emerald-600 text-2xl">✓</span>
                 <p><strong>Trusted Service:</strong> Responsive support & reliable warranty coverage.</p>
               </li>
 
               <li className="flex items-start gap-3">
-                <span className="text-red-500 text-2xl">✓</span>
+                <span className="text-emerald-600 text-2xl">✓</span>
                 <p><strong>Affordable Excellence:</strong> Top-notch performance without overpaying.</p>
               </li>
 

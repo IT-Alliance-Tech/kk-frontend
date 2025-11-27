@@ -24,9 +24,8 @@ export default function HomePage() {
     setLoading(true);
     try {
       // Fetch 8 products for homepage preview using API
-      const response = await getProducts({ limit: 8 });
-      const items = response.items || [];
-      setProducts(items.slice(0, 8));
+      const items = await getProducts({ limit: 8 });
+      setProducts(Array.isArray(items) ? items.slice(0, 8) : []);
     } catch (err) {
       console.error("Failed to fetch products:", err);
       setProducts([]);

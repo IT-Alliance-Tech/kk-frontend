@@ -18,13 +18,21 @@ export default function AdminLoginPage() {
     setError("");
     try {
       const res = await adminLogin(email.trim(), password);
-      if (res && res.token) {
-        localStorage.setItem("adminToken", res.token);
-        localStorage.setItem("adminUser", JSON.stringify(res.admin || {}));
-        router.push("/admin");
+      
+      // Safe extraction: handle both direct response and envelope format
+      // res might be { token, admin } OR { statusCode, success, error, data: { token, admin } }
+      const token = (res && res.token) || (res && res.data && res.data.token) || null;
+      const admin = (res && res.admin) || (res && res.data && res.data.admin) || null;
+      
+      if (!token || typeof token !== "string") {
+        setError("Login failed: no token returned");
         return;
       }
-      setError("Login failed: no token returned");
+      
+      // Store token and admin info
+      localStorage.setItem("adminToken", token);
+      localStorage.setItem("adminUser", JSON.stringify(admin || {}));
+      router.push("/admin");
     } catch (err: any) {
       console.error("Admin login error:", err);
       setError(err?.message || "Login failed");

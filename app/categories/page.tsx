@@ -51,19 +51,20 @@ export default function CategoriesPage() {
             <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
               Shop by Category
             </h1>
-            <p className="text-lg text-slate-700 max-w-2xl">
+            <p className="text-lg text-slate-700 max-w-2xl mb-6">
               Explore our curated collection of premium kitchen essentials
             </p>
+
+            {/* Search Skeleton */}
+            <div className="max-w-md">
+              <div className="h-12 bg-white rounded-lg animate-pulse shadow-sm"></div>
+            </div>
           </div>
         </section>
 
         {/* Loading Skeletons */}
         <section className="py-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Search Skeleton */}
-            <div className="mb-8 max-w-md">
-              <div className="h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
 
             {/* Grid Skeletons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -121,17 +122,12 @@ export default function CategoriesPage() {
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
             Shop by Category
           </h1>
-          <p className="text-lg text-slate-700 max-w-2xl">
+          <p className="text-lg text-slate-700 max-w-2xl mb-6">
             Explore our curated collection of premium kitchen essentials
           </p>
-        </div>
-      </section>
 
-      {/* Main Content */}
-      <section className="py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Search Bar */}
-          <div className="mb-8 max-w-md">
+          <div className="max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
@@ -144,7 +140,12 @@ export default function CategoriesPage() {
               />
             </div>
           </div>
+        </div>
+      </section>
 
+      {/* Main Content */}
+      <section className="py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Results Count */}
           {searchQuery && (
             <p className="text-sm text-slate-600 mb-4">

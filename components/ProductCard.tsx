@@ -79,7 +79,7 @@ export default function ProductCard({ product }: any) {
     <div className="bg-white border rounded-lg overflow-hidden flex flex-col h-full min-h-[320px] md:min-h-[360px] hover:shadow-lg transition-shadow">
 
       <Link href={`/products/${product.slug}`}>
-        <div className="h-36 sm:h-40 md:h-48 w-full overflow-hidden bg-gray-100">
+        <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
           <Image
             src={imgSrc}
             alt={productTitle}
@@ -101,7 +101,7 @@ export default function ProductCard({ product }: any) {
           </h3>
         </Link>
 
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-auto pt-4 flex items-center justify-between gap-2">
           <div className="text-sm sm:text-base md:text-lg font-bold text-emerald-600">
             ₹{product.price || 0}
           </div>
@@ -116,7 +116,7 @@ export default function ProductCard({ product }: any) {
             <button
               onClick={onAdd}
               disabled={adding}
-              className="bg-emerald-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-emerald-700 transition disabled:opacity-50"
+              className="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs sm:text-sm hover:bg-emerald-700 transition disabled:opacity-50"
             >
               {adding ? "Adding..." : "Add"}
             </button>
