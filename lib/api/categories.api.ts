@@ -1,5 +1,7 @@
-import { apiGet } from "@/lib/api";
+import { apiGet, normalizeListResponse } from "@/lib/api";
 
 export async function getCategories() {
-  return apiGet("/categories");
+  const data = await apiGet("/categories");
+  // Normalize to always return array
+  return normalizeListResponse(data, ['categories', 'items']);
 }

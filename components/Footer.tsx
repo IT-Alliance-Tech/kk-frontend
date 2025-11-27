@@ -16,37 +16,37 @@ export default function Footer() {
         <div className="max-w-8xl mx-auto px-3 sm:px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
           {/* Column 1 - Quick Links */}
           <div>
-            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-rose-600 inline-block pb-1">
+            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-emerald-500 inline-block pb-1">
               KITCHEN KETTLES
             </h2>
             <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
               <li>
-                <Link href="/" className="hover:text-rose-600 transition">
+                <Link href="/" className="hover:text-emerald-600 transition">
                   Home
                 </Link>
               </li>
               <li>
                 <Link
                   href="/services"
-                  className="hover:text-rose-600 transition"
+                  className="hover:text-emerald-600 transition"
                 >
                   Services
                 </Link>
               </li>
               <li>
-                <Link href="/brand" className="hover:text-rose-600 transition">
+                <Link href="/brand" className="hover:text-emerald-600 transition">
                   Brand
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-rose-600 transition">
+                <Link href="/about" className="hover:text-emerald-600 transition">
                   About Us
                 </Link>
               </li>
               <li>
                 <Link
                   href="/privacy-policy"
-                  className="hover:text-rose-600 transition"
+                  className="hover:text-emerald-600 transition"
                 >
                   Privacy Policy
                 </Link>
@@ -54,7 +54,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms-and-conditions" // ✅ Correct path format
-                  className="hover:text-rose-600 transition"
+                  className="hover:text-emerald-600 transition"
                 >
                   Terms & Conditions
                 </Link>
@@ -62,7 +62,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/shipping-policy"
-                  className="hover:text-rose-600 transition"
+                  className="hover:text-emerald-600 transition"
                 >
                   Shipping Policy
                 </Link>
@@ -72,7 +72,7 @@ export default function Footer() {
 
           {/* Column 2 - Address */}
           <div>
-            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-rose-600 inline-block pb-1">
+            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-emerald-500 inline-block pb-1">
               ADDRESS
             </h2>
             <p className="text-xs sm:text-sm leading-relaxed">
@@ -84,25 +84,25 @@ export default function Footer() {
 
           {/* Column 3 - Contact + Socials */}
           <div>
-            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-rose-600 inline-block pb-1">
+            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-emerald-500 inline-block pb-1">
               CONNECT WITH US
             </h2>
 
             <div className="text-xs sm:text-sm mb-4 space-y-2">
               <p className="flex items-center gap-2">
-                <FaPhoneAlt className="text-rose-600" />{" "}
+                <FaPhoneAlt className="text-emerald-600" />{" "}
                 <a
                   href="tel:+918989889880"
-                  className="hover:text-rose-600 transition break-all"
+                  className="hover:text-emerald-600 transition break-all"
                 >
                   +91 8989889880
                 </a>
               </p>
               <p className="flex items-center gap-2">
-                <FaEnvelope className="text-rose-600" />{" "}
+                <FaEnvelope className="text-emerald-600" />{" "}
                 <a
                   href="mailto:saleskitchenkettles@gmail.com"
-                  className="hover:text-rose-600 transition break-all text-xs sm:text-sm"
+                  className="hover:text-emerald-600 transition break-all text-xs sm:text-sm"
                 >
                   saleskitchenkettles@gmail.com
                 </a>
@@ -114,14 +114,14 @@ export default function Footer() {
               <a
                 href="#"
                 aria-label="Facebook"
-                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-rose-600 hover:text-white transition"
+                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-emerald-600 hover:text-white transition"
               >
                 <FaFacebookF className="text-base sm:text-lg" />
               </a>
               <a
                 href="#"
                 aria-label="Instagram"
-                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-rose-600 hover:text-white transition"
+                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-emerald-600 hover:text-white transition"
               >
                 <FaInstagram className="text-base sm:text-lg" />
               </a>
@@ -134,7 +134,7 @@ export default function Footer() {
           © {new Date().getFullYear()}{" "}
           <span className="font-medium text-gray-800">Kitchen Kettles</span> |
           Designed & Developed by{" "}
-          <span className="text-rose-600 font-medium hover:underline">
+          <span className="text-emerald-600 font-medium hover:underline">
             IT Alliance
           </span>
         </div>

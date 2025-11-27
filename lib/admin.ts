@@ -3,6 +3,7 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
 
 // Enhanced auth wrappers with better error handling and credential management
+// Unwraps backend envelope format: { statusCode, success, error, data }
 async function apiFetchAuth(path: string, opts: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
   const headers = { ...(opts.headers || {}), 'Content-Type': 'application/json' } as Record<string, string>;
@@ -15,11 +16,26 @@ async function apiFetchAuth(path: string, opts: RequestInit = {}) {
   });
 
   const json = await res.json().catch(() => ({}));
+  
   if (!res.ok) {
     const err = new Error(json.message || `Request failed: ${res.status}`);
     (err as any).status = res.status;
     throw err;
   }
+  
+  // Unwrap backend envelope: { statusCode, success, error, data }
+  if (json && typeof json === 'object' && ('statusCode' in json || 'success' in json)) {
+    // Backend envelope detected
+    if (json.success === false || !json.success) {
+      const errMsg = json.error?.message || json.message || 'Request failed';
+      const err = new Error(errMsg);
+      (err as any).status = json.statusCode || res.status;
+      throw err;
+    }
+    // Return unwrapped data
+    return json.data ?? json;
+  }
+  
   return json;
 }
 
@@ -27,6 +43,29 @@ export function apiGetAuth(path: string) { return apiFetchAuth(path, { method: '
 export function apiPostAuth(path: string, data?: any) { return apiFetchAuth(path, { method: 'POST', body: JSON.stringify(data) }); }
 export function apiPutAuth(path: string, data?: any) { return apiFetchAuth(path, { method: 'PUT', body: JSON.stringify(data) }); }
 export function apiDeleteAuth(path: string) { return apiFetchAuth(path, { method: 'DELETE' }); }
+
+/**
+ * Ensure any payload becomes an array
+ * Checks known keys: items, data, products, categories, brands
+ */
+function ensureArray(payload: any, knownKeys: string[] = ['items', 'data', 'products', 'categories', 'brands']): any[] {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  
+  // Check known keys for array data
+  for (const key of knownKeys) {
+    if (Array.isArray(payload[key])) {
+      return payload[key];
+    }
+  }
+  
+  // If payload has data property that's an array
+  if (payload.data && Array.isArray(payload.data)) {
+    return payload.data;
+  }
+  
+  return [];
+}
 
 async function callLogin(url: string, body: any) {
   const res = await fetch(url, {
@@ -65,8 +104,9 @@ export function adminLogout() {
 }
 
 // -------------------- PRODUCTS --------------------
-export function getAdminProducts() {
-  return apiGetAuth("/admin/products");
+export async function getAdminProducts() {
+  const data = await apiGetAuth("/admin/products");
+  return ensureArray(data, ['items', 'products', 'data']);
 }
 
 export function getSingleProduct(id: string) {
@@ -86,8 +126,9 @@ export function deleteProduct(id: string) {
 }
 
 // -------------------- USERS --------------------
-export function getAdminUsers() {
-  return apiGetAuth("/admin/users");
+export async function getAdminUsers() {
+  const data = await apiGetAuth("/admin/users");
+  return ensureArray(data, ['items', 'users', 'data']);
 }
 
 // -------------------- BRANDS --------------------
@@ -98,11 +139,19 @@ export async function getBrands() {
   if (!res.ok) {
     throw new Error(`Failed to fetch brands (${res.status})`);
   }
-  return res.json();
+  const json = await res.json();
+  
+  // Unwrap envelope if present
+  const data = (json && (json.statusCode !== undefined || json.success !== undefined)) 
+    ? (json.data ?? json) 
+    : json;
+  
+  return ensureArray(data, ['items', 'brands', 'data']);
 }
 
-export function getAdminBrands() {
-  return apiGetAuth("/brands");
+export async function getAdminBrands() {
+  const data = await apiGetAuth("/brands");
+  return ensureArray(data, ['items', 'brands', 'data']);
 }
 
 export function getSingleBrand(id: string) {
@@ -129,11 +178,19 @@ export async function getCategories() {
   if (!res.ok) {
     throw new Error(`Failed to fetch categories (${res.status})`);
   }
-  return res.json();
+  const json = await res.json();
+  
+  // Unwrap envelope if present
+  const data = (json && (json.statusCode !== undefined || json.success !== undefined)) 
+    ? (json.data ?? json) 
+    : json;
+  
+  return ensureArray(data, ['items', 'categories', 'data']);
 }
 
-export function getAdminCategories() {
-  return apiGetAuth("/categories");
+export async function getAdminCategories() {
+  const data = await apiGetAuth("/categories");
+  return ensureArray(data, ['items', 'categories', 'data']);
 }
 
 export function getSingleCategory(id: string) {

@@ -54,8 +54,9 @@ export default function EditProductPage() {
         }
 
         // Load brands and categories
-        setBrands(brandsData.items || brandsData.brands || brandsData || []);
-        setCategories(categoriesData.items || categoriesData.categories || categoriesData || []);
+        // API functions now return arrays directly via ensureArray
+        setBrands(Array.isArray(brandsData) ? brandsData : []);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       } catch (err: any) {
         console.error("Failed to fetch data:", err);
         setStatus(err.message || "Failed to load product");

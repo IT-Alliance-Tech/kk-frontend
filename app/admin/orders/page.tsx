@@ -12,7 +12,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -23,10 +23,14 @@ export default function AdminOrdersPage() {
     async function loadOrders() {
       try {
         const res = await apiGetAuth("/admin/orders");
-
-        // Backend gives: { ok: true, data: [...] }
-        const ordersList = res.data || [];
-
+        const ordersList =
+          Array.isArray(res) ? res :
+          Array.isArray(res?.orders) ? res.orders :
+          Array.isArray(res?.items) ? res.items :
+          Array.isArray(res?.data) ? res.data :
+          [];
+        console.log("admin orders response:", res);
+        console.log("admin orders list:", ordersList);
         setOrders(ordersList);
       } catch (err) {
         console.error("Failed to load admin orders", err);

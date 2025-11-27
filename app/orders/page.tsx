@@ -8,7 +8,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getMyOrders, type ApiError } from "@/lib/api/orders.api";
+import { getMyOrders } from "@/lib/api/orders.api";
+import { ApiError } from "@/lib/api";
 
 export default function OrdersPage() {
   const router = useRouter();
