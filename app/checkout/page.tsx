@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/CartContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createOrder } from "@/lib/api/orders.api";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -21,11 +22,12 @@ export default function CheckoutPage() {
   const [state, setState] = useState("");
   const [pin, setPin] = useState("");
 
-  const discount = Number(searchParams.get("discount") || 0);
-  const coupon = searchParams.get("coupon") || "";
+  // Get coupon data from URL params
+  const couponCode = searchParams.get("couponCode") || "";
+  const discountAmount = Number(searchParams.get("discountAmount") || 0);
 
   const subtotal = items.reduce((s, it) => s + it.price * (it.qty || 0), 0);
-  const total = subtotal - (subtotal * discount) / 100;
+  const total = subtotal - discountAmount;
 
   // 🧠 Prefill user data if logged in
   useEffect(() => {
@@ -60,54 +62,38 @@ export default function CheckoutPage() {
 
     setLoading(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      const user_id = auth?.user?.id || null;
-
-      // ✅ Order payload matching your DB schema
-      const orderPayload = {
-        user_id,
-        order_number: "ORD-" + Date.now(), // unique order number
-        subtotal: Number(subtotal),
-        discount_amount: Number((subtotal * discount) / 100),
-        total: Number(total),
-        status: "pending",
-        payment_status: "pending",
-        payment_method: "cod", // can be dynamic later
-        shipping_address: {
+      // Prepare order payload for backend API
+      const orderPayload: any = {
+        items: items.map((item) => ({
+          productId: item.id,
+          quantity: item.qty || 1,
+        })),
+        address: {
           name,
           phone,
-          email,
-          address,
+          line1: address,
+          line2: "",
           city,
           state,
-          pin,
+          country: "India",
+          pincode: pin,
         },
-        billing_address: {
-          name,
-          phone,
-          email,
-          address,
-          city,
-          state,
-          pin,
-        },
-        coupons: coupon || null, // ✅ matches your DB column
+        paymentMethod: "COD",
       };
 
-      // ✅ Insert into Supabase
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert([orderPayload])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Supabase error inserting order:", error);
-        throw new Error(error.message);
+      // Add coupon if applied
+      if (couponCode) {
+        orderPayload.couponCode = couponCode;
       }
 
+      // Call backend API to create order
+      const order = await createOrder(orderPayload as any);
+
+      // Clear cart on success
       clearCart();
-      router.push(`/payment?orderId=${order.id}`);
+
+      // Redirect to payment/confirmation page
+      router.push(`/payment?orderId=${order._id || order.id}`);
     } catch (err: any) {
       console.error("Order placement error:", err);
       alert("Failed to place order: " + err.message);
@@ -221,10 +207,12 @@ export default function CheckoutPage() {
               <div>Subtotal</div>
               <div>₹{subtotal.toFixed(2)}</div>
             </div>
-            <div className="flex justify-between text-xs sm:text-sm">
-              <div>Discount</div>
-              <div>{discount}%</div>
-            </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-xs sm:text-sm text-green-600">
+                <div>Discount {couponCode && `(${couponCode})`}</div>
+                <div>-₹{discountAmount.toFixed(2)}</div>
+              </div>
+            )}
             <div className="border-t mt-2 pt-2 flex justify-between font-semibold text-sm sm:text-base">
               <div>Total</div>
               <div>₹{total.toFixed(2)}</div>
