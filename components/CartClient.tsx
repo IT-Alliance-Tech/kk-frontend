@@ -11,6 +11,7 @@ import {
   BackendCart,
   BackendCartItem,
 } from "@/lib/api/cart.api";
+import { applyCouponForUser } from "@/lib/api/coupons.api";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import QuantitySelector from "@/components/QuantitySelector";
 
@@ -20,8 +21,11 @@ export default function CartClient() {
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCouponData, setAppliedCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
   const router = useRouter();
 
   // Load cart from backend on mount
@@ -72,6 +76,12 @@ export default function CartClient() {
       setActionLoading(true);
       const updatedCart = await clearCartAPI();
       setCart(updatedCart);
+      // Clear coupon when cart is cleared
+      setCouponCode("");
+      setDiscount(0);
+      setDiscountAmount(0);
+      setAppliedCouponData(null);
+      setCouponError("");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to clear cart");
     } finally {
@@ -79,10 +89,60 @@ export default function CartClient() {
     }
   }
 
+  async function handleApplyCoupon() {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+
+    if (!cart || cart.items.length === 0) {
+      setCouponError("Cart is empty");
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+      setCouponError("");
+
+      // Map cart items to the format expected by the API
+      const cartItems = cart.items.map((item: BackendCartItem) => ({
+        productId: item.productId,
+        qty: item.qty,
+        price: item.price,
+      }));
+
+      const result = await applyCouponForUser(couponCode, cartItems);
+
+      if (result.success) {
+        setDiscountAmount(result.discountAmount || 0);
+        setAppliedCouponData(result.coupon);
+        setDiscount(0); // Reset percentage discount since we're using flat discount amount
+        setCouponError("");
+        // Show success message
+        alert(result.message || "Coupon applied successfully!");
+      } else {
+        setCouponError(result.error || "Failed to apply coupon");
+        setDiscountAmount(0);
+        setAppliedCouponData(null);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to apply coupon";
+      setCouponError(errorMessage);
+      setDiscountAmount(0);
+      setAppliedCouponData(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
   function handleCheckout() {
-    router.push(
-      `/checkout?discount=${discount}&coupon=${encodeURIComponent(couponCode || "")}`,
-    );
+    // Pass coupon data to checkout
+    const params = new URLSearchParams();
+    if (appliedCouponData && discountAmount > 0) {
+      params.append("couponCode", couponCode);
+      params.append("discountAmount", discountAmount.toString());
+    }
+    router.push(`/checkout${params.toString() ? '?' + params.toString() : ''}`);
   }
 
   if (loading) {
@@ -128,8 +188,8 @@ export default function CartClient() {
   }
 
   const subtotal = cart.total;
-  const discountAmount = (subtotal * discount) / 100;
-  const total = subtotal - discountAmount;
+  const finalDiscountAmount = appliedCouponData ? discountAmount : 0;
+  const total = subtotal - finalDiscountAmount;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
@@ -204,11 +264,14 @@ export default function CartClient() {
                 placeholder="Enter coupon code"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
+                disabled={couponLoading}
               />
               <button
-                className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-blue-700 transition"
+                onClick={handleApplyCoupon}
+                disabled={couponLoading || actionLoading}
+                className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Apply Coupon
+                {couponLoading ? "Applying..." : "Apply Coupon"}
               </button>
               <button
                 onClick={() => router.push("/coupons")}
@@ -222,9 +285,9 @@ export default function CartClient() {
                 {couponError}
               </div>
             )}
-            {discount > 0 && (
+            {appliedCouponData && discountAmount > 0 && (
               <div className="text-green-600 mt-2 text-xs sm:text-sm">
-                Coupon applied: {discount}% off
+                ✓ Coupon {appliedCouponData.code} applied: ₹{discountAmount.toFixed(2)} off
               </div>
             )}
           </div>
@@ -242,10 +305,12 @@ export default function CartClient() {
               <div>₹{subtotal.toFixed(2)}</div>
             </div>
 
-            <div className="flex justify-between text-xs sm:text-sm">
-              <div>Discount</div>
-              <div>{discount}%</div>
-            </div>
+            {appliedCouponData && discountAmount > 0 && (
+              <div className="flex justify-between text-xs sm:text-sm text-green-600">
+                <div>Discount ({appliedCouponData.code})</div>
+                <div>-₹{discountAmount.toFixed(2)}</div>
+              </div>
+            )}
 
             <div className="border-t mt-2 pt-2 flex justify-between font-semibold text-sm sm:text-base">
               <div>Total</div>
