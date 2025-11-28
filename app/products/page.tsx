@@ -194,21 +194,9 @@ export default function ProductsPage() {
       <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">All Products</h1>
-          <p className="text-slate-600 mb-6">
-            Browse our complete collection ({paginationData.total} products)
-          </p>
+          {/* subtitle removed per design update */}
 
-          <div className="max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+          {/* Removed inner page search bar as per updated UI requirement */}
         </div>
       </section>
 
