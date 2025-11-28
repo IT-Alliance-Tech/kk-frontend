@@ -357,28 +357,32 @@ export default function ProductPage() {
               </div>
 
               {/* Add to Cart Section */}
+              {/* When item in cart: show Go to Cart (green) + move quantity spinner to bottom-right */}
               <div className="sticky bottom-0 bg-white pt-4 border-t lg:border-0 mt-auto">
                 {currentQty > 0 ? (
                   <div className="flex items-center gap-4">
+                    <Link
+                      href="/cart"
+                      className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-center"
+                      aria-label={`Go to cart for ${product?.title}`}
+                    >
+                      Go to Cart
+                    </Link>
                     <QuantitySelector
                       value={currentQty}
                       onChange={handleQuantityChange}
                       size="md"
                     />
-                    <Link
-                      href="/cart"
-                      className="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition text-center"
-                    >
-                      Go to Cart
-                    </Link>
                   </div>
                 ) : (
+                  // Unified Add to Cart button: same markup & classes as /products page
                   <button
                     onClick={handleAddToCart}
                     disabled={!inStock}
-                    className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                    aria-label={`Add ${product?.title} to cart`}
                   >
-                    <ShoppingCart className="w-5 h-5" />
+                    <ShoppingCart size={16} />
                     {inStock ? "Add to Cart" : "Out of Stock"}
                   </button>
                 )}
