@@ -127,7 +127,7 @@ export default function ContactPage() {
                     <br />
                   </span>
                 ))
-              : "Loading..."}
+              : ""}
           </p>
         </motion.div>
       </div>
