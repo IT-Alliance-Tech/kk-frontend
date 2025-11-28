@@ -237,7 +237,8 @@ export default function CartClient() {
                         {item.title}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
-                        ₹{item.price.toFixed(2)} × {item.qty}
+                        {/* Removed duplicate quantity display beside unit price — quantity is controlled by the spinner control */}
+                        ₹{item.price.toFixed(2)}
                       </div>
                     </div>
                   </div>

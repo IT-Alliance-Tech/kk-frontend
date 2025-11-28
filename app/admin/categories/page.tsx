@@ -1,17 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAdminCategories, deleteCategory } from "@/lib/admin";
+import { getAdminCategories, deleteCategory, getAdminProducts } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const router = useRouter();
 
   const loadCategories = async () => {
     const data = await getAdminCategories();
     setCategories(data || []);
+  };
+
+  const loadProducts = async () => {
+    const data = await getAdminProducts();
+    setProducts(data || []);
   };
 
   const handleDelete = async (id: string) => {
@@ -32,6 +38,7 @@ export default function AdminCategoriesPage() {
 
   useEffect(() => {
     loadCategories();
+    loadProducts();
   }, []);
 
   return (
@@ -49,52 +56,58 @@ export default function AdminCategoriesPage() {
       <table className="w-full border">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border p-2">Image</th>
             <th className="border p-2">Name</th>
-            <th className="border p-2">Slug</th>
-            <th className="border p-2">Description</th>
+            <th className="border p-2">#Products</th>
+            <th className="border p-2">#Brands</th>
             <th className="border p-2">Action</th>
           </tr>
         </thead>
 
         <tbody>
-          {categories.map((c: any) => (
-            <tr key={c._id}>
-              <td className="border p-2">
-                {c.image_url || c.image ? (
-                  <img
-                    src={c.image_url || c.image}
-                    alt={c.name}
-                    className="w-16 h-16 object-cover"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-xs">
-                    No Image
-                  </div>
-                )}
-              </td>
-              <td className="border p-2">{c.name}</td>
-              <td className="border p-2 text-gray-600">{c.slug}</td>
-              <td className="border p-2 text-sm text-gray-600">
-                {c.description || "-"}
-              </td>
-              <td className="border p-2 space-x-3">
-                <Link
-                  href={`/admin/categories/${c._id}`}
-                  className="text-blue-600"
-                >
-                  Edit
-                </Link>
+          {categories.map((c: any) => {
+            // Calculate product count for this category
+            const productCount = products?.filter(p => String(p.category) === String(c._id)).length ?? 0;
+            
+            // Calculate brand count for this category
+            const brandCount = Array.from(
+              new Set(
+                products?.filter(p => String(p.category) === String(c._id))
+                  .map(p => String(p.brand))
+                  .filter(Boolean) || []
+              )
+            ).length ?? 0;
 
-                <button
-                  className="text-red-600"
-                  onClick={() => handleDelete(c._id)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
+            return (
+              <tr key={c._id}>
+                <td className="border p-2">{c.productCategory?.name || c.name}</td>
+                <td className="border p-2 text-center">{productCount}</td>
+                <td className="border p-2 text-center">{brandCount}</td>
+                <td className="border p-2 space-x-3">
+                  {/* View category details (read-only) */}
+                  <Link
+                    href={`/admin/categories/view/${c._id}`}
+                    className="text-green-600"
+                  >
+                    View
+                  </Link>
+
+                  <Link
+                    href={`/admin/categories/${c._id}`}
+                    className="text-blue-600"
+                  >
+                    Edit
+                  </Link>
+
+                  <button
+                    className="text-red-600"
+                    onClick={() => handleDelete(c._id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
