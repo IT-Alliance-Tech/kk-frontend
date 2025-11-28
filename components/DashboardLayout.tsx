@@ -72,9 +72,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   ];
 
   // Handle logout
-  const handleLogout = () => {
-    logout();
-    router.push("/");
+  const handleLogout = async () => {
+    // Logout will handle navigation and reload automatically
+    await logout();
   };
 
   // Check if nav item is active

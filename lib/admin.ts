@@ -99,8 +99,41 @@ export async function adminLogin(email: string, password: string) {
   throw new Error("Admin login failed: unable to reach backend login endpoint");
 }
 
-export function adminLogout() {
-  return apiPostAuth("/admin/logout", {});
+export async function adminLogout() {
+  try {
+    // Call backend to clear cookies
+    await apiPostAuth("/admin/logout", {});
+  } catch (e) {
+    // Continue with client-side cleanup even if backend fails
+    console.warn('Backend logout failed:', e);
+  }
+  
+  // Clear all admin tokens and session data from localStorage
+  if (typeof window !== 'undefined') {
+    const keysToRemove = [
+      'adminToken', 'admin_token', 'adminUser',
+      'token', 'accessToken', 'access', 'user'
+    ];
+    
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      } catch (e) {
+        // Ignore errors
+      }
+    });
+
+    // Clear cookies
+    const cookieNames = ['adminToken', 'accessToken', 'token'];
+    cookieNames.forEach(name => {
+      document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+      document.cookie = `${name}=; path=/admin; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+    });
+
+    // Force navigation to login
+    window.location.href = '/admin/login';
+  }
 }
 
 // -------------------- PRODUCTS --------------------
