@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Package, Search, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/components/CartContext";
@@ -263,9 +262,7 @@ export default function ProductsPage() {
                           }}
                         />
 
-                        {product.mrp && product.mrp > product.price && (
-                          <Badge className="absolute top-2 right-2 bg-red-500">Sale</Badge>
-                        )}
+                        {/* removed Sale badge (per new design) */}
                       </div>
                     </Link>
 
@@ -298,33 +295,44 @@ export default function ProductsPage() {
                     {/* CUSTOM ADD TO CART + QTY UI   */}
                     {/* ------------------------------ */}
 
+                    {/* When item in cart: show Go to Cart (green) + move quantity spinner to bottom-right */}
                     <CardFooter className="mt-auto">
                       {qty === 0 ? (
                         <button
                           onClick={() => increaseQty(product)}
                           disabled={product.stock === 0}
                           className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                          aria-label={`Add ${product.title} to cart`}
                         >
                           <ShoppingCart size={16} />
                           {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
                         </button>
                       ) : (
-                        <div className="flex items-center justify-center gap-4 bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-sm w-full">
-                          <button
-                            onClick={() => decreaseQty(product)}
-                            className="text-red-500 text-lg px-1"
-                            aria-label="Decrease quantity"
+                        <div className="flex items-center justify-between gap-2 w-full">
+                          <Link
+                            href="/cart"
+                            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition text-center text-sm font-medium"
+                            aria-label={`Go to cart for ${product.title}`}
                           >
-                            −
-                          </button>
-                          <span className="text-gray-900 text-base font-medium">{qty}</span>
-                          <button
-                            onClick={() => increaseQty(product)}
-                            className="text-red-500 text-lg px-1"
-                            aria-label="Increase quantity"
-                          >
-                            +
-                          </button>
+                            Go to Cart
+                          </Link>
+                          <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-sm">
+                            <button
+                              onClick={() => decreaseQty(product)}
+                              className="text-red-500 text-lg px-1"
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <span className="text-gray-900 text-base font-medium min-w-[1.5rem] text-center">{qty}</span>
+                            <button
+                              onClick={() => increaseQty(product)}
+                              className="text-red-500 text-lg px-1"
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
                         </div>
                       )}
                     </CardFooter>
