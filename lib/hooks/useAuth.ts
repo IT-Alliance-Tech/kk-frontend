@@ -132,14 +132,45 @@ export function useAuth(): UseAuthReturn {
 
   /**
    * Logout user and clear state
+   * Calls backend to invalidate session, clears all client storage, and forces page reload
    */
-  const logout = useCallback(() => {
-    // Call API logout (clears localStorage)
+  const logout = useCallback(async () => {
+    try {
+      // Attempt to call backend logout endpoint (best effort)
+      const token = typeof window !== 'undefined' 
+        ? (localStorage.getItem('token') || localStorage.getItem('accessToken'))
+        : null;
+      
+      if (token) {
+        try {
+          // Try to notify backend (ignore errors - logout should always succeed)
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }).catch(() => {});
+        } catch (e) {
+          // Silently handle - backend call is optional
+        }
+      }
+    } catch (e) {
+      // Continue with client-side logout even if backend fails
+    }
+
+    // Clear all client-side session data
     apiLogout();
 
-    // Clear state
+    // Clear state immediately
     setToken(null);
     setUser(null);
+    
+    // Force a hard navigation to ensure clean state
+    if (typeof window !== 'undefined') {
+      // Use window.location to force a full page reload and clear any stale state
+      window.location.href = '/login';
+    }
   }, []);
 
   /**

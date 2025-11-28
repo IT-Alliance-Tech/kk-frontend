@@ -64,10 +64,10 @@ export default function Navbar() {
     if (q.trim()) router.push(`/search?q=${encodeURIComponent(q)}`);
   };
 
-  const handleLogout = () => {
-    authLogout();
-    router.push("/login");
+  const handleLogout = async () => {
     setDropdownOpen(false);
+    // Logout will handle navigation and reload
+    await authLogout();
   };
 
   const getInitials = (name?: string, email?: string) => {

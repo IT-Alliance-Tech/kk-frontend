@@ -37,9 +37,20 @@ export default function EditProductPage() {
           getCategories(),
         ]);
 
-        // Load product data
-        if (productRes.success && productRes.product) {
-          const p = productRes.product;
+        // Log full response for debugging
+        console.log('PRODUCT FETCH RESPONSE:', productRes);
+
+        // Defensive access to product in response
+        // After apiGetAuth unwrapping, check multiple possible paths
+        const product = productRes?.product || productRes?.data?.product || null;
+        
+        if (!product) {
+          console.error('Product not found at expected paths', productRes);
+          setStatus("Product not found");
+        } else {
+          // Normalize product: ensure id field exists
+          const p = { ...product, id: product._id || product.id };
+          
           setTitle(p.title || "");
           setDescription(p.description || "");
           setBrandId(p.brand?._id || p.brand || "");
@@ -49,8 +60,6 @@ export default function EditProductPage() {
           setStock(p.stock?.toString() || "");
           setImages(Array.isArray(p.images) ? p.images.join(", ") : "");
           setIsActive(p.isActive !== undefined ? p.isActive : true);
-        } else {
-          setStatus("Product not found");
         }
 
         // Load brands and categories

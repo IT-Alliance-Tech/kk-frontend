@@ -14,6 +14,7 @@ import {
 import { applyCouponForUser } from "@/lib/api/coupons.api";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import QuantitySelector from "@/components/QuantitySelector";
+import { getAccessToken } from "@/lib/utils/auth";
 
 export default function CartClient() {
   const [cart, setCart] = useState<BackendCart | null>(null);
@@ -136,6 +137,14 @@ export default function CartClient() {
   }
 
   function handleCheckout() {
+    // Check if user is logged in
+    const token = getAccessToken();
+    if (!token) {
+      // Redirect to login with return URL
+      router.push("/login?next=/checkout");
+      return;
+    }
+
     // Pass coupon data to checkout
     const params = new URLSearchParams();
     if (appliedCouponData && discountAmount > 0) {
@@ -158,13 +167,15 @@ export default function CartClient() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-600 mb-4">{error}</div>
+        <div className="text-center space-y-4">
+          <div className="text-red-500 text-lg font-medium">
+            You need to login to view your cart
+          </div>
           <button
-            onClick={loadCart}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            onClick={() => router.push("/login?next=/cart")}
+            className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 transition"
           >
-            Retry
+            Login to Continue
           </button>
         </div>
       </div>
