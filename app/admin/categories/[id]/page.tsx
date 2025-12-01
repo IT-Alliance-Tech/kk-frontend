@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSingleCategory, updateCategory } from "@/lib/admin";
 
 export default function EditCategoryPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -21,7 +22,7 @@ export default function EditCategoryPage({
   useEffect(() => {
     async function loadCategory() {
       try {
-        const category = await getSingleCategory(params.id);
+        const category = await getSingleCategory(id);
         setName(category.name || "");
         setSlug(category.slug || "");
         setDescription(category.description || "");
@@ -31,7 +32,7 @@ export default function EditCategoryPage({
       }
     }
     loadCategory();
-  }, [params.id]);
+  }, [id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +57,7 @@ export default function EditCategoryPage({
         image_url: imageUrl.trim() || "",
       };
 
-      await updateCategory(params.id, payload);
+      await updateCategory(id, payload);
       setStatus("Category updated successfully!");
       setTimeout(() => {
         router.push("/admin/categories");

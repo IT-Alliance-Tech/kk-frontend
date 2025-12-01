@@ -6,6 +6,7 @@ import Image from "next/image";
 import { getBrands } from "@/lib/api/brands.api";
 import type { Brand } from "@/lib/types/brand";
 import { normalizeSrc } from "@/lib/normalizeSrc";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 
 export default function BrandsPreview() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -18,8 +19,12 @@ export default function BrandsPreview() {
       try {
         const allBrands = await getBrands();
         if (!cancelled) {
-          // Take only the first 4 brands
-          setBrands(allBrands.slice(0, 4));
+          // Take only the first 4 brands and normalize logoUrl
+          const normalized = (allBrands || []).slice(0, 4).map((b: any) => ({
+            ...b,
+            logoUrl: b.logoUrl || b.logo_url || b.logo || null
+          }));
+          setBrands(normalized);
         }
       } catch (error) {
         console.error("Failed to load brands preview:", error);
@@ -76,31 +81,25 @@ export default function BrandsPreview() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
         {brands.map((brand) => (
           <Link
-            key={brand._id}
-            href={`/brands/${brand.slug || brand._id}`}
+            key={brand.id || brand.slug}
+            href={`/brands/${brand.slug || brand.id}`}
             className="p-4 sm:p-6 bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow flex flex-col items-center"
             aria-label={`View ${brand.name} brand`}
             style={{ minHeight: 140 }}
           >
-            {/* Image at top */}
+            {/* Image block: defensive rendering */}
             <div className="w-full flex items-center justify-center h-16 sm:h-20">
-              {brand.logoUrl ? (
-                <Image
-                  src={normalizeSrc(brand.logoUrl)}
-                  alt={brand.name || "Brand logo"}
-                  width={140}
-                  height={64}
-                  className="object-contain max-w-full max-h-full"
-                  loading="lazy"
-                  unoptimized={brand.logoUrl.startsWith("http")}
-                />
-              ) : (
-                <div className="h-12 w-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-gray-700">{brand.name}</span>
-                </div>
-              )}
+              <Image
+                src={brand.logoUrl ?? "/brand-placeholder.svg"}
+                alt={`${brand.name} logo`}
+                width={80}
+                height={80}
+                className="object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/brand-placeholder.svg";
+                }}
+              />
             </div>
-
             {/* Brand name centered below the image; visually in middle area */}
             <div className="mt-3 flex-1 w-full flex items-center justify-center">
               <span className="text-sm font-semibold text-gray-800 text-center">{brand.name}</span>

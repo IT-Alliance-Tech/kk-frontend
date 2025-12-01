@@ -21,6 +21,15 @@ export default function AdminDashboard() {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
+  // Helper to format numbers as Indian Rupees
+  const formatINR = (value: number): string => {
+    try {
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+    } catch (e) {
+      return `₹${value}`; // fallback
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* KPI Cards Grid */}
@@ -34,7 +43,7 @@ export default function AdminDashboard() {
         />
         <KPI
           title="Revenue"
-          value={`$${totalRevenue.toFixed(2)}`}
+          value={formatINR(totalRevenue)}
           icon="💰"
           trend={{ value: 8.3, isPositive: true }}
           subtitle="Excluding cancelled"

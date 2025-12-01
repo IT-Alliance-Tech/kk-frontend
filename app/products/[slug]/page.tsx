@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api";
 import { useCart } from "@/components/CartContext";
 import { normalizeSrc } from "@/lib/normalizeSrc";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProductCard from "@/components/ProductCard";
 import QuantitySelector from "@/components/QuantitySelector";
@@ -130,9 +131,10 @@ export default function ProductPage() {
   }
 
   // Handle images array
+  // use default placeholder when no product image or when replacing dummy import
   const images = product.images && Array.isArray(product.images) && product.images.length > 0
     ? product.images.map((img: string) => normalizeSrc(img))
-    : [normalizeSrc(product.images) || `https://placehold.co/600x600?text=${encodeURIComponent(product.title || "Product")}`];
+    : (product.images ? [normalizeSrc(product.images)] : [DefaultProductImage]);
 
   const mainImage = images[selectedImage] || images[0];
 

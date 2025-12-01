@@ -28,12 +28,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    await deleteProduct(id);
-    loadProducts();
-  };
-
   useEffect(() => {
     loadProducts();
     loadCategoriesAndBrands();
@@ -103,14 +97,6 @@ export default function AdminProductsPage() {
                   >
                     Edit
                   </Link>
-
-                  <button
-                    className="text-red-600"
-                    onClick={() => handleDelete(p._id)}
-                    aria-label={`Delete ${label}`}
-                  >
-                    Delete
-                  </button>
                 </td>
               </tr>
             );

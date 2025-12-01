@@ -1,11 +1,11 @@
 // app/confirmation/page.tsx
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-export default function ConfirmationPage() {
+function ConfirmationPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -94,5 +94,19 @@ export default function ConfirmationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
+          <div className="text-center">Loading order confirmation...</div>
+        </div>
+      </div>
+    }>
+      <ConfirmationPageContent />
+    </Suspense>
   );
 }

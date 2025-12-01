@@ -7,17 +7,18 @@
 import VerifyOtpClient from "./VerifyOtpClient";
 
 interface VerifyOtpPageProps {
-  searchParams: {
+  searchParams: Promise<{
     email?: string;
     purpose?: "login" | "signup" | "forgot";
     redirectTo?: string;
-  };
+  }>;
 }
 
-export default function VerifyOtpPage({ searchParams }: VerifyOtpPageProps) {
-  const email = searchParams.email || "";
-  const purpose = searchParams.purpose || "login";
-  const redirectTo = searchParams.redirectTo;
+export default async function VerifyOtpPage({ searchParams }: VerifyOtpPageProps) {
+  const params = await searchParams;
+  const email = params.email || "";
+  const purpose = params.purpose || "login";
+  const redirectTo = params.redirectTo;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4 sm:px-6 lg:px-8">

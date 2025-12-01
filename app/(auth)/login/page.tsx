@@ -6,11 +6,12 @@
 import RequestOtpClient from "../request/RequestOtpClient";
 
 interface LoginPageProps {
-  searchParams: { redirect?: string };
+  searchParams: Promise<{ redirect?: string }>;
 }
 
-export default function LoginPage({ searchParams }: LoginPageProps) {
-  const redirectTo = searchParams.redirect || "/orders";
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const redirectTo = params.redirect || "/orders";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
