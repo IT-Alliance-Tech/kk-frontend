@@ -7,11 +7,12 @@
 import RequestOtpClient from "./RequestOtpClient";
 
 interface RequestOtpPageProps {
-  searchParams: { purpose?: "login" | "signup" | "forgot" };
+  searchParams: Promise<{ purpose?: "login" | "signup" | "forgot" }>;
 }
 
-export default function RequestOtpPage({ searchParams }: RequestOtpPageProps) {
-  const purpose = searchParams.purpose || "login";
+export default async function RequestOtpPage({ searchParams }: RequestOtpPageProps) {
+  const params = await searchParams;
+  const purpose = params.purpose || "login";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4 sm:px-6 lg:px-8">

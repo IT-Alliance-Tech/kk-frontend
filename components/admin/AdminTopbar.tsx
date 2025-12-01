@@ -23,12 +23,7 @@ export default function AdminTopbar({ title = "Dashboard" }: AdminTopbarProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <button
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          aria-label="Notifications"
-        >
-          <span className="text-xl">🔔</span>
-        </button>
+        {/* removed bell icon per request — preserves header layout */}
 
         <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
           <div className="text-right hidden sm:block">

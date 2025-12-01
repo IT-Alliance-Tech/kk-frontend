@@ -2,13 +2,14 @@
  * Brand type definition
  */
 export type Brand = {
-  _id: string;
+  id: string;
   name: string;
   slug?: string;
   logoUrl?: string;
   description?: string;
   createdAt?: string;
   updatedAt?: string;
+  _id?: string; // incoming backend might use _id (mongodb) — accept both _id and id
 };
 
 /**

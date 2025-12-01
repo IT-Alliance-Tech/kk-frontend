@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getOrder } from "@/lib/api/orders.api";
@@ -26,10 +26,11 @@ import {
 } from "lucide-react";
 
 interface OrderDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
+  const { id } = use(params);
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +51,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         return;
       }
 
-      const data = await getOrder(params.id);
+      const data = await getOrder(id);
 
       if (!data) {
         setError("Order not found");
@@ -64,13 +65,13 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       fetchOrder();
     }
-  }, [params.id, fetchOrder]);
+  }, [id, fetchOrder]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";

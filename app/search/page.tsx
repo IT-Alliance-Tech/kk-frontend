@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
@@ -8,7 +8,7 @@ import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
 
@@ -117,5 +117,18 @@ export default function SearchPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4">Searching...</h1>
+        <div className="text-center">Loading search results...</div>
+      </div>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }

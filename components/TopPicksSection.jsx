@@ -1,5 +1,6 @@
 "use client";
 import ProductCard from "@/components/ProductCard";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 
 export default function TopPicksSection() {
   const products = [
@@ -7,21 +8,21 @@ export default function TopPicksSection() {
       id: "1",
       name: "Mixer Grinder",
       price: 1200,
-      image_url: "/images/mixer.jpg",
+      image_url: DefaultProductImage,
     },
     {
       id: "2",
       name: "Milton Pro Munch Lunch Boxes",
       price: 800,
-      image_url: "/images/lunchbox.jpg",
+      image_url: DefaultProductImage,
     },
     {
       id: "3",
       name: "Kitchen Product Cooker",
       price: 1000,
-      image_url: "/images/cooker.jpg",
+      image_url: DefaultProductImage,
     },
-    { id: "4", name: "Bottle", price: 400, image_url: "/images/bottle.jpg" },
+    { id: "4", name: "Bottle", price: 400, image_url: DefaultProductImage },
   ];
 
   return (

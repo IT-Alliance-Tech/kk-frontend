@@ -1,11 +1,12 @@
 // kk-frontend/app/auth/verify/page.tsx
 import { redirect } from "next/navigation";
 
-export default function AuthVerifyRedirect({
+export default async function AuthVerifyRedirect({
   searchParams,
 }: {
-  searchParams?: Record<string, string>;
+  searchParams?: Promise<Record<string, string>>;
 }) {
-  const qs = new URLSearchParams(searchParams || {}).toString();
+  const params = searchParams ? await searchParams : {};
+  const qs = new URLSearchParams(params).toString();
   redirect(`/verify${qs ? "?" + qs : ""}`);
 }
