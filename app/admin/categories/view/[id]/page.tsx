@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getSingleCategory, getAdminProducts, getAdminBrands } from "@/lib/admin";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function CategoryViewPage() {
   const params = useParams();
@@ -15,6 +16,7 @@ export default function CategoryViewPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); // Track delete operation state
 
   useEffect(() => {
     if (!id) return;
@@ -43,6 +45,58 @@ export default function CategoryViewPage() {
 
     fetchData();
   }, [id]);
+
+  /**
+   * Handle category deletion with confirmation
+   * Confirms with user, calls DELETE API, shows feedback, and redirects on success
+   */
+  const handleDelete = async () => {
+    // Confirm deletion with user
+    if (!confirm('Are you sure you want to permanently delete this category and all its associations? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      // Get auth token from localStorage (same pattern as lib/admin.ts)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      
+      // Build API URL using the category ID
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
+      const url = `${API_BASE}/admin/categories/${id}`;
+
+      // Make DELETE request to backend
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include', // Include cookies for auth
+      });
+
+      // Parse response
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // Show error message from server or fallback
+        const errorMsg = data.message || data.error?.message || 'Failed to delete category';
+        toast.error(errorMsg);
+        setIsDeleting(false);
+        return;
+      }
+
+      // Success: show notification and redirect
+      toast.success(data.message || 'Category deleted successfully');
+      router.push('/admin/categories');
+    } catch (err: any) {
+      // Handle network errors or unexpected exceptions
+      console.error('Delete error:', err);
+      toast.error(err.message || 'An error occurred while deleting the category');
+      setIsDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -101,6 +155,14 @@ export default function CategoryViewPage() {
           >
             Edit
           </Link>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="inline-flex items-center px-4 py-2 rounded text-sm font-medium bg-white border border-red-300 text-red-700 hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
         </div>
       </div>
 

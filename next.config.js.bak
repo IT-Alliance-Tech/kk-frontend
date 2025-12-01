@@ -1,0 +1,40 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  turbopack: {},
+
+  experimental: {
+    // safe placeholder for experimental flags if needed
+  },
+
+  images: {
+    // allow all supabase subdomains and via.placeholder
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        port: "",
+        pathname: "/**"
+      },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+        port: "",
+        pathname: "/**"
+      }
+    ],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; img-src * data: blob;"
+  },
+
+  webpack: (config) => {
+    config.ignoreWarnings = config.ignoreWarnings || [];
+    config.ignoreWarnings.push((warn) =>
+      /Critical dependency: the request of a dependency is an expression/.test(
+        warn.message || ""
+      )
+    );
+    return config;
+  },
+};
+
+module.exports = nextConfig;

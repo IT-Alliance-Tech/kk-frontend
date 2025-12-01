@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/CartContext";
 import { createOrder } from "@/lib/api/orders.api";
 import { getAddresses } from "@/lib/api/user.api";
 import { getAccessToken } from "@/lib/utils/auth";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { items, clearCart } = useCart();
@@ -241,13 +242,16 @@ export default function CheckoutPage() {
                   className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row"
                 >
                   <div className="flex items-center gap-3 w-full sm:w-auto">
-                    {/* TODO: replace with next/image if src is static */}
+                    {/* use default placeholder when no product image or when replacing dummy import */}
                     <Image
-                      src={it.image_url || "/placeholder.png"}
-                      alt={it.name}
+                      src={it.image_url || DefaultProductImage}
+                      alt={it.name || 'Product image'}
                       width={64}
                       height={64}
                       className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
+                      }}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-sm sm:text-base truncate">
@@ -306,5 +310,20 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+          <div className="text-center">Loading checkout...</div>
+        </div>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }

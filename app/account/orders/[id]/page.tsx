@@ -5,17 +5,18 @@
 
 "use client";
 
+import { use } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import OrderDetail from "@/components/OrderDetail";
 
 interface OrderDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   // Unwrap the params promise using React.use()
-  const { id } = params;
+  const { id } = use(params);
 
   return (
     <ProtectedRoute>

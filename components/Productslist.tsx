@@ -8,7 +8,7 @@ export default function ProductList({ products }: { products: any[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
       {products.map((p) => (
-        <div key={p.id ?? p._id} className="border rounded p-4 shadow-sm">
+  <div key={p._id || p.id} className="border rounded p-4 shadow-sm">
           <Image
             src={p.images?.[0] ?? "/placeholder.png"}
             alt={p.title ?? p.name}

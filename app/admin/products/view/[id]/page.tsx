@@ -5,7 +5,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getSingleProduct, getBrands, getCategories } from "@/lib/admin";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function ViewProductPage() {
   const params = useParams();
@@ -16,6 +18,7 @@ export default function ViewProductPage() {
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); // Track delete operation state
 
   // Fetch product, brands, and categories
   useEffect(() => {
@@ -58,6 +61,58 @@ export default function ViewProductPage() {
     }
   }, [productId]);
 
+  /**
+   * Handle product deletion with confirmation
+   * Confirms with user, calls DELETE API, shows feedback, and redirects on success
+   */
+  const handleDelete = async () => {
+    // Confirm deletion with user
+    if (!confirm('Are you sure you want to permanently delete this product? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      // Get auth token from localStorage (same pattern as lib/admin.ts)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      
+      // Build API URL using the product ID
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api";
+      const url = `${API_BASE}/admin/products/${productId}`;
+
+      // Make DELETE request to backend
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: 'include', // Include cookies for auth
+      });
+
+      // Parse response
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // Show error message from server or fallback
+        const errorMsg = data.message || data.error?.message || 'Failed to delete product';
+        toast.error(errorMsg);
+        setIsDeleting(false);
+        return;
+      }
+
+      // Success: show notification and redirect
+      toast.success('Product deleted successfully');
+      router.push('/admin/products');
+    } catch (err: any) {
+      // Handle network errors or unexpected exceptions
+      console.error('Delete error:', err);
+      toast.error(err.message || 'An error occurred while deleting the product');
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
@@ -93,15 +148,25 @@ export default function ViewProductPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      {/* Header with Back button */}
+      {/* Header with Back and Delete buttons */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">View Product</h1>
-        <Link
-          href="/admin/products"
-          className="px-4 py-2 rounded border hover:bg-gray-50 transition"
-        >
-          Back to Products
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/admin/products"
+            className="px-4 py-2 rounded border hover:bg-gray-50 transition"
+          >
+            Back to Products
+          </Link>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="inline-flex items-center px-4 py-2 border border-red-300 rounded text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
       </div>
 
       {/* Product Details Card */}
@@ -162,6 +227,10 @@ export default function ViewProductPage() {
                   src={src}
                   alt={`${product?.title} - Image ${i + 1}`}
                   className="w-32 h-32 object-cover rounded border"
+                  onError={(e) => {
+                    // use default placeholder when no product image or when replacing dummy import
+                    e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
+                  }}
                 />
               ))
             ) : (

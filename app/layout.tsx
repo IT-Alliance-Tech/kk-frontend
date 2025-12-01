@@ -1,20 +1,28 @@
+"use client";
+
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
 import { CartProvider } from "@/components/CartContext";
 import { ToastProvider } from "@/components/ToastContext";
-
-export const metadata = {
-  title: "KitchenKettles",
-  description: "Kitchen products and more",
-};
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // ensure page opens at top on navigation
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, [pathname]);
+
   return (
     <html lang="en">
       <body>

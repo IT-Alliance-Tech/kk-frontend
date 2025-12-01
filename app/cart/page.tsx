@@ -1,4 +1,6 @@
 // app/cart/page.tsx
+"use client";
+
 import dynamic from "next/dynamic";
 
 const CartClient = dynamic(() => import("@/components/CartClient"), {

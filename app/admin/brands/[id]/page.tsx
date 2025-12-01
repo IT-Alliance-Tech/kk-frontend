@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getSingleBrand, updateBrand } from "@/lib/admin";
 
-export default function EditBrandPage({ params }: { params: { id: string } }) {
+export default function EditBrandPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
@@ -16,7 +17,7 @@ export default function EditBrandPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function loadBrand() {
       try {
-        const brand = await getSingleBrand(params.id);
+        const brand = await getSingleBrand(id);
         setName(brand.name || "");
         setSlug(brand.slug || "");
         setLogoUrl(brand.logoUrl || "");
@@ -25,7 +26,7 @@ export default function EditBrandPage({ params }: { params: { id: string } }) {
       }
     }
     loadBrand();
-  }, [params.id]);
+  }, [id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +50,7 @@ export default function EditBrandPage({ params }: { params: { id: string } }) {
         logoUrl: logoUrl.trim() || undefined,
       };
 
-      await updateBrand(params.id, payload);
+      await updateBrand(id, payload);
       setStatus("Brand updated successfully!");
       setTimeout(() => {
         router.push("/admin/brands");

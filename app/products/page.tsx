@@ -1,11 +1,12 @@
 // Updated products/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiGet } from "@/lib/api";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,7 +40,7 @@ interface PaginationData {
 
 const ITEMS_PER_PAGE = 12;
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -229,24 +230,22 @@ export default function ProductsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((product) => {
                 const qty = qtyMap[product._id] || 0;
+                // use default placeholder when no product image or when replacing dummy import
+                const productImageSrc = product.images?.[0] || DefaultProductImage;
 
                 return (
                   <Card key={product._id} className="group hover:shadow-lg transition flex flex-col h-full">
                     <Link href={`/products/${product.slug}`}>
                       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
                         <Image
-                          src={
-                            product.images?.[0] ||
-                            `https://placehold.co/400x400?text=${encodeURIComponent(
-                              product.title
-                            )}`
-                          }
-                          alt={product.title}
+                          src={productImageSrc}
+                          alt={product?.title || 'Product image'}
                           width={400}
                           height={400}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          unoptimized={typeof productImageSrc === 'string' && productImageSrc.startsWith("http")}
                           onError={(e) => {
-                            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23cbd5e1'%3ENo Image%3C/text%3E%3C/svg%3E";
+                            e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
                           }}
                         />
 
@@ -401,5 +400,26 @@ export default function ProductsPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-white min-h-screen">
+        <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
+          <div className="container mx-auto px-4">
+            <h1 className="text-4xl font-bold text-slate-900 mb-4">All Products</h1>
+          </div>
+        </section>
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="text-center">Loading products...</div>
+          </div>
+        </section>
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
   );
 }

@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartContext";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import {
   Card,
   CardContent,
@@ -22,12 +23,15 @@ export default function ProductCard({ product }) {
   const productTitle = product.title || product.name || "Untitled Product";
 
   // Handle images
-  let imgSrc = "/placeholder.png";
-  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-    imgSrc = product.images[0];
-  } else if (product.image_url) {
-    imgSrc = product.image_url;
-  }
+  // use default placeholder when no product image or when replacing dummy import
+  const imgSrc = (() => {
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      return product.images[0];
+    } else if (product.image_url) {
+      return product.image_url;
+    }
+    return DefaultProductImage;
+  })();
 
   const handleQuantityChange = (newQty) => {
     if (newQty === 0) {
@@ -62,12 +66,12 @@ export default function ProductCard({ product }) {
         <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
           <Image
             src={imgSrc}
-            alt={productTitle}
+            alt={product?.title || product?.name || 'Product image'}
             width={400}
             height={400}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
             onError={(e) => {
-              e.currentTarget.src = "/placeholder.png";
+              e.currentTarget.src = DefaultProductImage.src || DefaultProductImage;
             }}
           />
 

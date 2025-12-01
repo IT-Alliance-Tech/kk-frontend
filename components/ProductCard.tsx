@@ -6,6 +6,7 @@ import { useToast } from "@/components/ToastContext";
 import { useState } from "react";
 import Image from "next/image";
 import { normalizeSrc } from "@/lib/normalizeSrc";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import {
   Card,
   CardContent,
@@ -28,14 +29,17 @@ export default function ProductCard({ product }: any) {
   const productTitle = product.title || product.name || "Untitled Product";
 
   // Handle images - support arrays or single string
-  let imgSrc = "/placeholder.png";
-  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-    imgSrc = normalizeSrc(product.images[0]);
-  } else if (product.images && typeof product.images === "string") {
-    imgSrc = normalizeSrc(product.images);
-  } else if (product.image_url) {
-    imgSrc = normalizeSrc(product.image_url);
-  }
+  // use default placeholder when no product image or when replacing dummy import
+  const imgSrc = (() => {
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      return normalizeSrc(product.images[0]);
+    } else if (product.images && typeof product.images === "string") {
+      return normalizeSrc(product.images);
+    } else if (product.image_url) {
+      return normalizeSrc(product.image_url);
+    }
+    return DefaultProductImage;
+  })();
 
   const handleQuantityChange = (newQty: number) => {
     try {
@@ -48,7 +52,7 @@ export default function ProductCard({ product }: any) {
             id: productId,
             name: productTitle,
             price: product.price || 0,
-            image_url: imgSrc,
+            image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
           },
           newQty
         );
@@ -70,7 +74,7 @@ export default function ProductCard({ product }: any) {
         id: productId,
         name: productTitle,
         price: product.price || 0,
-        image_url: imgSrc,
+        image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
       });
       showToast("Added to cart!", "success");
     } catch {
@@ -95,13 +99,13 @@ export default function ProductCard({ product }: any) {
         <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
           <Image
             src={imgSrc}
-            alt={productTitle}
+            alt={product?.title || product?.name || 'Product image'}
             width={400}
             height={400}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-            unoptimized={imgSrc.startsWith("http")}
+            unoptimized={typeof imgSrc === 'string' && imgSrc.startsWith("http")}
             onError={(e) => {
-              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23cbd5e1'%3ENo Image%3C/text%3E%3C/svg%3E";
+              e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
             }}
           />
 

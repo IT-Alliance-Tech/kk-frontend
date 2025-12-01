@@ -97,13 +97,6 @@ export default function AdminCategoriesPage() {
                   >
                     Edit
                   </Link>
-
-                  <button
-                    className="text-red-600"
-                    onClick={() => handleDelete(c._id)}
-                  >
-                    Delete
-                  </button>
                 </td>
               </tr>
             );
