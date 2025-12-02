@@ -23,7 +23,7 @@ export default function ContactPage() {
   useEffect(() => {
     const fetchContactInfo = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/contact-info"); 
+        const res = await fetch("https://kk-backend-5c11.onrender.com/api/contact-info"); 
         const data = await res.json();
         setContactData(data);
       } catch (error) {
@@ -49,7 +49,7 @@ export default function ContactPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/api/contact", {
+      const res = await fetch("https://kk-backend-5c11.onrender.com/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

@@ -262,7 +262,7 @@ function PaymentPageContent() {
 
         // Fallback to direct fetch
         const response = await fetch(
-          `http://localhost:5001/api/orders/${orderId}`,
+          `https://kk-backend-5c11.onrender.com/api/orders/${orderId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -504,7 +504,7 @@ function PaymentPageContent() {
                 {/* Download Invoice (only for paid orders) */}
                 {isPaid && (
                   <a
-                    href={`http://localhost:5001/api/orders/${
+                    href={`https://kk-backend-5c11.onrender.com/api/orders/${
                       order._id || order.id
                     }/invoice`}
                     target="_blank"

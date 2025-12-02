@@ -106,7 +106,7 @@ MongoDB connected successfully
 **Verify backend is running:**
 
 ```bash
-curl -i http://localhost:5001
+curl -i https://kk-backend-5c11.onrender.com/api
 ```
 
 Should return: `HTTP/1.1 200 OK` with JSON response `{"ok":true,"service":"kitchen-kettles-api"}`
@@ -254,7 +254,7 @@ The `getMyOrders()` function handles these response shapes:
 
 **Solution:**
 
-1. Verify backend is running on `http://localhost:5001`
+1. Verify backend is running on `https://kk-backend-5c11.onrender.com/api`
 2. Check `kk-backend/src/app.js` has CORS middleware configured
 3. Restart backend after any config changes
 4. Clear browser cache and reload
@@ -266,7 +266,7 @@ The `getMyOrders()` function handles these response shapes:
 1. Check if user has any orders in database
 2. Verify backend endpoint `/api/orders/me` returns data:
    ```bash
-   curl -i -H "Authorization: Bearer <your-token>" http://localhost:5001/api/orders/me
+   curl -i -H "Authorization: Bearer <your-token>" https://kk-backend-5c11.onrender.com/api/orders/me
    ```
 3. Check browser console for response shape issues
 

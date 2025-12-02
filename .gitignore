@@ -38,3 +38,5 @@ next-env.d.ts
 .env.*.local
 **/.env
 ./tools
+./tools
+.env.local.bak
