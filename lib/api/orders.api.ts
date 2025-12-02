@@ -18,7 +18,7 @@ import {
 } from "@/lib/adapters/order.adapter";
 
 // Base API URL for direct backend calls (when needed)
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = "https://kk-backend-5c11.onrender.com/api";
 
 /**
  * Fetch with authentication and envelope unwrapping

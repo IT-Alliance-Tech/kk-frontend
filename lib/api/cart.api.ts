@@ -7,7 +7,7 @@ import { getAccessToken } from "@/lib/utils/auth";
 import { ApiError } from "@/lib/api";
 
 // Base API URL for cart endpoints
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://kk-backend-5c11.onrender.com/api";
 
 /**
  * Cart item from backend

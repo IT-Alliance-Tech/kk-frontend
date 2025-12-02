@@ -34,7 +34,7 @@ export default function AdminLayoutClient({
 
       try {
         // Call backend /auth/verify with cookies
-        const BACKEND_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+        const BACKEND_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://kk-backend-5c11.onrender.com/api';
         
         const response = await fetch(`${BACKEND_BASE}/auth/verify`, {
           method: 'GET',

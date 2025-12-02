@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const res = await fetch("http://localhost:5001/api/categories", {
+    const res = await fetch("https://kk-backend-5c11.onrender.com/api/categories", {
       cache: "no-store",
     });
 
