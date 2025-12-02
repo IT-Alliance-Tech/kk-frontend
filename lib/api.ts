@@ -1,5 +1,5 @@
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://kk-backend-5c11.onrender.com/api";
 
 // -------------------- UNIFIED API WRAPPER - UNWRAPS BACKEND ENVELOPE --------------------
 

@@ -36,9 +36,5 @@ yarn-error.log*
 next-env.d.ts
 .env.local
 .env.*.local
-<<<<<<< HEAD
-**/.env
-=======
-**/.env
 ./tools
->>>>>>> e09f22a40b6164b6c4b3d11e6f3ddb96fdeaa80c
+.env.local.bak

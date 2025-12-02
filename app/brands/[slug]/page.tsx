@@ -79,8 +79,8 @@ export default async function BrandPage({ params }: Props) {
   }
 
   // Fetch products for this brand using the brand's id
-  // use env var for backend base URL; default to localhost:5001 for dev
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+  // use env var for backend base URL; default to https://kk-backend-5c11.onrender.com/api for dev
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://kk-backend-5c11.onrender.com/api";
   try {
     const brandId = brand.id || brand._id;
     if (brandId) {
@@ -177,5 +177,5 @@ export default async function BrandPage({ params }: Props) {
  * Test checklist:
  * 1. Open /brands/bake-master (existing slug) — should show products.
  * 2. Open using _id if available (e.g., /brands/507f1f77bcf86cd799439011) — should work.
- * 3. Verify network request origin is http://localhost:5001 (or the env var value).
+ * 3. Verify network request origin is https://kk-backend-5c11.onrender.com/api (or the env var value).
  */
