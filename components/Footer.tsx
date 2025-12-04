@@ -28,18 +28,22 @@ export default function Footer() {
               </p>
               <div className="flex gap-3 mt-2">
                 <a
-                  href="#"
-                  aria-label="Facebook"
+                  href="https://www.facebook.com/people/Kitchen-kettels/61571967747034/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kitchen Kettles Facebook"
                   className="p-2 bg-white border border-gray-200 rounded-full hover:bg-emerald-600 hover:text-white transition"
                 >
-                  <FaFacebookF className="text-base" />
+                  <FaFacebookF className="text-base text-[#1a1a1a] hover:text-[#3EB489] transition-colors duration-200" />
                 </a>
                 <a
-                  href="#"
-                  aria-label="Instagram"
+                  href="https://www.instagram.com/kitchen_kettles/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kitchen Kettles Instagram"
                   className="p-2 bg-white border border-gray-200 rounded-full hover:bg-emerald-600 hover:text-white transition"
                 >
-                  <FaInstagram className="text-base" />
+                  <FaInstagram className="text-base text-[#1a1a1a] hover:text-[#3EB489] transition-colors duration-200" />
                 </a>
               </div>
             </div>
@@ -166,7 +170,7 @@ export default function Footer() {
       </footer>
 
       {/* Floating WhatsApp and Call Buttons */}
-      <div className="fixed left-4 bottom-20 z-50 flex flex-col gap-3 sm:left-6">
+      <div className="fixed right-4 bottom-20 z-50 flex flex-col gap-3 sm:right-6">
         {/* WhatsApp */}
         <a
           href="https://wa.me/918989889880"

@@ -4,9 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useCart } from "@/components/CartContext";
 import LogoImg from "@/assets/images/logo.png";
+
+const CartBadgeClient = dynamic(() => import("./CartBadgeClient"), { ssr: false });
 
 /* PREVIOUS HEADER MARKUP (kept for review)
    Two-row header: white bg top row with logo/search/auth, gray-100 bottom nav row
@@ -15,6 +19,7 @@ import LogoImg from "@/assets/images/logo.png";
 export default function Navbar() {
   const router = useRouter();
   const { user, loading, logout: authLogout } = useAuth();
+  const { distinctCount: cartCount } = useCart();
   const headerRef = useRef<HTMLElement | null>(null);
 
   const [q, setQ] = useState("");
@@ -168,10 +173,11 @@ export default function Navbar() {
             {/* CART ICON */}
             <Link
               href="/cart"
-              className="flex items-center gap-2 text-gray-200 hover:text-emerald-400 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
+              className="relative inline-block text-gray-200 hover:text-emerald-400 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded px-2 py-1"
               aria-label="Shopping cart"
             >
               <ShoppingCart className="h-6 w-6" />
+              <CartBadgeClient />
             </Link>
 
             {/* USER AVATAR / AUTH */}
