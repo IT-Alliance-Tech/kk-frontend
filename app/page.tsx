@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import HeroBanner from "@/components/HeroBanner";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import BrandsPreview from "@/components/BrandsPreview";
+import HomeCategories from "@/components/HomeCategories";
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -47,13 +48,32 @@ export default function HomePage() {
       {/* Brands Preview */}
       <BrandsPreview />
 
+      {/* Categories preview section (4 items) */}
+      <HomeCategories />
+
       {/* Top Products */}
       <section className="max-w-8xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-10">
-        {/* Centered title */}
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">
-            Top Picks for You
-          </h2>
+        {/* Header row: centered title + right aligned Explore link */}
+        <div className="relative py-4">
+          <div className="flex items-center justify-center">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">
+              Top Picks for You
+            </h2>
+          </div>
+
+          {/* Explore link pinned to right on same horizontal band (desktop) */}
+          <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 hidden sm:block">
+            <Link href="/products" className="text-emerald-600 hover:underline whitespace-nowrap">
+              See more products →
+            </Link>
+          </div>
+
+          {/* Mobile: show explore below title for small screens */}
+          <div className="mt-3 sm:hidden text-right">
+            <Link href="/products" className="text-emerald-600 hover:underline whitespace-nowrap">
+              See more products →
+            </Link>
+          </div>
         </div>
 
         {/* Products preview grid: 8 items, 4 per row on desktop */}
@@ -66,13 +86,6 @@ export default function HomePage() {
                 />
               ))
             : products.map((p) => <ProductCard key={p._id || p.id} product={p} />)}
-        </div>
-
-        {/* See more link placed below the grid, right-aligned */}
-        <div className="mt-6 flex justify-end">
-          <Link href="/products" className="text-xs sm:text-sm text-emerald-600 hover:underline whitespace-nowrap">
-            See more products →
-          </Link>
         </div>
       </section>
     </div>
