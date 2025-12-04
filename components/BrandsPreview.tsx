@@ -73,9 +73,25 @@ export default function BrandsPreview() {
 
   return (
     <section className="max-w-8xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
-      {/* Centered section title */}
-      <div className="flex justify-center mb-4">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">Brands</h2>
+      {/* Header row: centered title + right aligned Explore link */}
+      <div className="relative py-4">
+        <div className="flex items-center justify-center">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">Brands</h2>
+        </div>
+
+        {/* Explore link pinned to right on same horizontal band (desktop) */}
+        <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 hidden sm:block">
+          <Link href="/brands" className="text-emerald-600 hover:underline font-medium">
+            Explore more →
+          </Link>
+        </div>
+
+        {/* Mobile: show explore below title for small screens */}
+        <div className="mt-3 sm:hidden text-right">
+          <Link href="/brands" className="text-emerald-600 hover:underline font-medium">
+            Explore more →
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
@@ -106,13 +122,6 @@ export default function BrandsPreview() {
             </div>
           </Link>
         ))}
-      </div>
-
-      {/* Right aligned Explore more link */}
-      <div className="mt-4 flex justify-end">
-        <Link href="/brands" className="text-xs sm:text-sm text-emerald-600 hover:underline font-medium">
-          Explore more →
-        </Link>
       </div>
     </section>
   );
