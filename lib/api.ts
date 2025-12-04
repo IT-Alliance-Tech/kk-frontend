@@ -1,5 +1,28 @@
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://kk-backend-5c11.onrender.com/api";
+// normalize base (remove trailing slashes)
+export const API_BASE_RAW = process.env.NEXT_PUBLIC_API_URL || "https://kk-backend-5c11.onrender.com";
+export const API_BASE = API_BASE_RAW.replace(/\/+$/, "");
+
+/**
+ * buildUrl(path)
+ * - If `path` is already an absolute URL -> return it unchanged.
+ * - Else join API_BASE and path safely:
+ *    * If API_BASE ends with '/api' and path begins with 'api/' or '/api/', strip the leading 'api' from path.
+ *    * If API_BASE does not end with '/api' and path begins with '/api/', keep path intact.
+ * - Always ensure a single slash between parts.
+ */
+export function buildUrl(path = ""): string {
+  if (!path) return API_BASE;
+  if (/^https?:\/\//i.test(path)) return path;
+  // remove leading slashes
+  let normalizedPath = path.replace(/^\/+/, "");
+  if (API_BASE.toLowerCase().endsWith("/api")) {
+    // remove leading "api/" if present so we don't end up with /api/api
+    normalizedPath = normalizedPath.replace(/^api\/?/i, "");
+    return `${API_BASE}/${normalizedPath}`;
+  } else {
+    return `${API_BASE}/${normalizedPath}`;
+  }
+}
 
 // -------------------- UNIFIED API WRAPPER - UNWRAPS BACKEND ENVELOPE --------------------
 
@@ -89,7 +112,7 @@ export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = buildUrl(path);
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   
   try {
@@ -219,7 +242,7 @@ export function getAuthToken() {
  * Authenticated GET request with envelope unwrapping
  */
 export async function apiGetAuth<T = any>(path: string): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = buildUrl(path);
   const token = getAuthToken();
   
   const res = await fetch(url, {
@@ -269,7 +292,7 @@ export async function apiGetAuth<T = any>(path: string): Promise<T> {
  * Authenticated POST request with envelope unwrapping
  */
 export async function apiPostAuth<T = any>(path: string, body: any): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = buildUrl(path);
   const token = getAuthToken();
   
   const res = await fetch(url, {
@@ -322,7 +345,7 @@ export async function apiPostAuth<T = any>(path: string, body: any): Promise<T> 
  * Authenticated PUT request with envelope unwrapping
  */
 export async function apiPutAuth<T = any>(path: string, body: any): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = buildUrl(path);
   const token = getAuthToken();
   
   const res = await fetch(url, {
@@ -375,7 +398,7 @@ export async function apiPutAuth<T = any>(path: string, body: any): Promise<T> {
  * Authenticated DELETE request with envelope unwrapping
  */
 export async function apiDeleteAuth<T = any>(path: string): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = buildUrl(path);
   const token = getAuthToken();
   
   const res = await fetch(url, {

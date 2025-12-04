@@ -20,10 +20,10 @@ export default function ProductCard({ product }: any) {
   const { showToast } = useToast();
   const [adding, setAdding] = useState(false);
 
-  // Support both _id and id for MongoDB compatibility
-  const productId = product._id || product.id;
-  const cartItem = items.find((item) => item.id === productId);
-  const currentQty = cartItem?.qty || 0;
+  // Support both _id and id for MongoDB compatibility - robust lookup
+  const productIdKey = product._id || product.id || product.productId || '';
+  const cartItem = items.find((item) => item.id === productIdKey || item.productId === productIdKey);
+  const currentQty = cartItem ? Number(cartItem.qty) || 0 : 0;
 
   // Support both title (MongoDB) and name (legacy) fields
   const productTitle = product.title || product.name || "Untitled Product";
@@ -44,12 +44,12 @@ export default function ProductCard({ product }: any) {
   const handleQuantityChange = (newQty: number) => {
     try {
       if (newQty === 0) {
-        removeItem(productId);
+        removeItem(productIdKey);
         showToast("Removed from cart", "success");
       } else if (currentQty === 0) {
         addItem(
           {
-            id: productId,
+            id: productIdKey,
             name: productTitle,
             price: product.price || 0,
             image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
@@ -58,7 +58,7 @@ export default function ProductCard({ product }: any) {
         );
         showToast("Added to cart!", "success");
       } else {
-        updateQty(productId, newQty);
+        updateQty(productIdKey, newQty);
       }
     } catch {
       showToast("Failed to update cart", "error");
@@ -71,7 +71,7 @@ export default function ProductCard({ product }: any) {
 
     try {
       addItem({
-        id: productId,
+        id: productIdKey,
         name: productTitle,
         price: product.price || 0,
         image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,

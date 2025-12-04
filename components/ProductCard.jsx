@@ -14,10 +14,10 @@ import {
 export default function ProductCard({ product }) {
   const { addItem, updateQty, removeItem, items } = useCart();
 
-  // Support both id and _id
-  const productId = product.id || product._id;
-  const cartItem = items.find((item) => String(item.id) === String(productId));
-  const currentQty = cartItem?.qty || 0;
+  // Support both id and _id - robust lookup
+  const productIdKey = product.id || product._id || product.productId || '';
+  const cartItem = items.find((item) => item.id === productIdKey || item.productId === productIdKey);
+  const currentQty = cartItem ? Number(cartItem.qty) || 0 : 0;
 
   // Support both title and name
   const productTitle = product.title || product.name || "Untitled Product";
@@ -35,11 +35,11 @@ export default function ProductCard({ product }) {
 
   const handleQuantityChange = (newQty) => {
     if (newQty === 0) {
-      removeItem(productId);
+      removeItem(productIdKey);
     } else if (currentQty === 0) {
       addItem(
         {
-          id: productId,
+          id: productIdKey,
           name: productTitle,
           price: product.price || 0,
           image_url: imgSrc,
@@ -47,7 +47,7 @@ export default function ProductCard({ product }) {
         newQty
       );
     } else {
-      updateQty(productId, newQty);
+      updateQty(productIdKey, newQty);
     }
   };
 
