@@ -178,14 +178,17 @@ export default function CartClient() {
   }
 
   function handleCheckout() {
-    // Check if user is logged in
-    const token = getAccessToken();
-    if (!token) {
-      // Redirect to login with return URL
-      router.push("/login?next=/checkout");
-      return;
-    }
+    // TEMPORARY AUTH BYPASS — 2025-12-05 (REVERT BEFORE PUSH)
+    // Original token check and redirect commented out to allow QA access while login/OTP is being fixed:
+    // // Check if user is logged in
+    // const token = getAccessToken();
+    // if (!token) {
+    //   // Redirect to login with return URL
+    //   router.push("/login?next=/checkout");
+    //   return;
+    // }
 
+    // Bypassing login redirect for QA — allow checkout navigation for now.
     // Pass coupon data to checkout
     const params = new URLSearchParams();
     if (appliedCouponData && discountAmount > 0) {
@@ -264,7 +267,7 @@ export default function CartClient() {
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
       {isGuestMode && (
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 mb-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
             <span className="font-semibold text-blue-900">Guest Cart:</span>
             <span className="text-blue-700 ml-2">
@@ -279,7 +282,7 @@ export default function CartClient() {
           </div>
         </div>
       )}
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Items */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white p-3 sm:p-4 rounded shadow">
@@ -364,13 +367,13 @@ export default function CartClient() {
               <button
                 onClick={handleApplyCoupon}
                 disabled={couponLoading || actionLoading || isGuestMode}
-                className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 text-white px-4 sm:px-6 lg:px-8 py-2 rounded text-sm sm:text-base hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {couponLoading ? "Applying..." : "Apply Coupon"}
               </button>
               <button
                 onClick={() => router.push("/coupons")}
-                className="bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded text-sm sm:text-base hover:bg-yellow-600 transition"
+                className="bg-yellow-500 text-black px-4 sm:px-6 lg:px-8 py-2 rounded text-sm sm:text-base hover:bg-yellow-600 transition"
               >
                 View Coupons
               </button>
