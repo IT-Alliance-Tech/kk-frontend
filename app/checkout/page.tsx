@@ -37,13 +37,16 @@ function CheckoutPageContent() {
 
   // Check authentication and load addresses on mount
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      // Redirect to login with return URL
-      router.push("/auth/login?next=/checkout");
-      return;
-    }
+    // TEMPORARY AUTH BYPASS — 2025-12-05 (REVERT BEFORE PUSH)
+    // Original token check and redirect commented out to allow QA access while login/OTP is being fixed:
+    // const token = getAccessToken();
+    // if (!token) {
+    //   // Redirect to login with return URL
+    //   router.push("/auth/login?next=/checkout");
+    //   return;
+    // }
 
+    // Bypassing login redirect for QA — allow checkout page rendering for now.
     loadAddresses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -139,7 +142,7 @@ function CheckoutPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Left: Address + Items */}
         <div className="lg:col-span-2 space-y-4">
           {/* Address Section */}

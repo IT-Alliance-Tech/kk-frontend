@@ -2,22 +2,13 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiGet } from "@/lib/api";
-import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Package, Search, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCart } from "@/components/CartContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Package, ChevronLeft, ChevronRight } from "lucide-react";
+import ProductCard from "@/components/ProductCard";
 
 interface Product {
   _id: string;
@@ -53,9 +44,6 @@ function ProductsPageContent() {
     page: 1,
     pages: 1,
   });
-  
-  const { addItem, removeItem } = useCart();
-  const [qtyMap, setQtyMap] = useState<{ [key: string]: number }>({});
 
   // Get current page from URL
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
@@ -158,31 +146,6 @@ function ProductsPageContent() {
     return pages;
   };
 
-  const increaseQty = (product: Product) => {
-    const newQty = (qtyMap[product._id] || 0) + 1;
-    setQtyMap((prev) => ({ ...prev, [product._id]: newQty }));
-
-    addItem(
-      {
-        id: product._id,
-        name: product.title,
-        price: product.price,
-        image_url: product.images?.[0] || "",
-      },
-      1
-    );
-  };
-
-  const decreaseQty = (product: Product) => {
-    const current = qtyMap[product._id] || 0;
-    if (current === 0) return;
-
-    const newQty = current - 1;
-    setQtyMap((prev) => ({ ...prev, [product._id]: newQty }));
-
-    removeItem(product._id);
-  };
-
   // Calculate showing range
   const startItem = (paginationData.page - 1) * ITEMS_PER_PAGE + 1;
   const endItem = Math.min(
@@ -228,104 +191,9 @@ function ProductsPageContent() {
             <>
               {/* Products Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((product) => {
-                const qty = qtyMap[product._id] || 0;
-                // use default placeholder when no product image or when replacing dummy import
-                const productImageSrc = product.images?.[0] || DefaultProductImage;
-
-                return (
-                  <Card key={product._id} className="group hover:shadow-lg transition flex flex-col h-full">
-                    <Link href={`/products/${product.slug}`}>
-                      <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-                        <Image
-                          src={productImageSrc}
-                          alt={product?.title || 'Product image'}
-                          width={400}
-                          height={400}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          unoptimized={typeof productImageSrc === 'string' && productImageSrc.startsWith("http")}
-                          onError={(e) => {
-                            e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
-                          }}
-                        />
-
-                        {/* removed Sale badge (per new design) */}
-                      </div>
-                    </Link>
-
-                    <div className="flex-1 flex flex-col">
-                      <CardHeader>
-                        <Link href={`/products/${product.slug}`}>
-                          <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600">
-                            {product.title}
-                          </CardTitle>
-                        </Link>
-
-                        {product.brand?.name && (
-                          <p className="text-sm text-slate-500">{product.brand.name}</p>
-                        )}
-                      </CardHeader>
-
-                      <CardContent>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl font-bold">₹{product.price}</span>
-                          {product.mrp && product.mrp > product.price && (
-                            <span className="text-sm text-slate-500 line-through">
-                              ₹{product.mrp}
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </div>
-
-                    {/* ------------------------------ */}
-                    {/* CUSTOM ADD TO CART + QTY UI   */}
-                    {/* ------------------------------ */}
-
-                    {/* When item in cart: show Go to Cart (green) + move quantity spinner to bottom-right */}
-                    <CardFooter className="mt-auto">
-                      {qty === 0 ? (
-                        <button
-                          onClick={() => increaseQty(product)}
-                          disabled={product.stock === 0}
-                          className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
-                          aria-label={`Add ${product.title} to cart`}
-                        >
-                          <ShoppingCart size={16} />
-                          {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-between gap-2 w-full">
-                          <Link
-                            href="/cart"
-                            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition text-center text-sm font-medium"
-                            aria-label={`Go to cart for ${product.title}`}
-                          >
-                            Go to Cart
-                          </Link>
-                          <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-sm">
-                            <button
-                              onClick={() => decreaseQty(product)}
-                              className="text-red-500 text-lg px-1"
-                              aria-label="Decrease quantity"
-                            >
-                              −
-                            </button>
-                            <span className="text-gray-900 text-base font-medium min-w-[1.5rem] text-center">{qty}</span>
-                            <button
-                              onClick={() => increaseQty(product)}
-                              className="text-red-500 text-lg px-1"
-                              aria-label="Increase quantity"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </CardFooter>
-                  </Card>
-                );
-              })}
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
               </div>
 
               {/* Pagination Controls */}

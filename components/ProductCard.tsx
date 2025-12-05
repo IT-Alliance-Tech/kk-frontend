@@ -23,7 +23,8 @@ export default function ProductCard({ product }: any) {
   // Support both _id and id for MongoDB compatibility - robust lookup
   const productIdKey = product._id || product.id || product.productId || '';
   const cartItem = items.find((item) => item.id === productIdKey || item.productId === productIdKey);
-  const currentQty = cartItem ? Number(cartItem.qty) || 0 : 0;
+  // Always ensure quantity is a non-negative number - prevent -1 display bug
+  const currentQty = Math.max(0, Number(cartItem?.qty) || 0);
 
   // Support both title (MongoDB) and name (legacy) fields
   const productTitle = product.title || product.name || "Untitled Product";
@@ -42,8 +43,11 @@ export default function ProductCard({ product }: any) {
   })();
 
   const handleQuantityChange = (newQty: number) => {
+    // Ensure newQty is always non-negative
+    const safeQty = Math.max(0, Number(newQty) || 0);
+    
     try {
-      if (newQty === 0) {
+      if (safeQty === 0) {
         removeItem(productIdKey);
         showToast("Removed from cart", "success");
       } else if (currentQty === 0) {
@@ -54,11 +58,11 @@ export default function ProductCard({ product }: any) {
             price: product.price || 0,
             image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
           },
-          newQty
+          safeQty
         );
         showToast("Added to cart!", "success");
       } else {
-        updateQty(productIdKey, newQty);
+        updateQty(productIdKey, safeQty);
       }
     } catch {
       showToast("Failed to update cart", "error");
@@ -85,11 +89,13 @@ export default function ProductCard({ product }: any) {
   };
 
   const increaseQty = () => {
-    handleQuantityChange(currentQty + 1);
+    // Safely increment with guard against negative values
+    handleQuantityChange(Math.max(0, currentQty) + 1);
   };
 
   const decreaseQty = () => {
-    handleQuantityChange(currentQty - 1);
+    // Safely decrement with guard - never go below 0
+    handleQuantityChange(Math.max(0, currentQty - 1));
   };
 
   // unified product card layout — match /products page

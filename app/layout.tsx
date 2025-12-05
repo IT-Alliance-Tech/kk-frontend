@@ -15,6 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const hideFooter = pathname.startsWith('/admin');
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -31,7 +32,7 @@ export default function RootLayout({
             <ToastProvider>
               <Navbar />
               <main className="min-h-screen bg-gray-50">{children}</main>
-              <Footer />
+              {!hideFooter && <Footer />}
             </ToastProvider>
           </ClientProviders>
         </CartProvider>

@@ -26,9 +26,9 @@ export default function AdminSidebar() {
 
   return (
     <aside
-      className={`kk-admin-sidebar bg-gray-900 text-white transition-all duration-300 ${
+      className={`kk-admin-sidebar fixed left-0 top-0 bg-gray-900 text-white transition-all duration-300 ${
         collapsed ? "w-16" : "w-64"
-      } min-h-screen flex flex-col`}
+      } h-screen flex flex-col overflow-y-auto z-40`}
     >
       <div className="p-4 border-b border-gray-700 flex items-center justify-between">
         {!collapsed && <h2 className="text-xl font-bold">Admin Panel</h2>}
