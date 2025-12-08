@@ -178,17 +178,14 @@ export default function CartClient() {
   }
 
   function handleCheckout() {
-    // TEMPORARY AUTH BYPASS — 2025-12-05 (REVERT BEFORE PUSH)
-    // Original token check and redirect commented out to allow QA access while login/OTP is being fixed:
-    // // Check if user is logged in
-    // const token = getAccessToken();
-    // if (!token) {
-    //   // Redirect to login with return URL
-    //   router.push("/login?next=/checkout");
-    //   return;
-    // }
+    // Check if user is logged in
+    const token = getAccessToken();
+    if (!token) {
+      // Redirect to login with return URL
+      router.push("/login?next=/checkout");
+      return;
+    }
 
-    // Bypassing login redirect for QA — allow checkout navigation for now.
     // Pass coupon data to checkout
     const params = new URLSearchParams();
     if (appliedCouponData && discountAmount > 0) {

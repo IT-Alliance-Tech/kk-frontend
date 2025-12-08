@@ -13,18 +13,11 @@ export default function SellerDashboard() {
   const { profile, loading } = useAuth();
   const router = useRouter();
 
-  // TEMPORARY AUTH BYPASS — 2025-12-05 (REVERT BEFORE PUSH)
-  // Original profile check and redirect commented out to allow QA access while login/OTP is being fixed:
-  // useEffect(() => {
-  //   if (!loading && !profile) {
-  //     router.push("/login");
-  //   }
-  // }, [profile, loading, router]);
-
-  // Bypassing login redirect for QA — allow seller page rendering for now.
   useEffect(() => {
-    // intentionally left blank while bypassing auth
-  }, []);
+    if (!loading && !profile) {
+      router.push("/login");
+    }
+  }, [profile, loading, router]);
 
   if (loading) {
     return (
