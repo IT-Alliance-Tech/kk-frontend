@@ -39,12 +39,12 @@ export default function HomePage() {
     <div className="bg-white min-h-screen">
       {/* Category + Hero */}
       <section className="bg-white">
-        <div className="max-w-8xl mx-auto px-3 sm:px-4">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6">
           {/* homepage categories strip removed */}
           <HeroCarousel />
         </div>
       </section>
-
+      
       {/* Brands Preview */}
       <BrandsPreview />
 
@@ -52,7 +52,7 @@ export default function HomePage() {
       <HomeCategories />
 
       {/* Top Products */}
-      <section className="max-w-8xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-10">
+      <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-10">
         {/* Header row: centered title + right aligned Explore link */}
         <div className="relative py-4">
           <div className="flex items-center justify-center">
@@ -96,7 +96,7 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
         
-        <div className="max-w-8xl mx-auto px-3 sm:px-4 relative z-10">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="backdrop-blur-sm bg-white/80 rounded-2xl shadow-xl border border-white/50 overflow-hidden group hover:shadow-2xl transition-all duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
               {/* Left side - Visual brand element */}
@@ -185,7 +185,7 @@ export default function HomePage() {
 
       {/* Contact Us Section - Modern Split Design */}
       <section className="w-full py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-8xl mx-auto px-3 sm:px-4">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 group hover:shadow-2xl transition-all duration-500">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
               {/* Left side - Content */}

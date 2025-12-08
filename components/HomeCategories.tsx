@@ -92,7 +92,7 @@ export default function HomeCategories() {
     // full width section so background and spacing match other sections
     <section className="w-full bg-white py-6 sm:py-8">
       {/* centered inner container (same as other homepage sections) */}
-      <div className="max-w-8xl mx-auto px-3 sm:px-4">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6">
         {/* Header row: centered title + right aligned Explore link */}
         <div className="relative py-4">
           <div className="flex items-center justify-center">
