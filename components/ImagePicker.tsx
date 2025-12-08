@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
+import Image from "next/image";
 
 interface ImageFile {
   url: string;
@@ -250,10 +251,12 @@ export default function ImagePicker({
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  <img
+                  <Image
                     src={img.url}
                     alt={img.name}
                     className="w-full h-32 object-cover"
+                    width={500}
+                    height={500}
                   />
                   {selectedUrls.includes(img.url) && (
                     <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">

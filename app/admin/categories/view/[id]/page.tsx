@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getSingleCategory, getAdminProducts, getAdminBrands } from "@/lib/admin";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
 
 export default function CategoryViewPage() {
@@ -222,10 +223,12 @@ export default function CategoryViewPage() {
                 >
                   <div className="flex items-center space-x-4">
                     {productImage ? (
-                      <img
+                      <Image
                         src={productImage}
                         alt={p?.title ?? "Product"}
                         className="w-16 h-16 object-cover rounded"
+                        width={500}
+                        height={500}
                       />
                     ) : (
                       <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">

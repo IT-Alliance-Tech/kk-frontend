@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { MapPin, Plus } from "lucide-react";
@@ -16,11 +16,7 @@ export default function AddressesPage() {
   const [editingData, setEditingData] = useState<any>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadAddresses();
-  }, []);
-
-  async function loadAddresses() {
+  const loadAddresses = useCallback(async function() {
     try {
       const data = await getAddresses();
       setAddresses(data || []);
@@ -29,7 +25,11 @@ export default function AddressesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    loadAddresses();
+  }, [loadAddresses]);
 
   function handleAddAddress() {
     setEditingIndex(null);

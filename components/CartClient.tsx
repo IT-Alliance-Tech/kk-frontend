@@ -268,7 +268,7 @@ export default function CartClient() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
             <span className="font-semibold text-blue-900">Guest Cart:</span>
             <span className="text-blue-700 ml-2">
-              You're browsing as a guest. 
+              You{"'"}re browsing as a guest. 
               <button 
                 onClick={() => router.push("/login?next=/cart")}
                 className="ml-1 underline hover:text-blue-900"

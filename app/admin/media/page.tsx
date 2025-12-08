@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, Trash2 } from "lucide-react";
+import Image from "next/image";
 
 interface ImageFile {
   url: string;
@@ -221,10 +222,12 @@ export default function MediaManagerPage() {
                 className="group relative rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all"
               >
                 <div className="aspect-square">
-                  <img
+                  <Image
                     src={img.url}
                     alt={img.name}
                     className="w-full h-full object-cover"
+                    width={500}
+                    height={500}
                   />
                 </div>
 
