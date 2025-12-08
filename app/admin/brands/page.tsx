@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getAdminBrands, deleteBrand } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function AdminBrandsPage() {
   const [brands, setBrands] = useState<any[]>([]);
@@ -61,10 +62,12 @@ export default function AdminBrandsPage() {
             <tr key={b._id}>
               <td className="border p-2">
                 {b.logoUrl ? (
-                  <img
+                  <Image
                     src={b.logoUrl}
                     alt={b.name}
                     className="w-16 h-16 object-contain"
+                    width={500}
+                    height={500}
                   />
                 ) : (
                   <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-xs">

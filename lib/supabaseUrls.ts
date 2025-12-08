@@ -141,7 +141,7 @@ export function normalizeBrandLogoUrl(
   return getSupabasePublicUrl(path);
 }
 
-export default {
+const supabaseUrlsExport = {
   getSupabasePublicUrl,
   isSupabaseUrl,
   extractPathFromSupabaseUrl,
@@ -149,3 +149,5 @@ export default {
   getCategoryLogoUrl,
   normalizeBrandLogoUrl,
 };
+
+export default supabaseUrlsExport;

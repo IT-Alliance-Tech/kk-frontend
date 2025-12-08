@@ -7,6 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getSingleProduct, getBrands, getCategories } from "@/lib/admin";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
 
 export default function ViewProductPage() {
@@ -222,14 +223,16 @@ export default function ViewProductPage() {
           <div className="flex gap-3 flex-wrap">
             {Array.isArray(product?.images) && product.images.length > 0 ? (
               product.images.map((src: string, i: number) => (
-                <img
+                <Image
                   key={i}
                   src={src}
                   alt={`${product?.title} - Image ${i + 1}`}
                   className="w-32 h-32 object-cover rounded border"
+                  width={500}
+                  height={500}
                   onError={(e) => {
                     // use default placeholder when no product image or when replacing dummy import
-                    e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
+                    (e.currentTarget as HTMLImageElement).src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
                   }}
                 />
               ))
