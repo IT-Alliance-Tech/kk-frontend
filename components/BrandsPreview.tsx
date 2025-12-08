@@ -44,7 +44,7 @@ export default function BrandsPreview() {
 
   if (loading) {
     return (
-      <section className="max-w-8xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Centered section title */}
         <div className="flex justify-center mb-4">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">Brands</h2>
@@ -72,7 +72,7 @@ export default function BrandsPreview() {
   }
 
   return (
-    <section className="max-w-8xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+    <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Header row: centered title + right aligned Explore link */}
       <div className="relative py-4">
         <div className="flex items-center justify-center">
