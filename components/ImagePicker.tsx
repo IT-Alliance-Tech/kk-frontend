@@ -38,10 +38,7 @@ export default function ImagePicker({
     setLoading(true);
     setError("");
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("adminToken="))
-        ?.split("=")[1];
+      const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       // TODO: Remove debug log after testing
       console.log("[DEBUG] Fetching images with token:", token ? "present" : "missing");
@@ -90,10 +87,7 @@ export default function ImagePicker({
         formData.append("files", file);
       });
 
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("adminToken="))
-        ?.split("=")[1];
+      const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       // TODO: Remove debug log after testing
       console.log("[DEBUG] Uploading files:", files.length);

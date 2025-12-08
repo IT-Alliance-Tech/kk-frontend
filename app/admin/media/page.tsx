@@ -24,10 +24,7 @@ export default function MediaManagerPage() {
     setLoading(true);
     setError("");
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("adminToken="))
-        ?.split("=")[1];
+      const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin`,
@@ -71,10 +68,7 @@ export default function MediaManagerPage() {
         formData.append("files", file);
       });
 
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("adminToken="))
-        ?.split("=")[1];
+      const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin`,
