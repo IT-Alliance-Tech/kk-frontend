@@ -15,25 +15,32 @@ async function apiFetchAuth(path: string, opts: RequestInit = {}) {
     ...opts,
   });
 
-  const json = await res.json().catch(() => ({}));
+  const status = res.status;
+  const json = await res.json().catch(() => null);
   
-  if (!res.ok) {
-    const err = new Error(json.message || `Request failed: ${res.status}`);
-    (err as any).status = res.status;
+  // Accept any 2xx status as success (200, 201, etc.)
+  const isSuccess = status >= 200 && status < 300;
+  
+  if (!isSuccess) {
+    const err = new Error(json?.message || json?.error || `Request failed: ${status}`);
+    (err as any).status = status;
     throw err;
   }
   
   // Unwrap backend envelope: { statusCode, success, error, data }
   if (json && typeof json === 'object' && ('statusCode' in json || 'success' in json)) {
     // Backend envelope detected
-    if (json.success === false || !json.success) {
+    if (json.success === false) {
       const errMsg = json.error?.message || json.message || 'Request failed';
       const err = new Error(errMsg);
-      (err as any).status = json.statusCode || res.status;
+      (err as any).status = json.statusCode || status;
       throw err;
     }
-    // Return unwrapped data
-    return json.data ?? json;
+    // Preserve the success field in the response
+    if (json.data) {
+      return { ...json.data, success: json.success };
+    }
+    return json;
   }
   
   return json;
@@ -85,7 +92,7 @@ export async function adminLogin(email: string, password: string) {
   const payload = { email, password };
   const backendRoot = API_BASE.replace(/\/api\/?$/, "");
   const attempts = [
-    `${backendRoot}/admin/login`,
+    `${backendRoot}/api/admin/login`,
     `${API_BASE}/admin/login`,
   ];
   for (const url of attempts) {
@@ -146,8 +153,25 @@ export function getSingleProduct(id: string) {
   return apiGetAuth(`/admin/products/${id}`);
 }
 
-export function createProduct(data: any) {
-  return apiPostAuth("/admin/products", data);
+export async function createProduct(data: any) {
+  try {
+    const result = await apiPostAuth("/admin/products", data);
+    // Handle different response structures defensively
+    const product = result?.product ?? result?.data?.product ?? result?.data ?? null;
+    return {
+      ok: true,
+      success: true,
+      product,
+      data: result
+    };
+  } catch (err: any) {
+    return {
+      ok: false,
+      success: false,
+      error: err.message || 'Creation failed',
+      message: err.message || 'Creation failed'
+    };
+  }
 }
 
 export function updateProduct(id: string, data: any) {

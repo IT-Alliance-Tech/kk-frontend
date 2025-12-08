@@ -93,22 +93,25 @@ export default function AddProductForm() {
 
       const result = await createProduct(payload);
 
-      if (!result.success) {
-        throw new Error(result.message || "Create failed");
+      // Check for success using multiple possible indicators
+      if (result?.ok || result?.success) {
+        setStatus("Created");
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setBrandId("");
+        setCategoryId("");
+        setPrice("");
+        setMrp("");
+        setStock("");
+        setImages("");
+        setIsActive(true);
+        router.refresh();
+      } else {
+        // Use any available error message
+        const errorMsg = result?.error || result?.message || "Create failed";
+        throw new Error(errorMsg);
       }
-
-      setStatus("Created");
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setBrandId("");
-      setCategoryId("");
-      setPrice("");
-      setMrp("");
-      setStock("");
-      setImages("");
-      setIsActive(true);
-      router.refresh();
     } catch (err: any) {
       setStatus(err.message || "Error");
     }

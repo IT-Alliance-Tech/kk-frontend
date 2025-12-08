@@ -37,16 +37,13 @@ function CheckoutPageContent() {
 
   // Check authentication and load addresses on mount
   useEffect(() => {
-    // TEMPORARY AUTH BYPASS — 2025-12-05 (REVERT BEFORE PUSH)
-    // Original token check and redirect commented out to allow QA access while login/OTP is being fixed:
-    // const token = getAccessToken();
-    // if (!token) {
-    //   // Redirect to login with return URL
-    //   router.push("/auth/login?next=/checkout");
-    //   return;
-    // }
+    const token = getAccessToken();
+    if (!token) {
+      // Redirect to login with return URL
+      router.push("/auth/login?next=/checkout");
+      return;
+    }
 
-    // Bypassing login redirect for QA — allow checkout page rendering for now.
     loadAddresses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

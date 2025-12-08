@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, getBrands, getCategories } from "@/lib/admin";
-import ImagePicker from "@/components/ImagePicker";
 
 export default function NewProductPage() {
   const [title, setTitle] = useState("");
@@ -15,7 +14,6 @@ export default function NewProductPage() {
   const [stock, setStock] = useState("");
   const [images, setImages] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [showImagePicker, setShowImagePicker] = useState(false);
 
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -225,24 +223,12 @@ export default function NewProductPage() {
         {/* Images */}
         <div>
           <label className="block text-sm font-medium mb-1">Image URLs (comma-separated)</label>
-          <div className="flex gap-2">
-            <input
-              value={images}
-              onChange={(e) => setImages(e.target.value)}
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-              className="border p-2 rounded w-full"
-            />
-            <button
-              type="button"
-              onClick={() => setShowImagePicker(true)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border rounded whitespace-nowrap"
-            >
-              📷 Browse Images
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            You can paste URLs directly or use the image picker to upload and select images
-          </p>
+          <input
+            value={images}
+            onChange={(e) => setImages(e.target.value)}
+            placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+            className="border p-2 rounded w-full"
+          />
         </div>
 
         {/* isActive Toggle */}
@@ -284,20 +270,6 @@ export default function NewProductPage() {
           </button>
         </div>
       </form>
-
-      {/* Image Picker Modal */}
-      <ImagePicker
-        isOpen={showImagePicker}
-        onClose={() => setShowImagePicker(false)}
-        onSelect={(urls) => {
-          // Append selected URLs to existing images field (comma-separated)
-          const existingUrls = images.trim() ? images.split(",").map(u => u.trim()).filter(u => u) : [];
-          const allUrls = [...existingUrls, ...urls];
-          setImages(allUrls.join(", "));
-        }}
-        multiSelect={true}
-        maxFiles={10}
-      />
     </div>
   );
 }
