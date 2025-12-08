@@ -168,7 +168,7 @@ function ProductsPageContent() {
         <div className="container mx-auto px-4">
           {/* Loading */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
                   <div className="h-40 bg-slate-200" />
@@ -190,7 +190,7 @@ function ProductsPageContent() {
           ) : (
             <>
               {/* Products Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

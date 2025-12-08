@@ -68,7 +68,7 @@ export default function HomeCategories() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Categories</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse h-48" />
           ))}
@@ -115,7 +115,7 @@ export default function HomeCategories() {
         </div>
 
         {/* Grid container: remains inside centered inner container */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {categories.map((cat) => {
           const id = cat._id ?? cat.id ?? cat.slug;
           const slug = cat.slug ?? (cat.name ? String(cat.name).toLowerCase().replace(/\s+/g, "-") : id);
