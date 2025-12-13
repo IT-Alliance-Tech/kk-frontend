@@ -119,7 +119,7 @@ export default async function BrandPage({ params }: Props) {
                           width={160}
                           height={160}
                           className="w-40 h-40 object-contain border border-slate-200 rounded-lg p-4 bg-white"
-                          // If you prefer `fill`, ensure wrapper is relative and size is fixed
+                          loading="lazy"
                         />
                       </div>
                     ) : (

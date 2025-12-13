@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Category } from "@/lib/supabase";
 import { getProducts, Product } from "@/lib/api/products.api";
 import HeroCarousel from "@/components/HeroCarousel";
@@ -10,8 +11,9 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import HeroBanner from "@/components/HeroBanner";
 import { normalizeSrc } from "@/lib/normalizeSrc";
-import BrandsPreview from "@/components/BrandsPreview";
-import HomeCategories from "@/components/HomeCategories";
+
+const BrandsPreview = dynamic(() => import("@/components/BrandsPreview"), { ssr: false });
+const HomeCategories = dynamic(() => import("@/components/HomeCategories"), { ssr: false });
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);

@@ -111,6 +111,7 @@ export default function BrandsPreview() {
                 width={80}
                 height={80}
                 className="object-contain"
+                loading="lazy"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = "/brand-placeholder.svg";
                 }}

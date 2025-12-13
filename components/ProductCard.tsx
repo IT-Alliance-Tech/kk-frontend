@@ -109,6 +109,7 @@ export default function ProductCard({ product }: any) {
             width={400}
             height={400}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            loading="lazy"
             unoptimized={typeof imgSrc === 'string' && imgSrc.startsWith("http")}
             onError={(e) => {
               e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;

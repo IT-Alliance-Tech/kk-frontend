@@ -230,6 +230,7 @@ export default function ViewProductPage() {
                   className="w-32 h-32 object-cover rounded border"
                   width={500}
                   height={500}
+                  loading="lazy"
                   onError={(e) => {
                     // use default placeholder when no product image or when replacing dummy import
                     (e.currentTarget as HTMLImageElement).src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;

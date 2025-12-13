@@ -140,6 +140,7 @@ export default function HomeCategories() {
                     alt={cat.name ?? "Category image"}
                     className="object-contain w-28 h-28 md:w-32 md:h-32 lg:w-36 lg:h-36"
                     style={{ maxWidth: "100%" }}
+                    loading="lazy"
                   />
                 ) : (
                   <div className="text-gray-400 text-sm">No image</div>
