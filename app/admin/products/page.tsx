@@ -34,26 +34,27 @@ export default function AdminProductsPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Products</h1>
+    <div className="p-3 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold">Products</h1>
         <Link
           href="/admin/products/new"
-          className="bg-black text-white px-4 py-2 rounded"
+          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base text-center"
         >
           + Add Product
         </Link>
       </div>
 
-      <table className="w-full border">
+      <div className="overflow-x-auto">
+        <table className="w-full border min-w-[640px]">
         <thead>
           {/* Reordered columns to: Title, Category, Brand, Price, Action (per product owner request) */}
           <tr className="bg-gray-100">
-            <th className="border p-2">Title</th>
-            <th className="border p-2">Category</th>
-            <th className="border p-2">Brand</th>
-            <th className="border p-2">Price</th>
-            <th className="border p-2">Action</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Title</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Category</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Brand</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Price</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
           </tr>
         </thead>
 
@@ -76,15 +77,15 @@ export default function AdminProductsPage() {
 
             return (
               <tr key={p._id}>
-                <td className="border p-2">{p.title}</td>
-                <td className="border p-2">{categoryName}</td>
-                <td className="border p-2">{brandName}</td>
-                <td className="border p-2">₹{p.price}</td>
-                <td className="border p-2 space-x-3">
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{p.title}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{categoryName}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{brandName}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">₹{p.price}</td>
+                <td className="border p-1.5 sm:p-2 space-x-1 sm:space-x-3 whitespace-nowrap">
                   {/* Open read-only product view page */}
                   <Link
                     href={`/admin/products/view/${pid}`}
-                    className="text-green-600"
+                    className="text-green-600 text-xs sm:text-sm"
                     aria-label={`View ${label}`}
                   >
                     View
@@ -92,7 +93,7 @@ export default function AdminProductsPage() {
 
                   <Link
                     href={`/admin/products/${pid}`}
-                    className="text-blue-600"
+                    className="text-blue-600 text-xs sm:text-sm"
                     aria-label={`Edit ${label}`}
                   >
                     Edit
@@ -103,6 +104,7 @@ export default function AdminProductsPage() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -42,24 +42,25 @@ export default function AdminCategoriesPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Categories</h1>
+    <div className="p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
         <Link
           href="/admin/categories/new"
-          className="bg-black text-white px-4 py-2 rounded"
+          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base whitespace-nowrap"
         >
           + Add Category
         </Link>
       </div>
 
-      <table className="w-full border">
+      <div className="overflow-x-auto">
+        <table className="w-full border min-w-[520px]">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border p-2">Name</th>
-            <th className="border p-2">#Products</th>
-            <th className="border p-2">#Brands</th>
-            <th className="border p-2">Action</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Name</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">#Products</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">#Brands</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
           </tr>
         </thead>
 
@@ -79,21 +80,21 @@ export default function AdminCategoriesPage() {
 
             return (
               <tr key={c._id}>
-                <td className="border p-2">{c.productCategory?.name || c.name}</td>
-                <td className="border p-2 text-center">{productCount}</td>
-                <td className="border p-2 text-center">{brandCount}</td>
-                <td className="border p-2 space-x-3">
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{c.productCategory?.name || c.name}</td>
+                <td className="border p-1.5 sm:p-2 text-center text-xs sm:text-sm whitespace-nowrap">{productCount}</td>
+                <td className="border p-1.5 sm:p-2 text-center text-xs sm:text-sm whitespace-nowrap">{brandCount}</td>
+                <td className="border p-1.5 sm:p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
                   {/* View category details (read-only) */}
                   <Link
                     href={`/admin/categories/view/${c._id}`}
-                    className="text-green-600"
+                    className="text-green-600 text-xs sm:text-sm"
                   >
                     View
                   </Link>
 
                   <Link
                     href={`/admin/categories/${c._id}`}
-                    className="text-blue-600"
+                    className="text-blue-600 text-xs sm:text-sm"
                   >
                     Edit
                   </Link>
@@ -103,6 +104,7 @@ export default function AdminCategoriesPage() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
