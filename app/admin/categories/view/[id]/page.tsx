@@ -229,6 +229,7 @@ export default function CategoryViewPage() {
                         className="w-16 h-16 object-cover rounded"
                         width={500}
                         height={500}
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">

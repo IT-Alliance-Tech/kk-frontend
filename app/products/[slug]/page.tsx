@@ -259,6 +259,7 @@ export default function ProductPage() {
                         alt={`Thumbnail ${idx + 1}`}
                         fill
                         className="object-contain p-1"
+                        loading="lazy"
                         unoptimized={img.startsWith("http")}
                       />
                     </button>

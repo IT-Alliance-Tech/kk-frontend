@@ -76,6 +76,7 @@ export default function ProductCard({ product }) {
             width={400}
             height={400}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            loading="lazy"
             onError={(e) => {
               e.currentTarget.src = DefaultProductImage.src || DefaultProductImage;
             }}
