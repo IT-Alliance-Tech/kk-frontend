@@ -31,9 +31,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-x-hidden">
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
         <KPI
           title="Total Orders"
           value={totalOrders}
@@ -60,8 +60,8 @@ export default function AdminDashboard() {
       <RecentOrdersTable orders={recentOrders} maxRows={5} />
 
       {/* Low Stock Alert - Full Width */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 md:p-6 w-full overflow-x-hidden">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
           Low Stock Alert
         </h3>
         <div className="space-y-3">
@@ -72,11 +72,11 @@ export default function AdminDashboard() {
             .map((product) => (
               <div
                 key={product.id}
-                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 gap-2"
               >
-                <span className="text-sm text-gray-900">{product.name}</span>
+                <span className="text-xs sm:text-sm text-gray-900 truncate flex-1">{product.name}</span>
                 <span
-                  className={`text-sm font-semibold ${
+                  className={`text-xs sm:text-sm font-semibold flex-shrink-0 ${
                     product.stock === 0
                       ? "text-red-600"
                       : product.stock < 10
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
               </div>
             ))}
           {productsData.filter((p) => p.stock < 20).length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-xs sm:text-sm text-gray-500 text-center py-4">
               All products are well stocked
             </p>
           )}

@@ -20,6 +20,7 @@ export default function AdminLayoutClient({
   const pathname = usePathname();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     async function verifySession() {
@@ -52,10 +53,10 @@ export default function AdminLayoutClient({
 
   return (
     <div className="kk-admin-layout min-h-screen bg-gray-50">
-      {showNavigation && <AdminSidebar />}
-      <div className={`flex flex-col min-h-screen ${showNavigation ? "ml-64" : ""}`}>
-        {showNavigation && <AdminTopbar />}
-        <main className={showNavigation ? "flex-1 p-6 overflow-auto" : "flex-1"}>
+      {showNavigation && <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+      <div className="flex flex-col min-h-screen md:ml-64">
+        {showNavigation && <AdminTopbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />}
+        <main className="flex-1 p-2 sm:p-4 md:p-6 overflow-x-hidden overflow-y-auto">
           {children}
         </main>
       </div>
