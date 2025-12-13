@@ -36,24 +36,25 @@ export default function AdminBrandsPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Brands</h1>
+    <div className="p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold">Brands</h1>
         <Link
           href="/admin/brands/new"
-          className="bg-black text-white px-4 py-2 rounded"
+          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base whitespace-nowrap"
         >
           + Add Brand
         </Link>
       </div>
 
-      <table className="w-full border">
+      <div className="overflow-x-auto">
+        <table className="w-full border min-w-[640px]">
         <thead>
           <tr className="bg-gray-100">
-            <th className="border p-2">Logo</th>
-            <th className="border p-2">Name</th>
-            <th className="border p-2">Slug</th>
-            <th className="border p-2">Action</th>
+            <th className="border p-2 text-xs sm:text-sm">Logo</th>
+            <th className="border p-2 text-xs sm:text-sm">Name</th>
+            <th className="border p-2 text-xs sm:text-sm">Slug</th>
+            <th className="border p-2 text-xs sm:text-sm">Action</th>
           </tr>
         </thead>
 
@@ -65,28 +66,28 @@ export default function AdminBrandsPage() {
                   <Image
                     src={b.logoUrl}
                     alt={b.name}
-                    className="w-16 h-16 object-contain"
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                     width={500}
                     height={500}
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-xs">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 flex items-center justify-center text-xs">
                     No Logo
                   </div>
                 )}
               </td>
-              <td className="border p-2">{b.name}</td>
-              <td className="border p-2 text-gray-600">{b.slug}</td>
-              <td className="border p-2 space-x-3">
+              <td className="border p-2 text-xs sm:text-sm">{b.name}</td>
+              <td className="border p-2 text-xs sm:text-sm text-gray-600">{b.slug}</td>
+              <td className="border p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
                 <Link
                   href={`/admin/brands/${b._id}`}
-                  className="text-blue-600"
+                  className="text-blue-600 text-xs sm:text-sm"
                 >
                   Edit
                 </Link>
 
                 <button
-                  className="text-red-600"
+                  className="text-red-600 text-xs sm:text-sm"
                   onClick={() => handleDelete(b._id)}
                 >
                   Delete
@@ -96,6 +97,7 @@ export default function AdminBrandsPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
