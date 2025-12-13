@@ -45,12 +45,12 @@ export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="backdrop-blur-sm bg-white/90 rounded-2xl shadow-2xl border border-white/50 p-6 sm:p-8 lg:p-10 hover:shadow-emerald-200/50 transition-all duration-500">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-slate-700 mb-2"
+            className="block text-sm font-semibold text-slate-700 mb-2.5"
           >
             Email Address
           </label>
@@ -61,19 +61,19 @@ export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
-            className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            className="w-full px-4 py-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-base placeholder:text-slate-400 hover:border-slate-400 bg-white/50 backdrop-blur-sm"
             disabled={loading}
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+          <div className="bg-red-50/90 border border-red-200 text-red-700 px-4 py-3.5 rounded-xl text-sm font-medium backdrop-blur-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+          <div className="bg-emerald-50/90 border border-emerald-200 text-emerald-700 px-4 py-3.5 rounded-xl text-sm font-medium backdrop-blur-sm">
             {success}
           </div>
         )}
@@ -81,7 +81,7 @@ export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center"
+          className="w-full bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 hover:from-emerald-700 hover:via-emerald-800 hover:to-emerald-900 disabled:from-emerald-400 disabled:via-emerald-400 disabled:to-emerald-400 disabled:cursor-not-allowed text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transform"
         >
           {loading ? (
             <>
@@ -105,31 +105,31 @@ export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Sending...
+              <span>Sending OTP...</span>
             </>
           ) : (
-            "Send OTP"
+            <span>Send OTP</span>
           )}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-slate-600">
+      <div className="mt-8 pt-6 border-t border-slate-200 text-center text-sm">
         {purpose === "signup" ? (
-          <p>
+          <p className="text-slate-600">
             Already have an account?{" "}
             <a
               href="/auth/request?purpose=login"
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline transition-colors duration-200"
             >
               Sign in
             </a>
           </p>
         ) : (
-          <p>
+          <p className="text-slate-600">
             Don&apos;t have an account?{" "}
             <a
               href="/auth/request?purpose=signup"
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline transition-colors duration-200"
             >
               Sign up
             </a>

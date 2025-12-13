@@ -73,30 +73,30 @@ export default function AdminOrdersPage() {
   if (loading) return <p className="text-center py-10">Loading orders...</p>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-3 sm:p-4 md:p-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Orders</h2>
-        <p className="text-sm text-gray-600 mt-1">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Orders</h2>
+        <p className="text-xs sm:text-sm text-gray-600 mt-1">
           View and manage customer orders
         </p>
       </div>
 
       {/* Search + Filter */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <input
             type="text"
             placeholder="Search by order ID, customer name, or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
+            className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm"
           />
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 border rounded-lg text-sm"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -111,17 +111,17 @@ export default function AdminOrdersPage() {
       {/* Orders Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[720px]">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs">Customer</th>
-                <th className="px-6 py-3 text-left text-xs hidden lg:table-cell">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs">Status</th>
-                <th className="px-6 py-3 text-left text-xs">Total</th>
-                <th className="px-6 py-3 text-left text-xs">Actions</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
 
@@ -132,23 +132,25 @@ export default function AdminOrdersPage() {
                   order.shippingAddress?.email || "N/A";
 
                 return (
-                  <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">{order._id}</td>
+                  <tr key={order._id} className="hover:bg-gray-50 border-b">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm whitespace-nowrap">
+                      <span className="font-mono">{order._id}</span>
+                    </td>
 
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{customerName}</div>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="font-medium text-xs sm:text-sm">{customerName}</div>
                       <div className="text-xs text-gray-500">
                         {customerEmail}
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 hidden lg:table-cell">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 hidden lg:table-cell text-xs sm:text-sm whitespace-nowrap">
                       {formatDate(order.createdAt)}
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <span
-                        className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                        className={`px-2 py-1 text-xs rounded-full font-semibold whitespace-nowrap ${
                           statusColors[order.status] ||
                           "bg-gray-100 text-gray-800"
                         }`}
@@ -157,14 +159,14 @@ export default function AdminOrdersPage() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 font-semibold">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm whitespace-nowrap">
                       ₹{(order.total || 0).toFixed(2)}
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="text-blue-600 text-sm"
+                        className="text-blue-600 text-xs sm:text-sm hover:underline"
                       >
                         View
                       </button>
@@ -177,7 +179,7 @@ export default function AdminOrdersPage() {
         </div>
 
         {filteredOrders.length === 0 && (
-          <div className="p-6 text-center text-gray-500">No orders found</div>
+          <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">No orders found</div>
         )}
       </div>
     </div>

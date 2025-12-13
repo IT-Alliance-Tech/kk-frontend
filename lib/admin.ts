@@ -36,9 +36,9 @@ async function apiFetchAuth(path: string, opts: RequestInit = {}) {
       (err as any).status = json.statusCode || status;
       throw err;
     }
-    // Preserve the success field in the response
-    if (json.data) {
-      return { ...json.data, success: json.success };
+    // Return the data directly (may be array or object)
+    if (json.data !== undefined) {
+      return json.data;
     }
     return json;
   }
