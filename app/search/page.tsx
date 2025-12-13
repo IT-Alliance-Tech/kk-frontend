@@ -80,6 +80,7 @@ function SearchPageContent() {
                         width={48}
                         height={48}
                         className="h-12 object-contain"
+                        loading="lazy"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}

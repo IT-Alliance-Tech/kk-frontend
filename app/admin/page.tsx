@@ -1,9 +1,13 @@
 // NEW - admin demo
+"use client";
+
 import React from "react";
-import KPI from "../../components/admin/KPI";
-import RecentOrdersTable from "../../components/admin/RecentOrdersTable";
+import dynamic from "next/dynamic";
 import ordersData from "../../data/mock/orders.json";
 import productsData from "../../data/mock/products.json";
+
+const KPI = dynamic(() => import("../../components/admin/KPI"), { ssr: false });
+const RecentOrdersTable = dynamic(() => import("../../components/admin/RecentOrdersTable"), { ssr: false });
 
 export default function AdminDashboard() {
   // Calculate KPIs from mock data

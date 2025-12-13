@@ -69,6 +69,7 @@ export default function AdminBrandsPage() {
                     className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                     width={500}
                     height={500}
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 flex items-center justify-center text-xs">

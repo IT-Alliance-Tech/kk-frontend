@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { listCoupons, deleteCoupon, type Coupon } from '@/lib/api/coupons.api';
 import { Plus, Pencil, Trash2, Search, Calendar, Tag, TrendingUp } from 'lucide-react';
-import CouponModal from '@/components/admin/CouponModal';
+
+const CouponModal = dynamic(() => import('@/components/admin/CouponModal'), { ssr: false });
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
