@@ -3,8 +3,8 @@ import Image from "next/image";
 import { Truck, Shield, RefreshCcw, Headphones as HeadphonesIcon, CreditCard, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// ⭐ Import Repair Service Image
-import repairImage from "../../assets/images/service .png";
+// Use fallback image since service.png doesn't exist
+import repairImage from "../../assets/images/kitchen.png";
 
 export const metadata: Metadata = {
   title: "Our Services - Kitchen Kettels",
@@ -195,7 +195,7 @@ export default function ServicesPage() {
 
             {/* Right Content */}
             <div>
-              <h2 className="text-4xl font-bold text-red-600 mb-4">
+              <h2 className="text-4xl font-bold text-emerald-600 mb-4">
                 Our Expert Appliance Repair Services
               </h2>
 
@@ -206,7 +206,7 @@ export default function ServicesPage() {
                 your doorstep.
               </p>
 
-              <h3 className="text-2xl font-semibold text-red-600 mb-3">We Repair:</h3>
+              <h3 className="text-2xl font-semibold text-emerald-600 mb-3">We Repair:</h3>
 
               <ul className="space-y-2 text-slate-700 text-lg">
                 <li>→ Electric Kettles</li>
@@ -232,8 +232,8 @@ export default function ServicesPage() {
 
       {/* ---- NEED HELP ---- */}
       <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-12 text-center">
+        <div className="w-full px-4">
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-12 text-center">
             <h2 className="text-3xl font-bold text-slate-900 mb-4">
               Need Help?
             </h2>

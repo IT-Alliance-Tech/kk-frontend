@@ -1,45 +1,70 @@
 "use client";
+
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCart } from "@/components/CartContext"; // ✅ fixed import
+import { useCart } from "@/components/CartContext";
 import { useToast } from "@/components/ToastContext";
 import { useState } from "react";
 import Image from "next/image";
-import QuantitySelector from "@/components/QuantitySelector";
 import { normalizeSrc } from "@/lib/normalizeSrc";
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function ProductCard({ product }: any) {
   const { addItem, updateQty, removeItem, items } = useCart();
   const { showToast } = useToast();
   const [adding, setAdding] = useState(false);
 
-  // Find current quantity in cart
-  const cartItem = items.find((item) => item.id === product.id);
-  const currentQty = cartItem?.qty || 0;
+  // Support both _id and id for MongoDB compatibility - robust lookup
+  const productIdKey = product._id || product.id || product.productId || '';
+  const cartItem = items.find((item) => item.id === productIdKey || item.productId === productIdKey);
+  // Always ensure quantity is a non-negative number - prevent -1 display bug
+  const currentQty = Math.max(0, Number(cartItem?.qty) || 0);
+
+  // Support both title (MongoDB) and name (legacy) fields
+  const productTitle = product.title || product.name || "Untitled Product";
+
+  // Handle images - support arrays or single string
+  // use default placeholder when no product image or when replacing dummy import
+  const imgSrc = (() => {
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      return normalizeSrc(product.images[0]);
+    } else if (product.images && typeof product.images === "string") {
+      return normalizeSrc(product.images);
+    } else if (product.image_url) {
+      return normalizeSrc(product.image_url);
+    }
+    return DefaultProductImage;
+  })();
 
   const handleQuantityChange = (newQty: number) => {
+    // Ensure newQty is always non-negative
+    const safeQty = Math.max(0, Number(newQty) || 0);
+    
     try {
-      if (newQty === 0) {
-        // Remove from cart
-        removeItem(product.id);
+      if (safeQty === 0) {
+        removeItem(productIdKey);
         showToast("Removed from cart", "success");
       } else if (currentQty === 0) {
-        // Add to cart for first time
         addItem(
           {
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image_url: product.images?.[0] ?? null,
+            id: productIdKey,
+            name: productTitle,
+            price: product.price || 0,
+            image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
           },
-          newQty,
+          safeQty
         );
         showToast("Added to cart!", "success");
       } else {
-        // Update quantity
-        updateQty(product.id, newQty);
+        updateQty(productIdKey, safeQty);
       }
-    } catch (err) {
+    } catch {
       showToast("Failed to update cart", "error");
     }
   };
@@ -47,68 +72,133 @@ export default function ProductCard({ product }: any) {
   const onAdd = async (e: any) => {
     e.stopPropagation();
     setAdding(true);
+
     try {
       addItem({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image_url: product.images?.[0] ?? null,
+        id: productIdKey,
+        name: productTitle,
+        price: product.price || 0,
+        image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
       });
       showToast("Added to cart!", "success");
-    } catch (err) {
+    } catch {
       showToast("Failed to add", "error");
     } finally {
       setAdding(false);
     }
   };
 
+  const increaseQty = () => {
+    // Safely increment with guard against negative values
+    handleQuantityChange(Math.max(0, currentQty) + 1);
+  };
+
+  const decreaseQty = () => {
+    // Safely decrement with guard - never go below 0
+    handleQuantityChange(Math.max(0, currentQty - 1));
+  };
+
+  // unified product card layout — match /products page
   return (
-    <div className="bg-white border rounded-lg overflow-hidden flex flex-col h-full min-h-[320px] md:min-h-[360px] hover:shadow-lg transition-shadow">
+    <Card className="group hover:shadow-lg transition flex flex-col h-full">
       <Link href={`/products/${product.slug}`}>
-        <div className="h-36 sm:h-40 md:h-48 w-full overflow-hidden bg-gray-100">
-          {product.images ? (
-            <Image
-              src={normalizeSrc(product.images)}
-              alt={product.name ?? "Product image"}
-              width={300}
-              height={300}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              unoptimized={product.images?.startsWith("http")}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center text-xs sm:text-sm text-gray-400">
-              No Image
-            </div>
-          )}
+        <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+          <Image
+            src={imgSrc}
+            alt={product?.title || product?.name || 'Product image'}
+            width={400}
+            height={400}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            loading="lazy"
+            unoptimized={typeof imgSrc === 'string' && imgSrc.startsWith("http")}
+            onError={(e) => {
+              e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
+            }}
+          />
+
+          {/* removed Sale badge (per new design) */}
         </div>
       </Link>
-      <div className="p-2 sm:p-3 flex flex-col flex-1">
-        <Link href={`/products/${product.slug}`} className="flex-1">
-          <h3 className="font-medium line-clamp-2 text-xs sm:text-sm md:text-base">
-            {product.name}
-          </h3>
-        </Link>
-        <div className="mt-4 flex items-center justify-between gap-2">
-          <div className="text-sm sm:text-base md:text-lg font-bold text-emerald-600">
-            ₹{product.price}
-          </div>
-          {currentQty > 0 ? (
-            <QuantitySelector
-              value={currentQty}
-              onChange={handleQuantityChange}
-              size="sm"
-            />
-          ) : (
-            <button
-              onClick={onAdd}
-              disabled={adding}
-              className="bg-emerald-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-emerald-700 transition disabled:opacity-50"
-            >
-              {adding ? "Adding..." : "Add"}
-            </button>
+
+      <div className="flex-1 flex flex-col">
+        <CardHeader>
+          <Link href={`/products/${product.slug}`}>
+            <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600">
+              {productTitle}
+            </CardTitle>
+          </Link>
+
+          {product.brand?.name && (
+            <p className="text-sm text-slate-500">{product.brand.name}</p>
           )}
-        </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold">₹{product.price || 0}</span>
+            {product.mrp && product.mrp > product.price && (
+              <span className="text-sm text-slate-500 line-through">
+                ₹{product.mrp}
+              </span>
+            )}
+          </div>
+        </CardContent>
       </div>
-    </div>
+
+      <CardFooter className="mt-auto">
+        {currentQty === 0 ? (
+          <button
+            onClick={onAdd}
+            disabled={adding || product.stock === 0}
+            className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+            aria-label={`Add ${productTitle} to cart`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            {adding ? "Adding..." : product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+          </button>
+        ) : (
+          <div className="flex items-center justify-between gap-2 w-full">
+            <Link
+              href="/cart"
+              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition text-center text-sm font-medium"
+              aria-label={`Go to cart for ${productTitle}`}
+            >
+              Go to Cart
+            </Link>
+            <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-sm">
+              <button
+                onClick={decreaseQty}
+                className="text-red-500 text-lg px-1"
+                aria-label="Decrease quantity"
+              >
+                −
+              </button>
+              <span className="text-gray-900 text-base font-medium min-w-[1.5rem] text-center">{currentQty}</span>
+              <button
+                onClick={increaseQty}
+                className="text-red-500 text-lg px-1"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+      </CardFooter>
+    </Card>
   );
 }

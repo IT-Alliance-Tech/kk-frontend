@@ -3,7 +3,7 @@
  * Handles all order-related API calls with robust error handling
  */
 
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import { getAccessToken } from "@/lib/utils/auth";
 import type {
   Order,
@@ -18,27 +18,12 @@ import {
 } from "@/lib/adapters/order.adapter";
 
 // Base API URL for direct backend calls (when needed)
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = "https://kk-backend-5c11.onrender.com/api";
 
 /**
- * Custom error type for API errors
- */
-export interface ApiError {
-  status: number;
-  message: string;
-  body?: any;
-  originalError?: any;
-}
-
-/**
- * Fetch with authentication and robust error handling
- * Automatically adds Authorization header with Bearer token
- * Handles network errors, CORS errors, and non-2xx responses
- *
- * @param path - API path (e.g., '/api/orders/me')
- * @param opts - Fetch options
- * @returns Parsed JSON response
- * @throws ApiError with status and message
+ * Fetch with authentication and envelope unwrapping
+ * Uses the backend envelope format: { statusCode, success, error, data }
+ * Returns `data` directly for success, throws ApiError for failures
  */
 export async function fetchWithAuth(
   path: string,
@@ -49,11 +34,7 @@ export async function fetchWithAuth(
 
   // No token found - user needs to authenticate
   if (!token) {
-    const error: ApiError = {
-      status: 401,
-      message: "No token",
-    };
-    throw error;
+    throw new ApiError("No token", 401);
   }
 
   // Build request with Authorization header
@@ -64,65 +45,49 @@ export async function fetchWithAuth(
     ...opts.headers,
   };
 
+  const response = await fetch(url, {
+    ...opts,
+    headers,
+  });
+
+  // Parse response body
+  const text = await response.text().catch(() => null);
+  let body: any = null;
   try {
-    // Make the fetch request
-    const response = await fetch(url, {
-      ...opts,
-      headers,
-    });
-
-    // Handle non-2xx responses
-    if (!response.ok) {
-      let errorBody: any = {};
-
-      // Try to parse error response body
-      try {
-        errorBody = await response.json();
-      } catch (parseError) {
-        // If JSON parsing fails, try text
-        try {
-          const text = await response.text();
-          errorBody = { message: text };
-        } catch {
-          errorBody = { message: "Unknown error" };
-        }
-      }
-
-      const error: ApiError = {
-        status: response.status,
-        message:
-          errorBody.message || `Request failed with status ${response.status}`,
-        body: errorBody,
-      };
-      throw error;
-    }
-
-    // Parse and return successful response
-    return await response.json();
-  } catch (err) {
-    // Check if this is a network error or CORS error
-    if (err instanceof TypeError && err.message.includes("fetch")) {
-      const error: ApiError = {
-        status: 0,
-        message: "Network or CORS error",
-        originalError: err,
-      };
-      throw error;
-    }
-
-    // Re-throw if already an ApiError
-    if ((err as any).status !== undefined) {
-      throw err;
-    }
-
-    // Wrap other errors
-    const error: ApiError = {
-      status: 0,
-      message: err instanceof Error ? err.message : "Unknown error",
-      originalError: err,
-    };
-    throw error;
+    body = text ? JSON.parse(text) : null;
+  } catch (e) {
+    body = text;
   }
+
+  // Handle backend envelope format: { statusCode, success, error, data }
+  if (body && typeof body === "object" && ("statusCode" in body || "success" in body)) {
+    const statusCode = body.statusCode ?? response.status;
+    const okFlag = body.success === true;
+
+    if (!okFlag) {
+      const errMsg =
+        (body.error && (body.error.message || JSON.stringify(body.error))) ||
+        body.message ||
+        body.error ||
+        `Request failed with status ${statusCode}`;
+      const details = body.error?.details ?? body.details ?? null;
+      throw new ApiError(errMsg, statusCode, details);
+    }
+
+    // Success: return inner data property
+    return body.data;
+  }
+
+  // Handle non-envelope responses (fallback)
+  if (!response.ok) {
+    const errMsg =
+      (body && (body.message || JSON.stringify(body))) ||
+      response.statusText ||
+      `Request failed with status ${response.status}`;
+    throw new ApiError(errMsg, response.status, body);
+  }
+
+  return body;
 }
 
 /**

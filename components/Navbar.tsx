@@ -4,29 +4,32 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { ShoppingCart } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ShoppingCart, Menu, X } from "lucide-react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useCart } from "@/components/CartContext";
+import LogoImg from "@/assets/images/logo.png";
+
+const CartBadgeClient = dynamic(() => import("./CartBadgeClient"), { ssr: false });
 
 export default function Navbar() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const { user, loading, logout: authLogout } = useAuth();
+  const { distinctCount: cartCount } = useCart();
   const headerRef = useRef<HTMLElement | null>(null);
 
   const [q, setQ] = useState("");
-  const [user, setUser] = useState<any>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [logoError, setLogoError] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  // === FIX MAIN PADDING ========================================================
+  /* FIX MAIN PADDING */
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     const update = () => {
       const main = document.querySelector("main") as HTMLElement | null;
       const header = headerRef.current;
       if (!main || !header) return;
-      const h = Math.round(header.getBoundingClientRect().height);
-      main.style.paddingTop = `${h}px`;
+      main.style.paddingTop = `${Math.round(header.getBoundingClientRect().height)}px`;
     };
 
     update();
@@ -34,25 +37,16 @@ export default function Navbar() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // === SUPABASE AUTH SYNC ======================================================
+  /* DROPDOWN CLICK OUTSIDE */
   useEffect(() => {
-    let unsub: any;
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        setUser(data?.user ?? null);
-      } catch {}
-    })();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    unsub = sub?.subscription ?? sub;
-
-    return () => unsub?.unsubscribe?.();
-  }, [supabase]);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
   const handleSearch = (e: any) => {
     e.preventDefault();
@@ -60,139 +54,158 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
+    setDropdownOpen(false);
+    await authLogout();
+  };
+
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      const parts = name.trim().split(" ");
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    if (email) return email.substring(0, 2).toUpperCase();
+    return "U";
   };
 
   return (
-    <header ref={headerRef} className="w-full sticky top-0 z-50 bg-white shadow">
-      {/* ================== TOP HEADER AREA ================== */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row items-center justify-between gap-5">
+    <header
+      ref={headerRef}
+      className="w-full sticky top-0 z-50 bg-[#0f1720] shadow-lg border-b border-gray-800/40"
+    >
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+
           {/* LOGO */}
-          <Link href="/" className="flex items-center gap-3">
-            {!logoError ? (
-              <Image
-                src="https://prgkwuilcdaxujjflnbb.supabase.co/storage/v1/object/public/Kitchen%20kettles/Kitchen%20kettles%20product/Screenshot%202025-10-23%20120734.png"
-                alt="Kitchen Kettles"
-                width={200}
-                height={60}
-                className="w-auto h-14 md:h-16 object-contain"
-                onError={() => setLogoError(true)}
-              />
-            ) : (
-              <span className="text-2xl font-bold text-emerald-600">
-                Kitchen Kettles
-              </span>
-            )}
+          <Link href="/" className="flex items-center flex-shrink-0">
+            <Image
+              src={LogoImg}
+              alt="Kitchen Kettles"
+              width={160}
+              height={50}
+              className="h-12 w-auto object-contain"
+              priority
+            />
           </Link>
 
-          {/* SEARCH BOX */}
+          {/* DESKTOP NAV (NOW xl+) */}
+          <ul className="hidden xl:flex items-center gap-8 text-sm font-medium text-gray-200">
+            <li><Link href="/" className="hover:text-emerald-400">Home</Link></li>
+            <li><Link href="/products" className="hover:text-emerald-400">Products</Link></li>
+            <li><Link href="/categories" className="hover:text-emerald-400">Categories</Link></li>
+            <li><Link href="/brands" className="hover:text-emerald-400">Brands</Link></li>
+            <li><Link href="/services" className="hover:text-emerald-400">Services</Link></li>
+            <li><Link href="/about" className="hover:text-emerald-400">About</Link></li>
+            <li><Link href="/contact" className="hover:text-emerald-400">Contact</Link></li>
+          </ul>
+
+          {/* SEARCH (EXPANDS md → < xl) */}
           <form
             onSubmit={handleSearch}
-            className="w-full lg:flex-1 lg:max-w-2xl relative"
+            className="hidden md:block md:flex-1 md:mx-4 xl:flex-initial relative"
           >
             <input
               type="text"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="w-full border rounded-full py-3 pl-5 pr-14 text-base focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="Search Product / Service"
+              placeholder="Search..."
+              className="w-full md:max-w-[520px] xl:w-56 bg-gray-800/50 border border-gray-700 rounded-full py-2 pl-4 pr-10 text-sm text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 outline-none"
             />
             <button
               type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-emerald-600 text-white rounded-full p-3 hover:bg-emerald-700 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-400"
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
           </form>
 
-          {/* AUTH + CONTACT */}
-          <div className="flex items-center gap-5 text-base font-medium">
-            {user ? (
-              <>
-                <span className="hidden sm:inline text-gray-700 max-w-[180px] truncate">
-                  {user.email}
-                </span>
+          {/* RIGHT ICONS */}
+          <div className="flex items-center gap-4 flex-shrink-0">
 
+            <Link href="/cart" className="relative text-gray-200 hover:text-emerald-400">
+              <ShoppingCart className="h-6 w-6" />
+              <CartBadgeClient />
+            </Link>
+
+            {loading ? (
+              <span className="text-gray-400 text-sm">Loading...</span>
+            ) : user ? (
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={handleLogout}
-                  className="bg-red-500 px-4 py-1 text-white rounded hover:bg-red-600"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="w-10 h-10 rounded-full bg-emerald-600 text-white font-semibold flex items-center justify-center"
                 >
-                  Logout
+                  {getInitials(user.name, user.email)}
                 </button>
-              </>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <Link href="/account" className="block px-4 py-2 hover:bg-gray-100">
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <Link href="/login" className="text-emerald-600 hover:underline">
-                  Login
-                </Link>
-                <span className="text-gray-300">|</span>
-                <Link href="/register" className="text-emerald-600 hover:underline">
-                  Register
-                </Link>
+              <div className="hidden md:flex items-center gap-2 text-sm text-gray-300">
+                <Link href="/login" className="hover:text-emerald-400">Login</Link>
+                <span>/</span>
+                <Link href="/register" className="hover:text-emerald-400">Register</Link>
               </div>
             )}
 
-            <a
-              href="mailto:info@kitchenkettles.com"
-              className="hidden lg:inline-flex items-center gap-2 text-base text-gray-700 whitespace-nowrap"
-              aria-label="Email Kitchen Kettles"
+            {/* MOBILE MENU TOGGLE */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="xl:hidden text-gray-200 hover:text-emerald-400"
             >
-              <svg
-                className="h-5 w-5 flex-shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8" />
-                <rect x="3" y="6" width="18" height="12" rx="2" />
-              </svg>
-              <span className="leading-none">info@kitchenkettles.com</span>
-            </a>
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* ================== NAVBAR MENU ================== */}
-      <nav className="bg-gray-100 border-b">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          
-          {/* DESKTOP MENU — SMALLER SIZE ADDED HERE */}
-          <ul className="hidden lg:flex items-center gap-6 text-base font-semibold text-gray-800">
-            <li><Link href="/" className="hover:text-emerald-600">Home</Link></li>
-            <li><Link href="/products" className="hover:text-emerald-600">Products</Link></li>
-            <li><Link href="/categories" className="hover:text-emerald-600">Categories</Link></li>
-            <li><Link href="/brands" className="hover:text-emerald-600">Brands</Link></li>
-            <li><Link href="/services" className="hover:text-emerald-600">Services</Link></li>
-            <li><Link href="/about" className="hover:text-emerald-600">About</Link></li>
-            <li><Link href="/contact" className="hover:text-emerald-600">Contact</Link></li>
-          </ul>
+        {/* MOBILE MENU */}
+        {mobileOpen && (
+          <div className="xl:hidden border-t border-gray-800/40 py-4 space-y-2">
 
-          {/* RIGHT SIDE CART */}
-          <Link
-            href="/cart"
-            className="flex items-center gap-2 px-3 py-2 hover:bg-gray-200 rounded text-lg font-semibold"
-          >
-            <ShoppingCart className="h-6 w-6" />
-            <span className="hidden sm:inline">Cart</span>
-          </Link>
-        </div>
+            {/* MOBILE SEARCH */}
+            <form onSubmit={handleSearch} className="relative md:hidden px-4">
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="w-full bg-gray-800/50 border border-gray-700 rounded-full py-2 pl-4 pr-10 text-sm text-gray-200"
+                placeholder="Search..."
+              />
+              <button
+                type="submit"
+                className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </form>
+
+            {["Home","Products","Categories","Brands","Services","About","Contact"].map((item) => (
+              <Link
+                key={item}
+                href={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+                className="block px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded"
+                onClick={() => setMobileOpen(false)}
+              >
+                {item}
+              </Link>
+            ))}
+          </div>
+        )}
       </nav>
     </header>
   );

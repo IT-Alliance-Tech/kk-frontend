@@ -1,92 +1,26 @@
 [
   {
     "id": "1",
-    "name": "Stainless Steel Kettle",
-    "category": "Kettles",
-    "price": 49.99,
-    "stock": 45,
-    "image": "/images/products/kettle-1.jpg",
-    "description": "Premium stainless steel kettle with fast boiling technology"
+    "name": "Glass Food Storage Containers",
+    "price": 15.99,
+    "category": "Storage",
+    "stock": 50,
+    "status": "active"
   },
   {
     "id": "2",
-    "name": "Glass Electric Kettle",
-    "category": "Kettles",
-    "price": 59.99,
-    "stock": 32,
-    "image": "/images/products/kettle-2.jpg",
-    "description": "Modern glass kettle with LED illumination"
+    "name": "Stainless Steel Kitchen Utensils Set",
+    "price": 34.99,
+    "category": "Utensils",
+    "stock": 30,
+    "status": "active"
   },
   {
     "id": "3",
-    "name": "Ceramic Tea Kettle",
-    "category": "Kettles",
-    "price": 39.99,
-    "stock": 28,
-    "image": "/images/products/kettle-3.jpg",
-    "description": "Traditional ceramic kettle with whistle"
-  },
-  {
-    "id": "4",
-    "name": "Variable Temperature Kettle",
-    "category": "Kettles",
+    "name": "Non-Stick Cookware Set",
     "price": 89.99,
-    "stock": 15,
-    "image": "/images/products/kettle-4.jpg",
-    "description": "Precision temperature control for perfect tea and coffee"
-  },
-  {
-    "id": "5",
-    "name": "Travel Kettle",
-    "category": "Kettles",
-    "price": 29.99,
-    "stock": 0,
-    "image": "/images/products/kettle-5.jpg",
-    "description": "Compact portable kettle for travelers"
-  },
-  {
-    "id": "6",
-    "name": "Copper Kettle",
-    "category": "Kettles",
-    "price": 79.99,
-    "stock": 12,
-    "image": "/images/products/kettle-6.jpg",
-    "description": "Handcrafted copper kettle with vintage design"
-  },
-  {
-    "id": "7",
-    "name": "Smart WiFi Kettle",
-    "category": "Kettles",
-    "price": 99.99,
-    "stock": 8,
-    "image": "/images/products/kettle-7.jpg",
-    "description": "App-controlled smart kettle with scheduling features"
-  },
-  {
-    "id": "8",
-    "name": "Eco-Friendly Bamboo Kettle",
-    "category": "Kettles",
-    "price": 44.99,
-    "stock": 22,
-    "image": "/images/products/kettle-8.jpg",
-    "description": "Sustainable bamboo exterior with stainless steel interior"
-  },
-  {
-    "id": "9",
-    "name": "Vintage Enamel Kettle",
-    "category": "Kettles",
-    "price": 34.99,
-    "stock": 18,
-    "image": "/images/products/kettle-9.jpg",
-    "description": "Classic enamel kettle in various colors"
-  },
-  {
-    "id": "10",
-    "name": "Professional Barista Kettle",
-    "category": "Kettles",
-    "price": 119.99,
-    "stock": 6,
-    "image": "/images/products/kettle-10.jpg",
-    "description": "Gooseneck spout for precision pouring"
+    "category": "Cookware",
+    "stock": 20,
+    "status": "active"
   }
 ]

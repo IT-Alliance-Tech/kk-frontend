@@ -1,251 +1,110 @@
-// NEW - admin demo
 "use client";
 
-import React, { useState } from "react";
-import productsData from "../../../data/mock/products.json";
+import { useEffect, useState } from "react";
+import { getAdminProducts, deleteProduct, getBrands, getCategories } from "@/lib/admin";
+import Link from "next/link";
 
 export default function AdminProductsPage() {
-  const [products] = useState(productsData);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const loadProducts = async () => {
+    const data = await getAdminProducts();
+    // getAdminProducts now returns array directly via ensureArray
+    setProducts(Array.isArray(data) ? data : []);
+  };
+
+  const loadCategoriesAndBrands = async () => {
+    try {
+      const [categoriesData, brandsData] = await Promise.all([
+        getCategories(),
+        getBrands(),
+      ]);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setBrands(Array.isArray(brandsData) ? brandsData : []);
+    } catch (err) {
+      console.error("Failed to load categories/brands:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+    loadCategoriesAndBrands();
+  }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header with Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage your product inventory
-          </p>
-        </div>
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+    <div className="p-3 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold">Products</h1>
+        <Link
+          href="/admin/products/new"
+          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base text-center"
         >
-          <span className="text-lg">+</span>
-          Add Product
-        </button>
+          + Add Product
+        </Link>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search products by name or category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">All Categories</option>
-            <option value="kettles">Kettles</option>
-          </select>
-        </div>
-      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full border min-w-[640px]">
+        <thead>
+          {/* Reordered columns to: Title, Category, Brand, Price, Action (per product owner request) */}
+          <tr className="bg-gray-100">
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Title</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Category</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Brand</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Price</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
+          </tr>
+        </thead>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredProducts.map((product) => (
-                <tr
-                  key={product.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">
-                        🫖
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {product.name}
-                        </div>
-                        <div className="text-xs text-gray-500 hidden lg:block">
-                          ID: {product.id}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-gray-900">
-                      ${product.price.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`text-sm font-semibold ${
-                        product.stock === 0
-                          ? "text-red-600"
-                          : product.stock < 10
-                            ? "text-orange-600"
-                            : product.stock < 20
-                              ? "text-yellow-600"
-                              : "text-green-600"
-                      }`}
-                    >
-                      {product.stock === 0 ? "Out of Stock" : product.stock}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                        Edit
-                      </button>
-                      <span className="text-gray-300">|</span>
-                      <button className="text-red-600 hover:text-red-900 text-sm font-medium">
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <tbody>
+          {products.map((p: any) => {
+            // Show category/brand name instead of ID: prefer product.category.name/product.brand.name, then lookup from categories/brands arrays
+            const categoryName = p?.category?.name 
+              ?? categories?.find(c => String(c._id) === String(p.category))?.name 
+              ?? p.category 
+              ?? '-';
+            
+            const brandName = p?.brand?.name 
+              ?? brands?.find(b => String(b._id) === String(p.brand))?.name 
+              ?? p.brand 
+              ?? '-';
 
-        {filteredProducts.length === 0 && (
-          <div className="px-6 py-12 text-center text-gray-500">
-            No products found
-          </div>
-        )}
-      </div>
+            // Defensive access for product id and title
+            const pid = p?.id || p?._id;
+            const label = p?.title ?? 'product';
 
-      {/* Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex flex-wrap gap-6">
-          <div>
-            <p className="text-xs text-blue-600 uppercase tracking-wide font-medium">
-              Total Products
-            </p>
-            <p className="text-2xl font-bold text-blue-900">
-              {products.length}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-blue-600 uppercase tracking-wide font-medium">
-              In Stock
-            </p>
-            <p className="text-2xl font-bold text-blue-900">
-              {products.filter((p) => p.stock > 0).length}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-blue-600 uppercase tracking-wide font-medium">
-              Out of Stock
-            </p>
-            <p className="text-2xl font-bold text-blue-900">
-              {products.filter((p) => p.stock === 0).length}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-blue-600 uppercase tracking-wide font-medium">
-              Low Stock (&lt;20)
-            </p>
-            <p className="text-2xl font-bold text-blue-900">
-              {products.filter((p) => p.stock > 0 && p.stock < 20).length}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Add Product Modal Placeholder */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900">
-                Add New Product
-              </h3>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              {/* Placeholder: integrate with existing AddProductForm component if available */}
-              <p className="text-gray-600 mb-4">
-                Add product form placeholder. Integrate with existing{" "}
-                <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                  components/AddProductForm.tsx
-                </code>{" "}
-                if available.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product Name
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Enter product name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="flex gap-2 justify-end pt-4">
-                  <button
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            return (
+              <tr key={p._id}>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{p.title}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{categoryName}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{brandName}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">₹{p.price}</td>
+                <td className="border p-1.5 sm:p-2 space-x-1 sm:space-x-3 whitespace-nowrap">
+                  {/* Open read-only product view page */}
+                  <Link
+                    href={`/admin/products/view/${pid}`}
+                    className="text-green-600 text-xs sm:text-sm"
+                    aria-label={`View ${label}`}
                   >
-                    Cancel
-                  </button>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Add Product
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+                    View
+                  </Link>
+
+                  <Link
+                    href={`/admin/products/${pid}`}
+                    className="text-blue-600 text-xs sm:text-sm"
+                    aria-label={`Edit ${label}`}
+                  >
+                    Edit
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      </div>
     </div>
   );
 }

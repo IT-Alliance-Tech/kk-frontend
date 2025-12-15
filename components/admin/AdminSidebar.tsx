@@ -11,22 +11,42 @@ interface NavItem {
   icon: string;
 }
 
+interface AdminSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "📊" },
   { label: "Products", href: "/admin/products", icon: "📦" },
+  { label: "Brands", href: "/admin/brands", icon: "🏷️" },
+  { label: "Categories", href: "/admin/categories", icon: "📂" },
   { label: "Orders", href: "/admin/orders", icon: "🛒" },
+  { label: "Coupons", href: "/admin/coupons", icon: "🎟️" },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <aside
-      className={`kk-admin-sidebar bg-gray-900 text-white transition-all duration-300 ${
-        collapsed ? "w-16" : "w-64"
-      } min-h-screen flex flex-col`}
-    >
+    <>
+      {/* Mobile overlay - shown when sidebar is open on mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar - visible on desktop always, slides in on mobile when open */}
+      <aside
+        className={`kk-admin-sidebar fixed left-0 top-0 bg-gray-900 text-white transition-transform duration-300 h-screen overflow-y-auto flex flex-col ${
+          collapsed ? "w-16" : "md:w-64 w-64"
+        } ${
+          isOpen ? "translate-x-0 z-50" : "-translate-x-full z-40 md:z-40 md:translate-x-0"
+        }`}
+      >
       <div className="p-4 border-b border-gray-700 flex items-center justify-between">
         {!collapsed && <h2 className="text-xl font-bold">Admin Panel</h2>}
         <button
@@ -72,5 +92,6 @@ export default function AdminSidebar() {
         )}
       </div>
     </aside>
+    </>
   );
 }

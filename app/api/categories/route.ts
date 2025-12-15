@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const res = await fetch("http://localhost:5001/api/categories", {
+    const res = await fetch("https://kk-backend-5c11.onrender.com/api/categories", {
       cache: "no-store",
     });
 
@@ -16,8 +16,27 @@ export async function GET() {
     }
 
     const data = await res.json();
-    // Make sure it returns an array of categories
-    return NextResponse.json(data);
+    
+    // Unwrap backend envelope { statusCode, success, error, data }
+    // If backend returns envelope, extract data; otherwise return as-is
+    let categories = data;
+    if (data && typeof data === "object" && ("statusCode" in data || "success" in data)) {
+      if (data.success && data.data) {
+        categories = data.data;
+      } else if (!data.success) {
+        return NextResponse.json(
+          { error: data.error?.message || data.message || "Failed to fetch categories" },
+          { status: data.statusCode || 500 }
+        );
+      }
+    }
+    
+    // Ensure we return an array
+    const categoriesArray = Array.isArray(categories) 
+      ? categories 
+      : (categories?.items || categories?.categories || []);
+    
+    return NextResponse.json(categoriesArray);
   } catch (error) {
     console.error("Categories API error:", error);
     return NextResponse.json(

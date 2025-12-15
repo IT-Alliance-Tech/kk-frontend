@@ -1,19 +1,37 @@
-/**
- * Normalizes image src values for Next.js Image component.
- * Returns a safe src or fallback placeholder.
- */
-export const normalizeSrc = (src?: string | null): string => {
-  if (!src) return "/placeholder.png";
-  
-  // Already absolute URL
-  if (src.startsWith("http://") || src.startsWith("https://")) return src;
-  
-  // Already starts with slash
-  if (src.startsWith("/")) return src;
-  
-  // Valid relative path - prefix with slash
-  if (src.length > 4) return `/${src}`;
-  
-  // Fallback for invalid/short values
-  return "/placeholder.png";
-};
+export function normalizeSrc(input: any): string {
+  try {
+    // If array → use first valid string
+    if (Array.isArray(input)) {
+      const firstValid = input.find(
+        (x) => typeof x === "string" && x.trim() !== ""
+      );
+      if (firstValid) return normalizeSrc(firstValid);
+    }
+
+    // If not string → fallback
+    if (typeof input !== "string") return "/no-image.png";
+
+    const src = input.trim();
+
+    if (!src) return "/no-image.png";
+
+    // Full URL already
+    if (src.startsWith("http://") || src.startsWith("https://")) {
+      return src;
+    }
+
+    // Backend absolute path
+    if (src.startsWith("/uploads")) {
+      return `${process.env.NEXT_PUBLIC_API_URL}${src}`;
+    }
+
+    // Backend missing slash
+    if (src.startsWith("uploads")) {
+      return `${process.env.NEXT_PUBLIC_API_URL}/${src}`;
+    }
+
+    return src;
+  } catch {
+    return "/no-image.png";
+  }
+}

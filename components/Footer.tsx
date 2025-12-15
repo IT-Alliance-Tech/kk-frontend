@@ -1,3 +1,4 @@
+// Footer redesign: polished 4-column layout, newsletter, and bottom row — safe responsive changes only
 "use client";
 import {
   FaPhoneAlt,
@@ -11,137 +12,165 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <>
+
       {/* Main Footer Section */}
-      <footer className="bg-gradient-to-b from-gray-50 to-gray-100 text-gray-800 py-8 relative border-t border-gray-200">
-        <div className="max-w-8xl mx-auto px-3 sm:px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
-          {/* Column 1 - Quick Links */}
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-rose-600 inline-block pb-1">
-              KITCHEN KETTLES
-            </h2>
-            <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-              <li>
-                <Link href="/" className="hover:text-rose-600 transition">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/services"
-                  className="hover:text-rose-600 transition"
-                >
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/brand" className="hover:text-rose-600 transition">
-                  Brand
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-rose-600 transition">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy-policy"
-                  className="hover:text-rose-600 transition"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms-and-conditions" // ✅ Correct path format
-                  className="hover:text-rose-600 transition"
-                >
-                  Terms & Conditions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/shipping-policy"
-                  className="hover:text-rose-600 transition"
-                >
-                  Shipping Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 2 - Address */}
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-rose-600 inline-block pb-1">
-              ADDRESS
-            </h2>
-            <p className="text-xs sm:text-sm leading-relaxed">
-              Ground Floor & First Floor, No. 305, Shop No. 9, <br />
-              Varthur Main Road, Opp. Shani Mahatma Temple, <br />
-              Gunjur, Bengaluru – 560087
-            </p>
-          </div>
-
-          {/* Column 3 - Contact + Socials */}
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold tracking-widest mb-3 sm:mb-4 border-b-2 border-rose-600 inline-block pb-1">
-              CONNECT WITH US
-            </h2>
-
-            <div className="text-xs sm:text-sm mb-4 space-y-2">
-              <p className="flex items-center gap-2">
-                <FaPhoneAlt className="text-rose-600" />{" "}
-                <a
-                  href="tel:+918989889880"
-                  className="hover:text-rose-600 transition break-all"
-                >
-                  +91 8989889880
-                </a>
+      <footer className="w-full bg-[#0f1720] text-gray-100 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+            {/* Column 1 - Brand & Social */}
+            <div className="text-left">
+              <h2 className="text-sm font-semibold tracking-wider text-gray-200 uppercase mb-3">
+                KITCHEN KETTLES
+              </h2>
+              <span className="w-8 h-0.5 bg-emerald-400 block mb-4"></span>
+              <p className="text-sm text-gray-300 mb-4">
+                Your trusted partner for premium kitchen solutions.
               </p>
-              <p className="flex items-center gap-2">
-                <FaEnvelope className="text-rose-600" />{" "}
+              <div className="flex gap-3 mt-2">
                 <a
-                  href="mailto:saleskitchenkettles@gmail.com"
-                  className="hover:text-rose-600 transition break-all text-xs sm:text-sm"
+                  href="https://www.facebook.com/people/Kitchen-kettels/61571967747034/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kitchen Kettles Facebook"
+                  className="p-2 bg-white border border-gray-200 rounded-full hover:bg-emerald-600 hover:text-white transition"
                 >
-                  saleskitchenkettles@gmail.com
+                  <FaFacebookF className="text-base text-[#1a1a1a] hover:text-[#3EB489] transition-colors duration-200" />
                 </a>
+                <a
+                  href="https://www.instagram.com/kitchen_kettles/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Kitchen Kettles Instagram"
+                  className="p-2 bg-white border border-gray-200 rounded-full hover:bg-emerald-600 hover:text-white transition"
+                >
+                  <FaInstagram className="text-base text-[#1a1a1a] hover:text-[#3EB489] transition-colors duration-200" />
+                </a>
+              </div>
+            </div>
+
+            {/* Column 2 - Quick Links */}
+            <div className="text-left">
+              <h2 className="text-sm font-semibold tracking-wider text-gray-200 uppercase mb-3">
+                Quick Links
+              </h2>
+              <span className="w-8 h-0.5 bg-emerald-400 block mb-4"></span>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li>
+                  <Link href="/" className="hover:text-emerald-400 transition">
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/services" className="hover:text-emerald-400 transition">
+                    Services
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/brand" className="hover:text-emerald-400 transition">
+                    Brand
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about" className="hover:text-emerald-400 transition">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy-policy" className="hover:text-emerald-400 transition">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms-and-conditions" className="hover:text-emerald-400 transition">
+                    Terms & Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/shipping-policy" className="hover:text-emerald-400 transition">
+                    Shipping Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3 - Address */}
+            <div className="text-left">
+              <h2 className="text-sm font-semibold tracking-wider text-gray-200 uppercase mb-3">
+                Office Address
+              </h2>
+              <span className="w-8 h-0.5 bg-emerald-400 block mb-4"></span>
+              <p className="text-sm text-gray-300 mb-2">
+                Ground Floor & First Floor, No. 305, Shop No. 9,<br />
+                Varthur Main Road, Opp. Shani Mahatma Temple,<br />
+                Gunjur, Bengaluru – 560087
               </p>
             </div>
 
-            {/* Social Icons */}
-            <div className="flex gap-3 sm:gap-4 mt-3">
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-rose-600 hover:text-white transition"
-              >
-                <FaFacebookF className="text-base sm:text-lg" />
-              </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="p-2 bg-white border border-gray-200 rounded-full hover:bg-rose-600 hover:text-white transition"
-              >
-                <FaInstagram className="text-base sm:text-lg" />
-              </a>
+            {/* Column 4 - Connect & Newsletter */}
+            <div className="text-left">
+              <h2 className="text-sm font-semibold tracking-wider text-gray-200 uppercase mb-3">
+                Connect 
+              </h2>
+              <span className="w-8 h-0.5 bg-emerald-400 block mb-4"></span>
+              <div className="text-sm text-gray-300 space-y-2 mb-4">
+                <p className="flex items-center gap-2">
+                  <FaPhoneAlt className="text-emerald-400" />
+                  <a
+                    href="tel:+918989889880"
+                    className="hover:text-emerald-400 transition break-all"
+                  >
+                    +91 8989889880
+                  </a>
+                </p>
+                <p className="flex items-center gap-2">
+                  <FaEnvelope className="text-emerald-400" />
+                  <a
+                    href="mailto:saleskitchenkettles@gmail.com"
+                    className="hover:text-emerald-400 transition break-all"
+                  >
+                    saleskitchenkettles@gmail.com
+                  </a>
+                </p>
+              </div>
+              {/* Newsletter form removed as requested */}
+              <div className="flex gap-2 mt-4 flex-wrap">
+                {/* Trusted badges: use existing images if available, else placeholder chips */}
+                <span className="px-3 py-1 rounded-full border border-emerald-400 text-xs text-emerald-400 bg-gray-900">
+                  Trusted Seller
+                </span>
+                <span className="px-3 py-1 rounded-full border border-emerald-400 text-xs text-emerald-400 bg-gray-900">
+                  Secure Payments
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Footer */}
-        <div className="border-t border-gray-300 mt-8 sm:mt-10 pt-4 sm:pt-6 text-center text-[10px] sm:text-xs text-gray-600 px-4">
-          © {new Date().getFullYear()}{" "}
-          <span className="font-medium text-gray-800">Kitchen Kettles</span> |
-          Designed & Developed by{" "}
-          <span className="text-rose-600 font-medium hover:underline">
-            IT Alliance
-          </span>
+        <div className="border-t border-gray-700 mt-8 pt-6 text-xs text-gray-400 flex flex-col sm:flex-row justify-between items-center gap-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-3">
+            <Link href="/privacy-policy" className="hover:text-emerald-400 transition">
+              Privacy Policy
+            </Link>
+            <Link href="/terms-and-conditions" className="hover:text-emerald-400 transition">
+              Terms & Conditions
+            </Link>
+          </div>
+          <div>
+            © {new Date().getFullYear()}{" "}
+            <span className="font-medium text-gray-200">Kitchen Kettles</span>
+          </div>
+          <div>
+            Designed & Developed by{" "}
+            <span className="text-emerald-400 font-medium hover:underline">
+              IT Alliance
+            </span>
+          </div>
         </div>
       </footer>
 
       {/* Floating WhatsApp and Call Buttons */}
-      <div className="fixed left-4 bottom-20 z-50 flex flex-col gap-3 sm:left-6">
+      <div className="fixed right-4 bottom-20 z-50 flex flex-col gap-3 sm:right-6">
         {/* WhatsApp */}
         <a
           href="https://wa.me/918989889880"

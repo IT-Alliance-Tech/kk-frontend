@@ -10,7 +10,13 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ShoppingBag, User, MapPin, Heart } from "lucide-react";
+
+const UserDashboardClient = dynamic(
+  () => import("@/components/UserDashboardClient"),
+  { ssr: false }
+);
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -60,6 +66,9 @@ export default function AccountPage() {
               Manage your account, track orders, and update your preferences.
             </p>
           </div>
+
+          {/* User Dashboard Data */}
+          <UserDashboardClient />
 
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

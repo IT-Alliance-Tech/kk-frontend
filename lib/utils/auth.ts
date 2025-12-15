@@ -72,8 +72,8 @@ export function saveAccessToken(token: string): void {
 }
 
 /**
- * Clear access token from localStorage
- * Removes all common token key names
+ * Clear access token from localStorage and sessionStorage
+ * Removes all common token key names and user data
  */
 export function clearAccessToken(): void {
   if (typeof window === "undefined") {
@@ -81,11 +81,36 @@ export function clearAccessToken(): void {
   }
 
   try {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("access");
-    localStorage.removeItem("token");
-    // Also clear user data
-    localStorage.removeItem("user");
+    // Clear from localStorage
+    const keysToRemove = [
+      'accessToken', 'access_token', 'access', 'token',
+      'refreshToken', 'refresh_token',
+      'adminToken', 'admin_token',
+      'user', 'userInfo', 'adminUser'
+    ];
+    
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        // Ignore quota errors
+      }
+    });
+
+    // Also clear from sessionStorage
+    keysToRemove.forEach(key => {
+      try {
+        sessionStorage.removeItem(key);
+      } catch (e) {
+        // Ignore errors
+      }
+    });
+
+    // Clear cookies
+    const cookieNames = ['accessToken', 'refreshToken', 'adminToken', 'token'];
+    cookieNames.forEach(name => {
+      document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+    });
   } catch (error) {
     console.error("Failed to clear access token:", error);
   }

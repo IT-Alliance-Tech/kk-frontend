@@ -49,12 +49,55 @@ export async function login(
 }
 
 /**
- * Logout user by clearing token from localStorage
+ * Logout user by clearing ALL tokens and session data
+ * Clears localStorage, sessionStorage, and cookies
  */
 export function logout(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  if (typeof window === "undefined") return;
+
+  try {
+    // Remove all possible token keys from localStorage
+    const localStorageKeys = [
+      'token', 'accessToken', 'access_token', 'access',
+      'refreshToken', 'refresh_token',
+      'adminToken', 'admin_token',
+      'user', 'userInfo', 'adminUser'
+    ];
+    
+    localStorageKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        // Silently handle quota/access errors
+      }
+    });
+
+    // Clear sessionStorage as well
+    localStorageKeys.forEach(key => {
+      try {
+        sessionStorage.removeItem(key);
+      } catch (e) {
+        // Silently handle errors
+      }
+    });
+
+    // Clear all authentication cookies
+    const cookieNames = ['accessToken', 'refreshToken', 'adminToken', 'token', 'kk_session', 'kk_auth'];
+    cookieNames.forEach(name => {
+      // Clear cookie for all possible paths
+      document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+      document.cookie = `${name}=; path=/admin; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+    });
+
+    // Signal global logout (for cross-tab sync if needed)
+    try {
+      window.dispatchEvent(new Event('auth:logout'));
+    } catch (e) {
+      // Silently handle
+    }
+  } catch (err) {
+    // Log but don't throw - logout should always succeed
+    console.warn('Logout cleanup error:', err);
   }
 }
 

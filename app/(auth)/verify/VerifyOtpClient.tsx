@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { verifyOtp } from "@/lib/api/auth.api";
 import { normalizeAuthResponse } from "@/lib/adapters/auth.adapter";
 import { saveAccessToken } from "@/lib/utils/auth";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 interface VerifyOtpClientProps {
   email: string;
@@ -19,6 +20,7 @@ export default function VerifyOtpClient({
   redirectTo,
 }: VerifyOtpClientProps) {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,6 +86,12 @@ export default function VerifyOtpClient({
           );
         }
       }
+
+      // Refresh user state in auth context
+      await refreshUser();
+
+      // Notify the provider in the same tab immediately
+      window.dispatchEvent(new Event('auth:update'));
 
       // Redirect to orders page by default, or specified redirect destination
       const destination = redirectTo || "/orders";

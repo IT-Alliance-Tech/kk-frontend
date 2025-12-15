@@ -72,7 +72,7 @@ export default function ProductList({
   return (
     <div>
       {/* Grid */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {localProducts.slice(0, visibleCount).map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

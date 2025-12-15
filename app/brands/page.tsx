@@ -1,44 +1,87 @@
-/**
- * Brands listing page - Server Component
- * Fetches and displays all brands from the backend API
- */
+"use client";
 
+import { Suspense, useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getBrands } from "@/lib/api/brands.api";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Package, AlertCircle, Search, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Brand } from "@/lib/types";
 
-export default async function BrandsPage() {
-  let brands: Brand[] = [];
-  let error: string | null = null;
+function BrandsPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("q") || ""
+  );
 
-  try {
-    brands = await getBrands();
-  } catch (err) {
-    error = err instanceof Error ? err.message : "Failed to load brands";
-    brands = [];
-  }
+  // Fetch brands on mount
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        setLoading(true);
+        const data = await getBrands();
+        // Normalize logoUrl to handle different property names from backend
+        setBrands((data || []).map((b: any) => ({ ...b, logoUrl: b.logoUrl || b.logo_url || b.logo || null })));
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load brands");
+        setBrands([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  // Client-side filtering with useMemo
+  const filteredBrands = useMemo(() => {
+    if (!searchQuery.trim()) return brands;
+    
+    const query = searchQuery.toLowerCase();
+    return brands.filter((brand) =>
+      brand.name.toLowerCase().includes(query)
+    );
+  }, [brands, searchQuery]);
+
+  // Handle search with URL state sync
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    
+    const params = new URLSearchParams(searchParams.toString());
+    if (value.trim()) {
+      params.set("q", value);
+    } else {
+      params.delete("q");
+    }
+    
+    router.push(`/brands?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-8 sm:py-10 md:py-12">
-        <div className="container mx-auto px-3 sm:px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-2 sm:mb-4">
+      <section className="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 py-16 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
             Shop by Brand
           </h1>
-          <p className="text-sm sm:text-base text-slate-600">
-            Explore products from our trusted brand partners
-          </p>
+          {/* subtitle removed per design update */}
+          {/* Removed inner page search bar as per updated UI requirement */}
         </div>
       </section>
 
-      {/* Brands Grid Section */}
-      <section className="py-8 sm:py-10 md:py-12">
-        <div className="container mx-auto px-3 sm:px-4">
+      {/* Main Content */}
+      <section className="py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Error State */}
           {error && (
             <Alert variant="destructive" className="mb-6">
@@ -48,46 +91,68 @@ export default async function BrandsPage() {
             </Alert>
           )}
 
-          {/* Empty State */}
-          {!error && brands.length === 0 && (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-700 mb-2">
-                No Brands Found
-              </h2>
-              <p className="text-sm sm:text-base text-slate-500">
-                Check back soon for new brand partners
-              </p>
-            </div>
+          {/* Results Count */}
+          {searchQuery && !loading && (
+            <p className="text-sm text-slate-600 mb-4">
+              Found {filteredBrands.length} brand{filteredBrands.length === 1 ? '' : 's'}
+            </p>
           )}
 
-          {/* Brands Grid */}
-          {brands.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-              {brands.map((brand) => (
+          {/* Loading State */}
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="animate-pulse overflow-hidden">
+                  <div className="h-48 bg-slate-200" />
+                  <CardContent className="p-6">
+                    <div className="h-5 bg-slate-200 rounded mb-2" />
+                    <div className="h-4 bg-slate-200 rounded w-2/3" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : filteredBrands.length === 0 ? (
+            /* Empty State */
+            <div className="text-center py-16">
+              <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                No brands found
+              </h2>
+              <p className="text-slate-500 text-sm">
+                {searchQuery ? "Try adjusting your search" : "Check back soon for new brand partners"}
+              </p>
+            </div>
+          ) : (
+            /* Brands Grid */
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredBrands.map((brand) => (
                 <Link
-                  key={brand._id}
-                  href={`/brands/${brand.slug || brand.name.toLowerCase().replace(/\s+/g, "-")}`}
+                  key={brand.id || brand.slug}
+                  href={`/brands/${brand.slug || brand.id}`}
+                  className="group focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 rounded-xl"
+                  aria-label={`Browse ${brand.name} products`}
                 >
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-24 sm:h-28 md:h-32 flex items-center justify-center group">
-                    <CardContent className="p-3 sm:p-4 text-center w-full">
-                      {brand.logoUrl ? (
-                        /* TODO: replace with next/image if src is static */
-                        <Image
-                          src={brand.logoUrl}
-                          alt={brand.name}
-                          width={48}
-                          height={48}
-                          className="h-8 sm:h-10 md:h-12 mx-auto object-contain mb-1 sm:mb-2 group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="h-8 sm:h-10 md:h-12 flex items-center justify-center mb-1 sm:mb-2">
-                          <Package className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-slate-400 group-hover:text-slate-600 transition-colors" />
-                        </div>
-                      )}
-                      <p className="font-medium text-xs sm:text-sm text-slate-900 group-hover:text-emerald-600 transition-colors truncate">
-                        {brand.name}
-                      </p>
+                  <Card className="h-full overflow-hidden border-slate-200 hover:border-emerald-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
+                    <div className="relative h-48 w-full overflow-hidden bg-slate-100 flex items-center justify-center">
+                      <Image
+                        src={brand.logoUrl ?? "/brand-placeholder.svg"}
+                        alt={`${brand.name} logo`}
+                        width={120}
+                        height={120}
+                        className="object-contain p-6 group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/brand-placeholder.svg";
+                        }}
+                      />
+                    </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                          {brand.name}
+                        </h3>
+                        <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -97,5 +162,26 @@ export default async function BrandsPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function BrandsPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-white min-h-screen">
+        <section className="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 py-16 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 className="text-4xl font-bold text-slate-900 mb-4">Shop by Brand</h1>
+          </div>
+        </section>
+        <section className="py-12">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">Loading brands...</div>
+          </div>
+        </section>
+      </div>
+    }>
+      <BrandsPageContent />
+    </Suspense>
   );
 }
