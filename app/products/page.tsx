@@ -168,11 +168,11 @@ function ProductsPageContent() {
         <div className="container mx-auto px-4">
           {/* Loading */}
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6">
               {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <div className="h-40 bg-slate-200" />
-                  <CardContent className="p-4">
+                <Card key={i} className="animate-pulse flex flex-row md:flex-col py-3 md:py-0 border-0 md:border rounded-none md:rounded-lg shadow-none md:shadow">
+                  <div className="w-24 h-24 md:w-full md:h-40 bg-slate-200 rounded-md md:rounded-none flex-shrink-0" />
+                  <CardContent className="p-0 md:p-4 ml-3 md:ml-0 flex-1">
                     <div className="h-4 bg-slate-200 rounded mb-2" />
                     <div className="h-4 bg-slate-200 rounded w-2/3" />
                   </CardContent>
@@ -190,7 +190,7 @@ function ProductsPageContent() {
           ) : (
             <>
               {/* Products Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

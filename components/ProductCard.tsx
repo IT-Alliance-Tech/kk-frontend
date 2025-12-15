@@ -7,6 +7,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
+import { ShoppingCart } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -89,11 +90,10 @@ export default function ProductCard({ product }: any) {
   const increaseQty = () => handleQuantityChange(currentQty + 1);
   const decreaseQty = () => handleQuantityChange(currentQty - 1);
 
-  // h-full intentionally removed to avoid mobile grid stretch
   return (
-    <Card className="group hover:shadow-lg transition flex flex-col">
-      <Link href={`/products/${product.slug}`}>
-        <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+    <Card className="group hover:shadow-lg transition flex flex-row md:flex-col py-3 md:py-0 border-0 md:border rounded-none md:rounded-lg shadow-none md:shadow">
+      <Link href={`/products/${product.slug}`} className="flex-shrink-0 w-24 h-24 md:w-auto md:h-auto">
+        <div className="relative w-24 h-24 md:w-full md:aspect-[4/3] bg-slate-100 overflow-hidden rounded-md md:rounded-none">
           <Image
             src={imgSrc}
             alt={productTitle}
@@ -106,48 +106,46 @@ export default function ProductCard({ product }: any) {
         </div>
       </Link>
 
-      <div className="flex-1 flex flex-col">
-        <CardHeader>
+      <div className="flex-1 flex flex-col ml-3 md:ml-0 min-w-0">
+        <CardHeader className="p-0 md:p-6 pb-2 md:pb-2">
           <Link href={`/products/${product.slug}`}>
-            <CardTitle className="text-base line-clamp-2 group-hover:text-emerald-600">
+            <CardTitle className="text-sm md:text-base line-clamp-2 group-hover:text-emerald-600">
               {productTitle}
             </CardTitle>
           </Link>
           {product.brand?.name && (
-            <p className="text-sm text-slate-500">{product.brand.name}</p>
+            <p className="text-xs md:text-sm text-slate-500 mt-1">{product.brand.name}</p>
           )}
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0 md:p-6 pt-0 md:pt-0">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold">₹{product.price || 0}</span>
+            <span className="text-lg md:text-xl font-bold">₹{product.price || 0}</span>
             {product.mrp && product.mrp > product.price && (
-              <span className="text-sm text-slate-500 line-through">
+              <span className="text-xs md:text-sm text-slate-500 line-through">
                 ₹{product.mrp}
               </span>
             )}
           </div>
         </CardContent>
-      </div>
 
-      {/* Fixed-height Swiggy-style action slot */}
-      <CardFooter className="mt-auto h-[4.5rem] flex items-center">
-        {currentQty === 0 ? (
-          <button
-            onClick={onAdd}
-            disabled={adding || product.stock === 0}
-            className="w-full flex items-center justify-center gap-2 bg-black text-white py-2.5 px-4 rounded-md hover:bg-gray-900 transition text-sm disabled:bg-gray-300"
-          >
-            {adding ? "Adding..." : "Add to Cart"}
-          </button>
-        ) : (
-          // 🔽 UPDATED: vertical layout (Go to Cart above quantity)
-          <div className="flex flex-col gap-2 w-full items-center">
-            <Link
-              href="/cart"
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-md text-center text-sm font-medium"
+        <CardFooter className="mt-auto p-0 md:p-6 pt-2 md:pt-0 md:h-[4.5rem] flex items-center">
+          {currentQty === 0 ? (
+            <button
+              onClick={onAdd}
+              disabled={adding || product.stock === 0}
+              className="w-full flex items-center justify-center gap-2 bg-black text-white py-2.5 md:py-2.5 px-4 rounded-md hover:bg-gray-900 transition text-xs md:text-sm disabled:bg-gray-300"
             >
-              Go to Cart
+              <ShoppingCart size={16} className="shrink-0" />
+              {adding ? "Adding..." : "Add to Cart"}
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2 w-full items-center">
+              <Link
+                href="/cart"
+                className="w-full bg-green-600 text-white py-2 px-4 rounded-md text-center text-xs md:text-sm font-medium"
+              >
+                Go to Cart
             </Link>
 
             <div className="flex items-center gap-3 border rounded-full px-4 py-1.5">
@@ -172,6 +170,7 @@ export default function ProductCard({ product }: any) {
           </div>
         )}
       </CardFooter>
+      </div>
     </Card>
   );
 }
