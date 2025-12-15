@@ -55,7 +55,7 @@ function SearchPageContent() {
           {products.length > 0 && (
             <>
               <h2 className="text-xl font-semibold mb-3">Products</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
+              <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 mb-8">
                 {products.map((p) => (
                   <ProductCard key={p._id || p.slug || p.id} product={p} />
                 ))}
