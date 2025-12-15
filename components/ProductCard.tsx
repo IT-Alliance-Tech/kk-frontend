@@ -6,7 +6,7 @@ import { useToast } from "@/components/ToastContext";
 import { useState } from "react";
 import Image from "next/image";
 import { normalizeSrc } from "@/lib/normalizeSrc";
-import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
 import {
   Card,
   CardContent,
@@ -20,32 +20,30 @@ export default function ProductCard({ product }: any) {
   const { showToast } = useToast();
   const [adding, setAdding] = useState(false);
 
-  // Support both _id and id for MongoDB compatibility - robust lookup
-  const productIdKey = product._id || product.id || product.productId || '';
-  const cartItem = items.find((item) => item.id === productIdKey || item.productId === productIdKey);
-  // Always ensure quantity is a non-negative number - prevent -1 display bug
+  const productIdKey = product._id || product.id || product.productId || "";
+  const cartItem = items.find(
+    (item) => item.id === productIdKey || item.productId === productIdKey
+  );
   const currentQty = Math.max(0, Number(cartItem?.qty) || 0);
 
-  // Support both title (MongoDB) and name (legacy) fields
   const productTitle = product.title || product.name || "Untitled Product";
 
-  // Handle images - support arrays or single string
-  // use default placeholder when no product image or when replacing dummy import
   const imgSrc = (() => {
-    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    if (Array.isArray(product.images) && product.images.length > 0) {
       return normalizeSrc(product.images[0]);
-    } else if (product.images && typeof product.images === "string") {
+    }
+    if (typeof product.images === "string") {
       return normalizeSrc(product.images);
-    } else if (product.image_url) {
+    }
+    if (product.image_url) {
       return normalizeSrc(product.image_url);
     }
     return DefaultProductImage;
   })();
 
   const handleQuantityChange = (newQty: number) => {
-    // Ensure newQty is always non-negative
     const safeQty = Math.max(0, Number(newQty) || 0);
-    
+
     try {
       if (safeQty === 0) {
         removeItem(productIdKey);
@@ -56,7 +54,7 @@ export default function ProductCard({ product }: any) {
             id: productIdKey,
             name: productTitle,
             price: product.price || 0,
-            image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
+            image_url: typeof imgSrc === "string" ? imgSrc : imgSrc.src,
           },
           safeQty
         );
@@ -69,7 +67,7 @@ export default function ProductCard({ product }: any) {
     }
   };
 
-  const onAdd = async (e: any) => {
+  const onAdd = (e: any) => {
     e.stopPropagation();
     setAdding(true);
 
@@ -78,7 +76,7 @@ export default function ProductCard({ product }: any) {
         id: productIdKey,
         name: productTitle,
         price: product.price || 0,
-        image_url: typeof imgSrc === 'string' ? imgSrc : imgSrc.src,
+        image_url: typeof imgSrc === "string" ? imgSrc : imgSrc.src,
       });
       showToast("Added to cart!", "success");
     } catch {
@@ -88,35 +86,23 @@ export default function ProductCard({ product }: any) {
     }
   };
 
-  const increaseQty = () => {
-    // Safely increment with guard against negative values
-    handleQuantityChange(Math.max(0, currentQty) + 1);
-  };
+  const increaseQty = () => handleQuantityChange(currentQty + 1);
+  const decreaseQty = () => handleQuantityChange(currentQty - 1);
 
-  const decreaseQty = () => {
-    // Safely decrement with guard - never go below 0
-    handleQuantityChange(Math.max(0, currentQty - 1));
-  };
-
-  // unified product card layout — match /products page
+  // h-full intentionally removed to avoid mobile grid stretch
   return (
-    <Card className="group hover:shadow-lg transition flex flex-col h-full">
+    <Card className="group hover:shadow-lg transition flex flex-col">
       <Link href={`/products/${product.slug}`}>
         <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
           <Image
             src={imgSrc}
-            alt={product?.title || product?.name || 'Product image'}
+            alt={productTitle}
             width={400}
             height={400}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
             loading="lazy"
-            unoptimized={typeof imgSrc === 'string' && imgSrc.startsWith("http")}
-            onError={(e) => {
-              e.currentTarget.src = typeof DefaultProductImage === 'string' ? DefaultProductImage : DefaultProductImage.src;
-            }}
+            unoptimized={typeof imgSrc === "string" && imgSrc.startsWith("http")}
           />
-
-          {/* removed Sale badge (per new design) */}
         </div>
       </Link>
 
@@ -127,7 +113,6 @@ export default function ProductCard({ product }: any) {
               {productTitle}
             </CardTitle>
           </Link>
-
           {product.brand?.name && (
             <p className="text-sm text-slate-500">{product.brand.name}</p>
           )}
@@ -145,52 +130,40 @@ export default function ProductCard({ product }: any) {
         </CardContent>
       </div>
 
-      <CardFooter className="mt-auto">
+      {/* Fixed-height Swiggy-style action slot */}
+      <CardFooter className="mt-auto h-[4.5rem] flex items-center">
         {currentQty === 0 ? (
           <button
             onClick={onAdd}
             disabled={adding || product.stock === 0}
-            className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 px-4 rounded-md hover:bg-gray-900 transition disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
-            aria-label={`Add ${productTitle} to cart`}
+            className="w-full flex items-center justify-center gap-2 bg-black text-white py-2.5 px-4 rounded-md hover:bg-gray-900 transition text-sm disabled:bg-gray-300"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-            {adding ? "Adding..." : product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+            {adding ? "Adding..." : "Add to Cart"}
           </button>
         ) : (
-          <div className="flex items-center justify-between gap-2 w-full">
+          // 🔽 UPDATED: vertical layout (Go to Cart above quantity)
+          <div className="flex flex-col gap-2 w-full items-center">
             <Link
               href="/cart"
-              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition text-center text-sm font-medium"
-              aria-label={`Go to cart for ${productTitle}`}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md text-center text-sm font-medium"
             >
               Go to Cart
             </Link>
-            <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-3 py-1.5 shadow-sm">
+
+            <div className="flex items-center gap-3 border rounded-full px-4 py-1.5">
               <button
                 onClick={decreaseQty}
-                className="text-red-500 text-lg px-1"
+                className="text-red-500 text-base font-semibold"
                 aria-label="Decrease quantity"
               >
                 −
               </button>
-              <span className="text-gray-900 text-base font-medium min-w-[1.5rem] text-center">{currentQty}</span>
+              <span className="min-w-[1.25rem] text-center text-sm font-medium">
+                {currentQty}
+              </span>
               <button
                 onClick={increaseQty}
-                className="text-red-500 text-lg px-1"
+                className="text-red-500 text-base font-semibold"
                 aria-label="Increase quantity"
               >
                 +
