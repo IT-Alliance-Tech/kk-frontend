@@ -155,9 +155,8 @@ export default async function BrandPage({ params }: Props) {
           </h2>
 
           {Array.isArray(productsData) && productsData.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-4">
               {productsData.map((product: any) => (
-                // keep robust key, prefer _id then id
                 <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
