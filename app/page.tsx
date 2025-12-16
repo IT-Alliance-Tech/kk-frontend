@@ -245,19 +245,19 @@ export default function HomePage() {
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-6 pt-4 border-t border-gray-100">
-                    <div>
-                      <div className="text-2xl font-bold text-gray-900">2hrs</div>
+                  <div className="grid grid-cols-3 sm:flex sm:items-center gap-4 sm:gap-6 pt-4 border-t border-gray-100">
+                    <div className="text-center sm:text-left">
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">2hrs</div>
                       <div className="text-xs text-gray-500">Avg. response</div>
                     </div>
-                    <div className="w-px h-10 bg-gray-200"></div>
-                    <div>
-                      <div className="text-2xl font-bold text-gray-900">98%</div>
+                    <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                    <div className="text-center sm:text-left">
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">98%</div>
                       <div className="text-xs text-gray-500">Satisfaction rate</div>
                     </div>
-                    <div className="w-px h-10 bg-gray-200"></div>
-                    <div>
-                      <div className="text-2xl font-bold text-gray-900">24/7</div>
+                    <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                    <div className="text-center sm:text-left">
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">24/7</div>
                       <div className="text-xs text-gray-500">Always available</div>
                     </div>
                   </div>
