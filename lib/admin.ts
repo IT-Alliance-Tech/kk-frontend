@@ -49,6 +49,7 @@ async function apiFetchAuth(path: string, opts: RequestInit = {}) {
 export function apiGetAuth(path: string) { return apiFetchAuth(path, { method: 'GET' }); }
 export function apiPostAuth(path: string, data?: any) { return apiFetchAuth(path, { method: 'POST', body: JSON.stringify(data) }); }
 export function apiPutAuth(path: string, data?: any) { return apiFetchAuth(path, { method: 'PUT', body: JSON.stringify(data) }); }
+export function apiPatchAuth(path: string, data?: any) { return apiFetchAuth(path, { method: 'PATCH', body: JSON.stringify(data) }); }
 export function apiDeleteAuth(path: string) { return apiFetchAuth(path, { method: 'DELETE' }); }
 
 /**
@@ -207,7 +208,7 @@ export async function getBrands() {
 }
 
 export async function getAdminBrands() {
-  const data = await apiGetAuth("/brands");
+  const data = await apiGetAuth("/brands/all");
   return ensureArray(data, ['items', 'brands', 'data']);
 }
 
@@ -225,6 +226,14 @@ export function updateBrand(id: string, data: any) {
 
 export function deleteBrand(id: string) {
   return apiDeleteAuth(`/brands/${id}`);
+}
+
+export function disableBrand(id: string) {
+  return apiPatchAuth(`/brands/${id}/disable`, {});
+}
+
+export function enableBrand(id: string) {
+  return apiPatchAuth(`/brands/${id}/enable`, {});
 }
 
 // -------------------- CATEGORIES --------------------
@@ -246,7 +255,7 @@ export async function getCategories() {
 }
 
 export async function getAdminCategories() {
-  const data = await apiGetAuth("/categories");
+  const data = await apiGetAuth("/categories/all");
   return ensureArray(data, ['items', 'categories', 'data']);
 }
 
@@ -264,4 +273,12 @@ export function updateCategory(id: string, data: any) {
 
 export function deleteCategory(id: string) {
   return apiDeleteAuth(`/categories/${id}`);
+}
+
+export function disableCategory(id: string) {
+  return apiPatchAuth(`/categories/${id}/disable`, {});
+}
+
+export function enableCategory(id: string) {
+  return apiPatchAuth(`/categories/${id}/enable`, {});
 }

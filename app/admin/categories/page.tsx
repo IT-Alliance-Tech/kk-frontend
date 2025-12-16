@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAdminCategories, deleteCategory, getAdminProducts } from "@/lib/admin";
+import { getAdminCategories, disableCategory, enableCategory, getAdminProducts } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -23,13 +23,42 @@ export default function AdminCategoriesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this category?")) return;
     try {
-      await deleteCategory(id);
-      loadCategories();
+      // Delete is removed - use disable instead
+      alert("Please use Disable instead of Delete for categories");
     } catch (err: any) {
       console.error("Category deletion error:", err);
       alert(err.message || "Failed to delete category");
       
       // Handle 401 Unauthorized - redirect to login
+      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+        router.push("/admin/login");
+      }
+    }
+  };
+
+  const handleDisable = async (id: string) => {
+    if (!confirm("Are you sure you want to disable this category?")) return;
+    try {
+      await disableCategory(id);
+      loadCategories();
+    } catch (err: any) {
+      console.error("Category disable error:", err);
+      alert(err.message || "Failed to disable category");
+      
+      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+        router.push("/admin/login");
+      }
+    }
+  };
+
+  const handleEnable = async (id: string) => {
+    try {
+      await enableCategory(id);
+      loadCategories();
+    } catch (err: any) {
+      console.error("Category enable error:", err);
+      alert(err.message || "Failed to enable category");
+      
       if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
         router.push("/admin/login");
       }
@@ -60,6 +89,7 @@ export default function AdminCategoriesPage() {
             <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Name</th>
             <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">#Products</th>
             <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">#Brands</th>
+            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Status</th>
             <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
           </tr>
         </thead>
@@ -79,10 +109,17 @@ export default function AdminCategoriesPage() {
             ).length ?? 0;
 
             return (
-              <tr key={c._id}>
+              <tr key={c._id} className={!c.isActive ? "bg-gray-50 opacity-60" : ""}>
                 <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{c.productCategory?.name || c.name}</td>
                 <td className="border p-1.5 sm:p-2 text-center text-xs sm:text-sm whitespace-nowrap">{productCount}</td>
                 <td className="border p-1.5 sm:p-2 text-center text-xs sm:text-sm whitespace-nowrap">{brandCount}</td>
+                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm text-center">
+                  {c.isActive !== false ? (
+                    <span className="text-green-600 font-medium">Active</span>
+                  ) : (
+                    <span className="text-red-600 font-medium">Disabled</span>
+                  )}
+                </td>
                 <td className="border p-1.5 sm:p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
                   {/* View category details (read-only) */}
                   <Link
@@ -98,6 +135,22 @@ export default function AdminCategoriesPage() {
                   >
                     Edit
                   </Link>
+
+                  {c.isActive !== false ? (
+                    <button
+                      className="text-orange-600 text-xs sm:text-sm"
+                      onClick={() => handleDisable(c._id)}
+                    >
+                      Disable
+                    </button>
+                  ) : (
+                    <button
+                      className="text-green-600 text-xs sm:text-sm"
+                      onClick={() => handleEnable(c._id)}
+                    >
+                      Enable
+                    </button>
+                  )}
                 </td>
               </tr>
             );
