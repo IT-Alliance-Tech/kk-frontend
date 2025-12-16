@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAdminBrands, deleteBrand } from "@/lib/admin";
+import { getAdminBrands, deleteBrand, disableBrand, enableBrand } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -31,6 +31,35 @@ export default function AdminBrandsPage() {
     }
   };
 
+  const handleDisable = async (id: string) => {
+    if (!confirm("Are you sure you want to disable this brand?")) return;
+    try {
+      await disableBrand(id);
+      loadBrands();
+    } catch (err: any) {
+      console.error("Brand disable error:", err);
+      alert(err.message || "Failed to disable brand");
+      
+      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+        router.push("/admin/login");
+      }
+    }
+  };
+
+  const handleEnable = async (id: string) => {
+    try {
+      await enableBrand(id);
+      loadBrands();
+    } catch (err: any) {
+      console.error("Brand enable error:", err);
+      alert(err.message || "Failed to enable brand");
+      
+      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+        router.push("/admin/login");
+      }
+    }
+  };
+
   useEffect(() => {
     loadBrands();
   }, []);
@@ -54,13 +83,14 @@ export default function AdminBrandsPage() {
             <th className="border p-2 text-xs sm:text-sm">Logo</th>
             <th className="border p-2 text-xs sm:text-sm">Name</th>
             <th className="border p-2 text-xs sm:text-sm">Slug</th>
+            <th className="border p-2 text-xs sm:text-sm">Status</th>
             <th className="border p-2 text-xs sm:text-sm">Action</th>
           </tr>
         </thead>
 
         <tbody>
           {brands.map((b: any) => (
-            <tr key={b._id}>
+            <tr key={b._id} className={!b.isActive ? "bg-gray-50 opacity-60" : ""}>
               <td className="border p-2">
                 {b.logoUrl ? (
                   <Image
@@ -79,6 +109,13 @@ export default function AdminBrandsPage() {
               </td>
               <td className="border p-2 text-xs sm:text-sm">{b.name}</td>
               <td className="border p-2 text-xs sm:text-sm text-gray-600">{b.slug}</td>
+              <td className="border p-2 text-xs sm:text-sm text-center">
+                {b.isActive !== false ? (
+                  <span className="text-green-600 font-medium">Active</span>
+                ) : (
+                  <span className="text-red-600 font-medium">Disabled</span>
+                )}
+              </td>
               <td className="border p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
                 <Link
                   href={`/admin/brands/${b._id}`}
@@ -87,12 +124,29 @@ export default function AdminBrandsPage() {
                   Edit
                 </Link>
 
-                <button
-                  className="text-red-600 text-xs sm:text-sm"
-                  onClick={() => handleDelete(b._id)}
-                >
-                  Delete
-                </button>
+                {b.isActive !== false ? (
+                  <>
+                    <button
+                      className="text-orange-600 text-xs sm:text-sm"
+                      onClick={() => handleDisable(b._id)}
+                    >
+                      Disable
+                    </button>
+                    <button
+                      className="text-red-600 text-xs sm:text-sm"
+                      onClick={() => handleDelete(b._id)}
+                    >
+                      Delete
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="text-green-600 text-xs sm:text-sm"
+                    onClick={() => handleEnable(b._id)}
+                  >
+                    Enable
+                  </button>
+                )}
               </td>
             </tr>
           ))}
