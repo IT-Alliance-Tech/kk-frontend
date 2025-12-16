@@ -95,7 +95,7 @@ export default function ContactPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg md:text-xl text-emerald-50 max-w-2xl mx-auto"
           >
-            We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
           </motion.p>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function ContactPage() {
             className="bg-white rounded-2xl shadow-xl p-8 md:p-10"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Send Us a Message</h2>
-            <p className="text-gray-600 mb-8">Fill out the form below and we'll get back to you shortly.</p>
+            <p className="text-gray-600 mb-8">Fill out the form below and we&apos;ll get back to you shortly.</p>
 
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -238,7 +238,7 @@ export default function ContactPage() {
                   id="message"
                   name="message"
                   rows={5}
-                  placeholder="Tell us what's on your mind..."
+                  placeholder="Tell us what&apos;s on your mind..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 resize-none text-gray-900 placeholder-gray-400"
                 />
               </div>
