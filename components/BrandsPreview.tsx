@@ -104,12 +104,11 @@ export default function BrandsPreview() {
             style={{ minHeight: 140 }}
           >
             {/* Image block: defensive rendering */}
-            <div className="w-full flex items-center justify-center h-16 sm:h-20">
+            <div className="relative w-full h-16 sm:h-20">
               <Image
                 src={brand.logoUrl ?? "/brand-placeholder.svg"}
                 alt={`${brand.name} logo`}
-                width={80}
-                height={80}
+                fill
                 className="object-contain"
                 loading="lazy"
                 onError={(e) => {
