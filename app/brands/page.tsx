@@ -133,18 +133,19 @@ function BrandsPageContent() {
                   aria-label={`Browse ${brand.name} products`}
                 >
                   <Card className="h-full overflow-hidden border-slate-200 hover:border-emerald-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
-                    <div className="relative h-48 w-full overflow-hidden bg-slate-100 flex items-center justify-center">
-                      <Image
-                        src={brand.logoUrl ?? "/brand-placeholder.svg"}
-                        alt={`${brand.name} logo`}
-                        width={120}
-                        height={120}
-                        className="object-contain p-6 group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/brand-placeholder.svg";
-                        }}
-                      />
+                    <div className="relative h-40 sm:h-48 w-full overflow-hidden bg-slate-100 p-4 sm:p-6">
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={brand.logoUrl ?? "/brand-placeholder.svg"}
+                          alt={`${brand.name} logo`}
+                          fill
+                          className="object-contain group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/brand-placeholder.svg";
+                          }}
+                        />
+                      </div>
                     </div>
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between gap-2 mb-3">
