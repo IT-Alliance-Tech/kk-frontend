@@ -1,6 +1,6 @@
 "use client";
 
-import { Phone, Mail, MapPin, User, Info } from "lucide-react";
+import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
@@ -77,45 +77,195 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center py-10">
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-3xl md:text-4xl font-semibold text-emerald-600 mb-10 tracking-wide"
-      >
-        CONTACT US
-      </motion.h1>
-
-      {/* Contact Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl px-6 mb-16">
-        <div className="border-2 border-emerald-500 rounded-xl p-8 text-center">
-          <Phone className="mx-auto mb-2 text-emerald-600" />
-          <p>{contactData.phone}</p>
-        </div>
-        <div className="border-2 border-emerald-500 rounded-xl p-8 text-center">
-          <Mail className="mx-auto mb-2 text-emerald-600" />
-          <p>{contactData.email}</p>
-        </div>
-        <div className="border-2 border-emerald-500 rounded-xl p-8 text-center">
-          <MapPin className="mx-auto mb-2 text-emerald-600" />
-          <p className="whitespace-pre-line">{contactData.address}</p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section */}
+      <div className="bg-emerald-600 text-white py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4"
+          >
+            Get In Touch
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-lg md:text-xl text-emerald-50 max-w-2xl mx-auto"
+          >
+            We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
+          </motion.p>
         </div>
       </div>
 
-      {/* Form + Image */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl w-full px-6">
-        <Image src={contactMainImg} alt="Contact" className="rounded-xl" />
-        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input name="name" required placeholder="Name" />
-          <input name="phone" required placeholder="Phone" />
-          <input name="email" required placeholder="Email" />
-          <input name="subject" placeholder="Subject" />
-          <textarea name="message" placeholder="Message" />
-          <button disabled={loading}>
-            {loading ? "Sending..." : "Send"}
-          </button>
-        </form>
+      {/* Contact Info Cards */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
+              <Phone className="w-7 h-7 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Phone</h3>
+            <p className="text-gray-600 text-center break-words">{contactData.phone || "Loading..."}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
+              <Mail className="w-7 h-7 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Email</h3>
+            <p className="text-gray-600 text-center break-words">{contactData.email || "Loading..."}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 sm:col-span-2 lg:col-span-1"
+          >
+            <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
+              <MapPin className="w-7 h-7 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Address</h3>
+            <p className="text-gray-600 text-center whitespace-pre-line break-words">
+              {contactData.address || "Loading..."}
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Form + Image Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          {/* Image Section */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="relative h-64 sm:h-80 lg:h-auto min-h-[400px] rounded-2xl overflow-hidden shadow-xl"
+          >
+            <Image 
+              src={contactMainImg} 
+              alt="Contact Kitchen Kettles" 
+              className="object-cover w-full h-full"
+              priority
+            />
+          </motion.div>
+
+          {/* Form Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="bg-white rounded-2xl shadow-xl p-8 md:p-10"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Send Us a Message</h2>
+            <p className="text-gray-600 mb-8">Fill out the form below and we&apos;ll get back to you shortly.</p>
+
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  placeholder="John Doe"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  placeholder="+1 (555) 123-4567"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="john@example.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  Subject
+                </label>
+                <input
+                  id="subject"
+                  name="subject"
+                  type="text"
+                  placeholder="How can we help you?"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  rows={5}
+                  placeholder="Tell us what&apos;s on your mind..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 resize-none text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:hover:shadow-lg"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-5 h-5" />
+                    Send Message
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
