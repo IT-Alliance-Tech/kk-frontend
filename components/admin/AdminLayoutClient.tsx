@@ -51,6 +51,11 @@ export default function AdminLayoutClient({
   const isLoginPage = pathname === "/admin/login" || pathname?.startsWith("/admin/login/");
   const showNavigation = !isLoginPage && verified;
 
+  // Login page gets full viewport without layout constraints
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="kk-admin-layout min-h-screen bg-gray-50">
       {showNavigation && <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
