@@ -18,6 +18,8 @@ interface ImagePickerProps {
   onSelect: (urls: string[]) => void;
   multiSelect?: boolean;
   maxFiles?: number;
+  folder?: string;
+  slug?: string;
 }
 
 export default function ImagePicker({
@@ -26,6 +28,8 @@ export default function ImagePicker({
   onSelect,
   multiSelect = true,
   maxFiles = 10,
+  folder = 'products',
+  slug,
 }: ImagePickerProps) {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
@@ -45,7 +49,7 @@ export default function ImagePicker({
       console.log("[DEBUG] Fetching images with token:", token ? "present" : "missing");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin?folder=${folder}`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
@@ -66,7 +70,7 @@ export default function ImagePicker({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [folder]);
 
   useEffect(() => {
     if (isOpen) {
@@ -87,15 +91,16 @@ export default function ImagePicker({
       Array.from(files).forEach((file) => {
         formData.append("files", file);
       });
+      formData.append("folder", folder);
 
       const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
-      // TODO: Remove debug log after testing
-      console.log("[DEBUG] Uploading files:", files.length);
+      let uploadUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin?folder=${encodeURIComponent(folder)}`;
+      if (folder === 'brands' && slug) {
+        uploadUrl += `&slug=${encodeURIComponent(slug)}`;
+      }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin`,
-        {
+      const response = await fetch(uploadUrl, {
           method: "POST",
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
