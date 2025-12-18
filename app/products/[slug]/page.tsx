@@ -21,7 +21,8 @@ export default function ProductPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [similarProducts, setSimilarProducts] = useState<any[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
 
   const cartItem = items.find((item) => item.id === product?._id);
   const currentQty = cartItem?.qty || 0;
@@ -35,11 +36,18 @@ export default function ProductPage() {
       const p = data?.product || data;
       setProduct(p);
 
-      if (p?.category?._id) {
-        const rel = await apiGet(`/products?category=${p.category._id}&limit=4`);
-        setRelatedProducts(
-          (rel?.products || []).filter((x: any) => x._id !== p._id)
-        );
+      // Fetch similar products using new API endpoint
+      if (p?._id) {
+        setLoadingSimilar(true);
+        try {
+          const similarData = await apiGet(`/products/${p._id}/similar?limit=6`);
+          setSimilarProducts(similarData || []);
+        } catch (error) {
+          console.error('Failed to fetch similar products:', error);
+          setSimilarProducts([]);
+        } finally {
+          setLoadingSimilar(false);
+        }
       }
 
       setLoading(false);
@@ -303,17 +311,32 @@ export default function ProductPage() {
           </Tabs>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        {/* Similar Products */}
+        {loadingSimilar ? (
           <div className="mt-10 pt-8 border-t border-gray-200">
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">You May Also Like</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Similar Products</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
-              {relatedProducts.map((p) => (
+              {[...Array(4)].map((_, idx) => (
+                <div key={idx} className="bg-white rounded-lg border border-gray-200 h-80 animate-pulse">
+                  <div className="w-full h-48 bg-gray-200"></div>
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : similarProducts.length > 0 ? (
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Similar Products</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+              {similarProducts.map((p: any) => (
                 <ProductCard key={p._id} product={p} />
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

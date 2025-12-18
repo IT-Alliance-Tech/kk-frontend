@@ -28,7 +28,7 @@ export default function MediaManagerPage() {
       const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin`,
+        `${process.env.NEXT_PUBLIC_API_URL}/upload/admin`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
@@ -72,7 +72,7 @@ export default function MediaManagerPage() {
       const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin`,
+        `${process.env.NEXT_PUBLIC_API_URL}/upload/admin`,
         {
           method: "POST",
           headers: {
