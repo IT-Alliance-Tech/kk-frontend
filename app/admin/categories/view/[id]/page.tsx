@@ -210,10 +210,14 @@ export default function CategoryViewPage() {
                   ?.name ??
                 "-";
 
-              // Get product image
+              // Get product image - filter out placeholder and invalid URLs
               const productImage =
                 Array.isArray(p?.images) && p.images.length > 0
-                  ? p.images[0]
+                  ? p.images.find((img: any) => 
+                      typeof img === 'string' && 
+                      img.trim() !== '' && 
+                      !img.includes('via.placeholder.com')
+                    ) || null
                   : null;
 
               return (
