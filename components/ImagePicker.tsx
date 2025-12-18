@@ -49,7 +49,7 @@ export default function ImagePicker({
       console.log("[DEBUG] Fetching images with token:", token ? "present" : "missing");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin?folder=${folder}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/upload/admin?folder=${folder}`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
@@ -95,7 +95,7 @@ export default function ImagePicker({
 
       const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
-      let uploadUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"}/upload/admin?folder=${encodeURIComponent(folder)}`;
+      let uploadUrl = `${process.env.NEXT_PUBLIC_API_URL}/upload/admin?folder=${encodeURIComponent(folder)}`;
       if (folder === 'brands' && slug) {
         uploadUrl += `&slug=${encodeURIComponent(slug)}`;
       }
