@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrand } from "@/lib/admin";
+import { slugify } from "@/lib/api/brands.api";
+import ImagePicker from "@/components/ImagePicker";
 
 export default function NewBrandPage() {
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,10 +22,6 @@ export default function NewBrandPage() {
       setStatus("Name is required");
       return;
     }
-    if (!slug.trim()) {
-      setStatus("Slug is required");
-      return;
-    }
 
     setStatus("Creating brand...");
     setLoading(true);
@@ -31,7 +29,7 @@ export default function NewBrandPage() {
     try {
       const payload = {
         name: name.trim(),
-        slug: slug.trim(),
+        slug: slugify(name.trim()),
         logoUrl: logoUrl.trim() || undefined,
       };
 
@@ -72,24 +70,25 @@ export default function NewBrandPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Slug *</label>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="brand-slug"
-            required
-            className="border p-2 rounded w-full"
-          />
-        </div>
-
-        <div>
           <label className="block text-sm font-medium mb-1">Logo URL</label>
-          <input
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://example.com/logo.png"
-            className="border p-2 rounded w-full"
-          />
+          <div className="flex gap-2">
+            <input
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://example.com/logo.png"
+              className="border p-2 rounded w-full"
+            />
+            <button
+              type="button"
+              onClick={() => setShowImagePicker(true)}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border rounded whitespace-nowrap"
+            >
+              📷 Browse Images
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Upload or select a brand logo from Supabase storage
+          </p>
         </div>
 
         {status && (
@@ -119,6 +118,22 @@ export default function NewBrandPage() {
           </button>
         </div>
       </form>
+
+      {/* Image Picker Modal */}
+      <ImagePicker
+        isOpen={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelect={(urls) => {
+          // Set the first selected URL as the brand logo
+          if (urls.length > 0) {
+            setLogoUrl(urls[0]);
+          }
+        }}
+        multiSelect={false}
+        maxFiles={1}
+        folder="brands"
+        slug={slugify(name.trim())}
+      />
     </div>
   );
 }
