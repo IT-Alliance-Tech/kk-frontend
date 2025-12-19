@@ -3,7 +3,7 @@
 import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 
 // ⭐ Image Imports
 import contactMainImg from "../../assets/images/contact.png";
@@ -16,28 +16,18 @@ const API_BASE_URL =
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
+  
+  // ⭐ Card reveal states
+  const [revealPhone, setRevealPhone] = useState(false);
+  const [revealEmail, setRevealEmail] = useState(false);
+  const [revealAddress, setRevealAddress] = useState(false);
 
-  // ⭐ Contact Info State
-  const [contactData, setContactData] = useState({
-    phone: "",
-    email: "",
-    address: "",
-  });
-
-  // ⭐ Fetch Contact Info
-  useEffect(() => {
-    const fetchContactInfo = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/contact/contact-info`);
-        const data = await res.json();
-        setContactData(data);
-      } catch (error) {
-        console.error("Failed to load contact info", error);
-      }
-    };
-
-    fetchContactInfo();
-  }, []);
+  // ⭐ Static Contact Info (matching Footer)
+  const contactData = {
+    phone: "+91 8989889880",
+    email: "saleskitchenkettles@gmail.com",
+    address: "Ground Floor & First Floor, No. 305, Shop No. 9,\nVarthur Main Road, Opp. Shani Mahatma Temple,\nGunjur, Bengaluru – 560087",
+  };
 
   // ⭐ Submit Handler
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -103,45 +93,96 @@ export default function ContactPage() {
       {/* Contact Info Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 mb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Phone Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
+            onClick={() => setRevealPhone(!revealPhone)}
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer min-h-[200px] flex flex-col justify-center"
           >
             <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
               <Phone className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Phone</h3>
-            <p className="text-gray-600 text-center break-words">{contactData.phone || "Loading..."}</p>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{
+                opacity: revealPhone ? 1 : 0,
+                y: revealPhone ? 0 : 10,
+                scale: revealPhone ? 1 : 0.95,
+                height: revealPhone ? 'auto' : 0
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <p className="text-gray-600 text-center break-words pt-2">{contactData.phone}</p>
+            </motion.div>
+            {!revealPhone && (
+              <p className="text-sm text-emerald-600 text-center mt-2 font-medium">Click to reveal</p>
+            )}
           </motion.div>
 
+          {/* Email Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
+            onClick={() => setRevealEmail(!revealEmail)}
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer min-h-[200px] flex flex-col justify-center"
           >
             <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
               <Mail className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Email</h3>
-            <p className="text-gray-600 text-center break-words">{contactData.email || "Loading..."}</p>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{
+                opacity: revealEmail ? 1 : 0,
+                y: revealEmail ? 0 : 10,
+                scale: revealEmail ? 1 : 0.95,
+                height: revealEmail ? 'auto' : 0
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <p className="text-gray-600 text-center break-words pt-2">{contactData.email}</p>
+            </motion.div>
+            {!revealEmail && (
+              <p className="text-sm text-emerald-600 text-center mt-2 font-medium">Click to reveal</p>
+            )}
           </motion.div>
 
+          {/* Address Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300 sm:col-span-2 lg:col-span-1"
+            onClick={() => setRevealAddress(!revealAddress)}
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer sm:col-span-2 lg:col-span-1 min-h-[200px] flex flex-col justify-center"
           >
             <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
               <MapPin className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Address</h3>
-            <p className="text-gray-600 text-center whitespace-pre-line break-words">
-              {contactData.address || "Loading..."}
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{
+                opacity: revealAddress ? 1 : 0,
+                y: revealAddress ? 0 : 10,
+                scale: revealAddress ? 1 : 0.95,
+                height: revealAddress ? 'auto' : 0
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <p className="text-gray-600 text-center whitespace-pre-line break-words pt-2">
+                {contactData.address}
+              </p>
+            </motion.div>
+            {!revealAddress && (
+              <p className="text-sm text-emerald-600 text-center mt-2 font-medium">Click to reveal</p>
+            )}
           </motion.div>
         </div>
       </div>
