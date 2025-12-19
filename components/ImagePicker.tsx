@@ -38,6 +38,11 @@ export default function ImagePicker({
   const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
 
+  // Check if slug is required but missing (for brands and categories folders)
+  const requiresSlug = folder === 'brands' || folder === 'categories';
+  const isSlugValid = !requiresSlug || (slug && slug.trim().length > 0);
+  const canUpload = isSlugValid;
+
   // Fetch existing images
   const fetchImages = useCallback(async () => {
     setLoading(true);
@@ -82,6 +87,12 @@ export default function ImagePicker({
   // Handle file upload
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+
+    // Prevent upload if slug is required but missing
+    if (!canUpload) {
+      setError(`Please enter ${folder === 'categories' ? 'category' : 'brand'} name or slug before uploading an image`);
+      return;
+    }
 
     setUploading(true);
     setError("");
@@ -147,6 +158,13 @@ export default function ImagePicker({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
+    
+    // Prevent upload if slug is required but missing
+    if (!canUpload) {
+      setError(`Please enter ${folder === 'categories' ? 'category' : 'brand'} name or slug before uploading an image`);
+      return;
+    }
+    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleUpload(e.dataTransfer.files);
     }
@@ -192,14 +210,16 @@ export default function ImagePicker({
         <div className="p-4 border-b">
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              dragActive
+              !canUpload
+                ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+                : dragActive
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-300 hover:border-gray-400"
             }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
+            onDragEnter={canUpload ? handleDrag : undefined}
+            onDragLeave={canUpload ? handleDrag : undefined}
+            onDragOver={canUpload ? handleDrag : undefined}
+            onDrop={canUpload ? handleDrop : undefined}
           >
             <input
               type="file"
@@ -208,12 +228,25 @@ export default function ImagePicker({
               accept="image/*"
               onChange={(e) => handleUpload(e.target.files)}
               className="hidden"
+              disabled={!canUpload}
             />
             <label
               htmlFor="file-upload"
-              className="cursor-pointer text-sm text-gray-600"
+              className={`text-sm text-gray-600 ${canUpload ? 'cursor-pointer' : 'cursor-not-allowed'}`}
             >
-              {uploading ? (
+              {!canUpload ? (
+                <div className="text-amber-600">
+                  <span className="font-medium">⚠️ Upload disabled</span>
+                  <br />
+                  <span className="text-xs">
+                    Please enter {folder === 'categories' ? 'category' : 'brand'} name or slug before uploading images
+                  </span>
+                  <br />
+                  <span className="text-xs text-gray-500 mt-2 block">
+                    You can still browse and select existing images
+                  </span>
+                </div>
+              ) : uploading ? (
                 <span>Uploading...</span>
               ) : (
                 <>
