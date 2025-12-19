@@ -25,6 +25,7 @@ export default function EditProductPage() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showImageUploadModal, setShowImageUploadModal] = useState(false);
 
   // Fetch product, brands, and categories
   useEffect(() => {
@@ -280,12 +281,36 @@ export default function EditProductPage() {
         {/* Images */}
         <div>
           <label className="block text-sm font-medium mb-1">Image URLs (comma-separated)</label>
-          <input
-            value={images}
-            onChange={(e) => setImages(e.target.value)}
-            placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-            className="border p-2 rounded w-full"
-          />
+          <div className="flex gap-2">
+            <input
+              value={images}
+              onChange={(e) => setImages(e.target.value)}
+              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+              className="border p-2 rounded w-full"
+            />
+            <button
+              type="button"
+              onClick={() => setShowImageUploadModal(true)}
+              className="px-3 py-2 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1 whitespace-nowrap"
+              title="Browse Images"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                />
+              </svg>
+              Browse
+            </button>
+          </div>
         </div>
 
         {/* isActive Toggle */}
@@ -327,6 +352,46 @@ export default function EditProductPage() {
           </button>
         </div>
       </form>
+
+      {/* Image Upload Modal */}
+      {showImageUploadModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowImageUploadModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center mb-4">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-16 w-16 text-gray-400" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-center mb-2">Product Image Upload</h2>
+            <p className="text-gray-600 text-center mb-6">
+              Product image upload coming soon
+            </p>
+            <button
+              onClick={() => setShowImageUploadModal(false)}
+              className="w-full px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
