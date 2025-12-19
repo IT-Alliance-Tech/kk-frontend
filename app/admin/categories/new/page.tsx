@@ -15,7 +15,6 @@ function slugify(text: string): string {
 
 export default function NewCategoryPage() {
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -24,6 +23,10 @@ export default function NewCategoryPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Auto-generate slug from category name
+  const autoSlug = slugify(name.trim());
+  const canBrowseImages = autoSlug.length > 0;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -31,8 +34,11 @@ export default function NewCategoryPage() {
       setStatus("Name is required");
       return;
     }
-    if (!slug.trim()) {
-      setStatus("Slug is required");
+
+    // Auto-generate slug from name
+    const generatedSlug = slugify(name.trim());
+    if (!generatedSlug) {
+      setStatus("Invalid category name");
       return;
     }
 
@@ -42,7 +48,7 @@ export default function NewCategoryPage() {
     try {
       const payload = {
         name: name.trim(),
-        slug: slug.trim(),
+        slug: generatedSlug,
         description: description.trim(),
         image_url: imageUrl.trim() || "",
       };
@@ -81,17 +87,11 @@ export default function NewCategoryPage() {
             required
             className="border p-2 rounded w-full"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Slug *</label>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="category-slug"
-            required
-            className="border p-2 rounded w-full"
-          />
+          {autoSlug && (
+            <p className="text-xs text-gray-500 mt-1">
+              Slug: <span className="font-mono">{autoSlug}</span>
+            </p>
+          )}
         </div>
 
         <div>
@@ -116,14 +116,22 @@ export default function NewCategoryPage() {
             />
             <button
               type="button"
-              onClick={() => setShowImagePicker(true)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border rounded whitespace-nowrap"
+              onClick={() => canBrowseImages && setShowImagePicker(true)}
+              disabled={!canBrowseImages}
+              className={`px-4 py-2 border rounded whitespace-nowrap ${
+                canBrowseImages
+                  ? "bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                  : "bg-gray-50 text-gray-400 cursor-not-allowed"
+              }`}
+              title={!canBrowseImages ? "Enter category name or slug first" : ""}
             >
               📷 Browse Images
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Upload or select a category image from Supabase storage
+            {canBrowseImages
+              ? "Upload or select a category image from Supabase storage"
+              : "Enter category name or slug to enable image upload"}
           </p>
         </div>
 
@@ -168,7 +176,7 @@ export default function NewCategoryPage() {
         multiSelect={false}
         maxFiles={1}
         folder="categories"
-        slug={slugify(slug.trim() || name.trim())}
+        slug={autoSlug}
       />
     </div>
   );
