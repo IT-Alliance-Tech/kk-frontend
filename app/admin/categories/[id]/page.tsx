@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { getSingleCategory, updateCategory } from "@/lib/admin";
 import ImagePicker from "@/components/ImagePicker";
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '');
+}
+
 export default function EditCategoryPage({
   params,
 }: {
@@ -12,7 +20,6 @@ export default function EditCategoryPage({
 }) {
   const { id } = use(params);
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -21,12 +28,15 @@ export default function EditCategoryPage({
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Auto-generate slug from category name
+  const autoSlug = slugify(name.trim());
+  const canBrowseImages = autoSlug.length > 0;
+
   useEffect(() => {
     async function loadCategory() {
       try {
         const category = await getSingleCategory(id);
         setName(category.name || "");
-        setSlug(category.slug || "");
         setDescription(category.description || "");
         setImageUrl(category.image_url || category.image || "");
       } catch (err) {
@@ -43,8 +53,11 @@ export default function EditCategoryPage({
       setStatus("Name is required");
       return;
     }
-    if (!slug.trim()) {
-      setStatus("Slug is required");
+
+    // Auto-generate slug from name
+    const generatedSlug = slugify(name.trim());
+    if (!generatedSlug) {
+      setStatus("Invalid category name");
       return;
     }
 
@@ -54,7 +67,7 @@ export default function EditCategoryPage({
     try {
       const payload = {
         name: name.trim(),
-        slug: slug.trim(),
+        slug: generatedSlug,
         description: description.trim(),
         image_url: imageUrl.trim() || "",
       };
@@ -93,17 +106,11 @@ export default function EditCategoryPage({
             required
             className="border p-2 rounded w-full"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Slug *</label>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="category-slug"
-            required
-            className="border p-2 rounded w-full"
-          />
+          {autoSlug && (
+            <p className="text-xs text-gray-500 mt-1">
+              Slug: <span className="font-mono">{autoSlug}</span>
+            </p>
+          )}
         </div>
 
         <div>
@@ -128,14 +135,22 @@ export default function EditCategoryPage({
             />
             <button
               type="button"
-              onClick={() => setShowImagePicker(true)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border rounded whitespace-nowrap"
+              onClick={() => canBrowseImages && setShowImagePicker(true)}
+              disabled={!canBrowseImages}
+              className={`px-4 py-2 border rounded whitespace-nowrap ${
+                canBrowseImages
+                  ? "bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                  : "bg-gray-50 text-gray-400 cursor-not-allowed"
+              }`}
+              title={!canBrowseImages ? "Category slug is required" : ""}
             >
               📷 Browse Images
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Upload or select a category image from Supabase storage
+            {canBrowseImages
+              ? "Upload or select a category image from Supabase storage"
+              : "Category slug is required to enable image upload"}
           </p>
         </div>
 
@@ -180,7 +195,7 @@ export default function EditCategoryPage({
         multiSelect={false}
         maxFiles={1}
         folder="categories"
-        slug={slug.trim()}
+        slug={autoSlug}
       />
     </div>
   );
