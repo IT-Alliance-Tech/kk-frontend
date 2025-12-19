@@ -134,17 +134,16 @@ export default function EditProductPage() {
         isActive,
       };
 
-      const result = await updateProduct(productId, payload);
+      await updateProduct(productId, payload);
 
-      if (result.success) {
-        setStatus("Product updated successfully!");
-        setTimeout(() => {
-          router.push("/admin/products");
-        }, 1000);
-      } else {
-        throw new Error(result.message || "Update failed");
-      }
+      // Success: API call completed without throwing
+      setStatus("Product updated successfully!");
+      setSaving(false);
+      setTimeout(() => {
+        router.push("/admin/products");
+      }, 1000);
     } catch (err: any) {
+      // Failure: API call threw an error
       setStatus(err.message || "Error updating product");
       setSaving(false);
     }
