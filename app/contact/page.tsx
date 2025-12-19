@@ -4,14 +4,10 @@ import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState, useRef } from "react";
+import { apiPost } from "@/lib/api";
 
 // ⭐ Image Imports
 import contactMainImg from "../../assets/images/contact.png";
-
-// ⭐ API BASE URL (SAFE: ENV → FALLBACK)
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://kk-backend-5c11.onrender.com";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -44,23 +40,12 @@ export default function ContactPage() {
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        alert(result.message || "Your message has been sent successfully!");
-        formRef.current?.reset();
-      } else {
-        alert(result.error || "Something went wrong. Please try again.");
-      }
-    } catch (error) {
+      const result = await apiPost("/api/contact", data);
+      alert(result?.message || "Your message has been sent successfully!");
+      formRef.current?.reset();
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to send message. Please try again later.");
+      alert(error?.message || "Failed to send message. Please try again later.");
     } finally {
       setLoading(false);
     }
