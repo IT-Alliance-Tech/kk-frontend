@@ -3,12 +3,22 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory } from "@/lib/admin";
+import ImagePicker from "@/components/ImagePicker";
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '');
+}
 
 export default function NewCategoryPage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -97,12 +107,24 @@ export default function NewCategoryPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Image URL</label>
-          <input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-            className="border p-2 rounded w-full"
-          />
+          <div className="flex gap-2">
+            <input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="border p-2 rounded w-full"
+            />
+            <button
+              type="button"
+              onClick={() => setShowImagePicker(true)}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border rounded whitespace-nowrap"
+            >
+              📷 Browse Images
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Upload or select a category image from Supabase storage
+          </p>
         </div>
 
         {status && (
@@ -132,6 +154,22 @@ export default function NewCategoryPage() {
           </button>
         </div>
       </form>
+
+      {/* Image Picker Modal */}
+      <ImagePicker
+        isOpen={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelect={(urls) => {
+          // Set the first selected URL as the category image
+          if (urls.length > 0) {
+            setImageUrl(urls[0]);
+          }
+        }}
+        multiSelect={false}
+        maxFiles={1}
+        folder="categories"
+        slug={slugify(slug.trim() || name.trim())}
+      />
     </div>
   );
 }

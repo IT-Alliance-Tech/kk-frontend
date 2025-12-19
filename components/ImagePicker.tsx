@@ -96,7 +96,7 @@ export default function ImagePicker({
       const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
       let uploadUrl = `${process.env.NEXT_PUBLIC_API_URL}/upload/admin?folder=${encodeURIComponent(folder)}`;
-      if (folder === 'brands' && slug) {
+      if ((folder === 'brands' || folder === 'categories') && slug) {
         uploadUrl += `&slug=${encodeURIComponent(slug)}`;
       }
 
