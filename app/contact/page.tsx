@@ -12,11 +12,6 @@ import contactMainImg from "../../assets/images/contact.png";
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
-  
-  // ⭐ Card reveal states
-  const [revealPhone, setRevealPhone] = useState(false);
-  const [revealEmail, setRevealEmail] = useState(false);
-  const [revealAddress, setRevealAddress] = useState(false);
 
   // ⭐ Static Contact Info (matching Footer)
   const contactData = {
@@ -83,29 +78,13 @@ export default function ContactPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            onClick={() => setRevealPhone(!revealPhone)}
-            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer min-h-[200px] flex flex-col justify-center"
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 h-full flex flex-col justify-center"
           >
             <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
               <Phone className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Phone</h3>
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{
-                opacity: revealPhone ? 1 : 0,
-                y: revealPhone ? 0 : 10,
-                scale: revealPhone ? 1 : 0.95,
-                height: revealPhone ? 'auto' : 0
-              }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="overflow-hidden"
-            >
-              <p className="text-gray-600 text-center break-words pt-2">{contactData.phone}</p>
-            </motion.div>
-            {!revealPhone && (
-              <p className="text-sm text-emerald-600 text-center mt-2 font-medium">Click to reveal</p>
-            )}
+            <p className="text-gray-600 text-center break-words">{contactData.phone}</p>
           </motion.div>
 
           {/* Email Card */}
@@ -113,29 +92,13 @@ export default function ContactPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            onClick={() => setRevealEmail(!revealEmail)}
-            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer min-h-[200px] flex flex-col justify-center"
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 h-full flex flex-col justify-center"
           >
             <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
               <Mail className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Email</h3>
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{
-                opacity: revealEmail ? 1 : 0,
-                y: revealEmail ? 0 : 10,
-                scale: revealEmail ? 1 : 0.95,
-                height: revealEmail ? 'auto' : 0
-              }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="overflow-hidden"
-            >
-              <p className="text-gray-600 text-center break-words pt-2">{contactData.email}</p>
-            </motion.div>
-            {!revealEmail && (
-              <p className="text-sm text-emerald-600 text-center mt-2 font-medium">Click to reveal</p>
-            )}
+            <p className="text-gray-600 text-center break-words">{contactData.email}</p>
           </motion.div>
 
           {/* Address Card */}
@@ -143,44 +106,28 @@ export default function ContactPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            onClick={() => setRevealAddress(!revealAddress)}
-            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer sm:col-span-2 lg:col-span-1 min-h-[200px] flex flex-col justify-center"
+            className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 sm:col-span-2 lg:col-span-1 h-full flex flex-col justify-center"
           >
             <div className="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-full mb-4 mx-auto">
               <MapPin className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Address</h3>
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{
-                opacity: revealAddress ? 1 : 0,
-                y: revealAddress ? 0 : 10,
-                scale: revealAddress ? 1 : 0.95,
-                height: revealAddress ? 'auto' : 0
-              }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="overflow-hidden"
-            >
-              <p className="text-gray-600 text-center whitespace-pre-line break-words pt-2">
-                {contactData.address}
-              </p>
-            </motion.div>
-            {!revealAddress && (
-              <p className="text-sm text-emerald-600 text-center mt-2 font-medium">Click to reveal</p>
-            )}
+            <p className="text-gray-600 text-center whitespace-pre-line break-words">
+              {contactData.address}
+            </p>
           </motion.div>
         </div>
       </div>
 
       {/* Form + Image Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 lg:items-stretch">
           {/* Image Section */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="relative h-64 sm:h-80 lg:h-auto min-h-[400px] rounded-2xl overflow-hidden shadow-xl"
+            className="relative h-64 sm:h-80 lg:h-full rounded-2xl overflow-hidden shadow-xl"
           >
             <Image 
               src={contactMainImg} 
@@ -195,14 +142,14 @@ export default function ContactPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            className="bg-white rounded-2xl shadow-xl p-8 md:p-10"
+            className="bg-white rounded-2xl shadow-xl p-6 md:p-8"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Send Us a Message</h2>
-            <p className="text-gray-600 mb-8">Fill out the form below and we&apos;ll get back to you shortly.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Send Us a Message</h2>
+            <p className="text-gray-600 mb-4">Fill out the form below and we&apos;ll get back to you shortly.</p>
 
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -211,12 +158,12 @@ export default function ContactPage() {
                   type="text"
                   required
                   placeholder="John Doe"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -225,12 +172,12 @@ export default function ContactPage() {
                   type="tel"
                   required
                   placeholder="+1 (555) 123-4567"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -239,12 +186,12 @@ export default function ContactPage() {
                   type="email"
                   required
                   placeholder="john@example.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
                   Subject
                 </label>
                 <input
@@ -252,27 +199,27 @@ export default function ContactPage() {
                   name="subject"
                   type="text"
                   placeholder="How can we help you?"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
                 />
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
                   Message
                 </label>
                 <textarea
                   id="message"
                   name="message"
-                  rows={5}
+                  rows={3}
                   placeholder="Tell us what&apos;s on your mind..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 resize-none text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 resize-none text-gray-900 placeholder-gray-400"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:hover:shadow-lg"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:hover:shadow-lg"
               >
                 {loading ? (
                   <>
