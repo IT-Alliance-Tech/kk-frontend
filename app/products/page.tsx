@@ -47,15 +47,31 @@ function ProductsPageContent() {
 
   // Get current page from URL
   const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const categoryFilter = searchParams.get("category") || "";
+  const brandFilter = searchParams.get("brand") || "";
 
   // Fetch products with pagination
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const data = await apiGet(
-          `/products?page=${currentPage}&limit=${ITEMS_PER_PAGE}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ""}`
-        );
+        
+        // Build query string with all filters
+        const params = new URLSearchParams();
+        params.set("page", currentPage.toString());
+        params.set("limit", ITEMS_PER_PAGE.toString());
+        
+        if (searchQuery) {
+          params.set("q", searchQuery);
+        }
+        if (categoryFilter) {
+          params.set("category", categoryFilter);
+        }
+        if (brandFilter) {
+          params.set("brand", brandFilter);
+        }
+        
+        const data = await apiGet(`/products?${params.toString()}`);
         
         // Handle both array response and object with items
         const items = Array.isArray(data) ? data : (data?.items ?? []);
@@ -81,7 +97,7 @@ function ProductsPageContent() {
     };
 
     fetchProducts();
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, categoryFilter, brandFilter]);
 
   // Handle page change
   const handlePageChange = (newPage: number) => {

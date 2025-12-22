@@ -40,7 +40,7 @@ export default function ProductPage() {
       if (p?._id) {
         setLoadingSimilar(true);
         try {
-          const similarData = await apiGet(`/products/${p._id}/similar?limit=6`);
+          const similarData = await apiGet(`/products/${p._id}/similar?limit=8`);
           setSimilarProducts(similarData || []);
         } catch (error) {
           console.error('Failed to fetch similar products:', error);
@@ -316,7 +316,7 @@ export default function ProductPage() {
           <div className="mt-10 pt-8 border-t border-gray-200">
             <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Similar Products</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
-              {[...Array(4)].map((_, idx) => (
+              {[...Array(8)].map((_, idx) => (
                 <div key={idx} className="bg-white rounded-lg border border-gray-200 h-80 animate-pulse">
                   <div className="w-full h-48 bg-gray-200"></div>
                   <div className="p-4 space-y-3">
@@ -329,7 +329,23 @@ export default function ProductPage() {
           </div>
         ) : similarProducts.length > 0 ? (
           <div className="mt-10 pt-8 border-t border-gray-200">
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-6">Similar Products</h2>
+            {/* Header row with title and Explore more CTA */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Similar Products</h2>
+              <button 
+                onClick={() => {
+                  const categoryName = product?.category?.name;
+                  if (categoryName) {
+                    router.push(`/search?q=${encodeURIComponent(categoryName)}`);
+                  } else {
+                    router.push('/search');
+                  }
+                }}
+                className="text-emerald-600 hover:text-emerald-700 text-sm font-medium hover:underline transition-colors whitespace-nowrap cursor-pointer"
+              >
+                Explore more →
+              </button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
               {similarProducts.map((p: any) => (
                 <ProductCard key={p._id} product={p} />
