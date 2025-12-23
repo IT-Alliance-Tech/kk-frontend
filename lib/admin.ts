@@ -223,8 +223,28 @@ export async function getBrands() {
   return ensureArray(data, ['items', 'brands', 'data']);
 }
 
-export async function getAdminBrands() {
-  const data = await apiGetAuth("/brands/all");
+export async function getAdminBrands(params?: { page?: number; limit?: number }) {
+  // If no params provided, fetch all brands (backward compatibility)
+  if (!params || (!params.page && !params.limit)) {
+    const data = await apiGetAuth("/brands/all");
+    return ensureArray(data, ['items', 'brands', 'data']);
+  }
+
+  // Paginated request
+  const { page = 1, limit = 10 } = params;
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  
+  const data = await apiGetAuth(`/brands/all?${queryParams.toString()}`);
+  
+  // Check if response is paginated (has brands array)
+  if (data && data.brands) {
+    return data; // Return full paginated response
+  }
+  
+  // Fallback for non-paginated response
   return ensureArray(data, ['items', 'brands', 'data']);
 }
 
