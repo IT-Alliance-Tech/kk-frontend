@@ -145,9 +145,25 @@ export async function adminLogout() {
 }
 
 // -------------------- PRODUCTS --------------------
-export async function getAdminProducts() {
-  const data = await apiGetAuth("/admin/products");
-  return ensureArray(data, ['items', 'products', 'data']);
+export async function getAdminProducts(params?: { page?: number; limit?: number }) {
+  // For backward compatibility: if no params, request a very high limit to get all products
+  const effectiveParams = params || { page: 1, limit: 9999 };
+  
+  const queryString = '?' + new URLSearchParams({
+    page: String(effectiveParams.page || 1),
+    limit: String(effectiveParams.limit || 9999)
+  }).toString();
+  
+  const data = await apiGetAuth(`/admin/products${queryString}`);
+  
+  // If no params provided (backward compatibility), extract products array
+  if (!params) {
+    return ensureArray(data?.products || data, ['items', 'products', 'data']);
+  }
+  
+  // Backend now returns: { products, total, page, totalPages, limit }
+  // Return the full response for pagination info
+  return data;
 }
 
 export function getSingleProduct(id: string) {
