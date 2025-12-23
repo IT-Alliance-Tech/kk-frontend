@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
   { label: "Categories", href: "/admin/categories", icon: "📂" },
   { label: "Orders", href: "/admin/orders", icon: "🛒" },
   { label: "Coupons", href: "/admin/coupons", icon: "🎟️" },
+  { label: "Contact Submissions", href: "/admin/contact-submissions", icon: "📧" },
 ];
 
 export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarProps) {
