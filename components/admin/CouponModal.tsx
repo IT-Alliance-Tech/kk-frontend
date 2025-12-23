@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { X, Tag, Percent, IndianRupee, Calendar, Users, Package } from 'lucide-react';
 import { createCoupon, updateCoupon, type Coupon, type CreateCouponPayload } from '@/lib/api/coupons.api';
+import { getBrands, getCategories } from '@/lib/admin';
+import type { Brand } from '@/lib/types/brand';
+import type { Category } from '@/lib/supabase';
 
 interface CouponModalProps {
   coupon?: Coupon | null;
@@ -26,19 +29,43 @@ export default function CouponModal({ coupon, onClose }: CouponModalProps) {
   const [perUserLimit, setPerUserLimit] = useState(coupon?.perUserLimit?.toString() || '');
   const [active, setActive] = useState(coupon?.active ?? true);
 
-  // Applicability (simplified - just comma-separated IDs for now)
-  const [applicableProducts, setApplicableProducts] = useState(
-    coupon?.applicableProducts.join(', ') || ''
+  // Applicability - single brand and category (matching Product form)
+  const [brandId, setBrandId] = useState<string>(
+    coupon?.applicableBrands?.[0] || ''
   );
-  const [applicableCategories, setApplicableCategories] = useState(
-    coupon?.applicableCategories.join(', ') || ''
+  const [categoryId, setCategoryId] = useState<string>(
+    coupon?.applicableCategories?.[0] || ''
   );
-  const [applicableBrands, setApplicableBrands] = useState(
-    coupon?.applicableBrands.join(', ') || ''
-  );
+
+  // Brands and Categories data
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Fetch brands and categories on mount
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoadingData(true);
+        const [brandsData, categoriesData] = await Promise.all([
+          getBrands(),
+          getCategories()
+        ]);
+        
+        setBrands(Array.isArray(brandsData) ? brandsData : []);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      } catch (err) {
+        console.error('Failed to fetch brands/categories:', err);
+        setError('Failed to load brands and categories');
+      } finally {
+        setLoadingData(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,26 +126,13 @@ export default function CouponModal({ coupon, onClose }: CouponModalProps) {
         payload.perUserLimit = parseInt(perUserLimit);
       }
 
-      // Parse applicability arrays
-      if (applicableProducts.trim()) {
-        payload.applicableProducts = applicableProducts
-          .split(',')
-          .map((id) => id.trim())
-          .filter(Boolean);
+      // Add selected brand and category (single values like Product form)
+      if (brandId) {
+        payload.applicableBrands = [brandId];
       }
 
-      if (applicableCategories.trim()) {
-        payload.applicableCategories = applicableCategories
-          .split(',')
-          .map((id) => id.trim())
-          .filter(Boolean);
-      }
-
-      if (applicableBrands.trim()) {
-        payload.applicableBrands = applicableBrands
-          .split(',')
-          .map((id) => id.trim())
-          .filter(Boolean);
+      if (categoryId) {
+        payload.applicableCategories = [categoryId];
       }
 
       if (isEditMode) {
@@ -309,50 +323,45 @@ export default function CouponModal({ coupon, onClose }: CouponModalProps) {
               Applicability (Leave empty for all products)
             </h3>
 
-            <div>
-              <label htmlFor="applicableProducts" className="block text-sm font-medium text-gray-600 mb-2">
-                Product IDs
-              </label>
-              <input
-                type="text"
-                id="applicableProducts"
-                value={applicableProducts}
-                onChange={(e) => setApplicableProducts(e.target.value)}
-                placeholder="e.g., 60d5ec49f1b2c8b1f8e4e1a1, 60d5ec49f1b2c8b1f8e4e1a2"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-mono"
-              />
-              <p className="mt-1 text-xs text-gray-500">Comma-separated product IDs</p>
-            </div>
+            {loadingData ? (
+              <div className="text-sm text-gray-500">Loading brands and categories...</div>
+            ) : (
+              <>
+                {/* Brand Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Brand</label>
+                  <select
+                    value={brandId}
+                    onChange={(e) => setBrandId(e.target.value)}
+                    className="border p-2 rounded w-full"
+                  >
+                    <option value="">Select Brand</option>
+                    {brands.map((brand) => (
+                      <option key={brand._id || brand.id} value={brand._id || brand.id}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label htmlFor="applicableCategories" className="block text-sm font-medium text-gray-600 mb-2">
-                Category IDs
-              </label>
-              <input
-                type="text"
-                id="applicableCategories"
-                value={applicableCategories}
-                onChange={(e) => setApplicableCategories(e.target.value)}
-                placeholder="e.g., 60d5ec49f1b2c8b1f8e4e1a3, 60d5ec49f1b2c8b1f8e4e1a4"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-mono"
-              />
-              <p className="mt-1 text-xs text-gray-500">Comma-separated category IDs</p>
-            </div>
-
-            <div>
-              <label htmlFor="applicableBrands" className="block text-sm font-medium text-gray-600 mb-2">
-                Brand IDs
-              </label>
-              <input
-                type="text"
-                id="applicableBrands"
-                value={applicableBrands}
-                onChange={(e) => setApplicableBrands(e.target.value)}
-                placeholder="e.g., 60d5ec49f1b2c8b1f8e4e1a5, 60d5ec49f1b2c8b1f8e4e1a6"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-mono"
-              />
-              <p className="mt-1 text-xs text-gray-500">Comma-separated brand IDs</p>
-            </div>
+                {/* Category Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="border p-2 rounded w-full"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Active Status */}
