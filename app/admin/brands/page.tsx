@@ -8,18 +8,40 @@ import Image from "next/image";
 
 export default function AdminBrandsPage() {
   const [brands, setBrands] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const limit = 10;
 
-  const loadBrands = async () => {
-    const data = await getAdminBrands();
-    setBrands(data || []);
+  const loadBrands = async (page: number = 1) => {
+    setLoading(true);
+    try {
+      const response = await getAdminBrands({ page, limit });
+      
+      // Extract brands and pagination info
+      const brandsData = response?.brands || response?.data?.brands || [];
+      const totalCount = response?.total || response?.data?.total || 0;
+      const totalPagesCount = response?.totalPages || response?.data?.totalPages || 1;
+      
+      setBrands(Array.isArray(brandsData) ? brandsData : []);
+      setTotal(totalCount);
+      setTotalPages(totalPagesCount);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Failed to load brands:", error);
+      setBrands([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this brand?")) return;
     try {
       await deleteBrand(id);
-      loadBrands();
+      loadBrands(currentPage);
     } catch (err: any) {
       console.error("Brand deletion error:", err);
       alert(err.message || "Failed to delete brand");
@@ -35,7 +57,7 @@ export default function AdminBrandsPage() {
     if (!confirm("Are you sure you want to disable this brand?")) return;
     try {
       await disableBrand(id);
-      loadBrands();
+      loadBrands(currentPage);
     } catch (err: any) {
       console.error("Brand disable error:", err);
       alert(err.message || "Failed to disable brand");
@@ -49,7 +71,7 @@ export default function AdminBrandsPage() {
   const handleEnable = async (id: string) => {
     try {
       await enableBrand(id);
-      loadBrands();
+      loadBrands(currentPage);
     } catch (err: any) {
       console.error("Brand enable error:", err);
       alert(err.message || "Failed to enable brand");
@@ -61,8 +83,13 @@ export default function AdminBrandsPage() {
   };
 
   useEffect(() => {
-    loadBrands();
+    loadBrands(1);
   }, []);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    loadBrands(newPage);
+  };
 
   return (
     <div className="p-3 sm:p-4 md:p-6">
@@ -76,83 +103,160 @@ export default function AdminBrandsPage() {
         </Link>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border min-w-[640px]">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2 text-xs sm:text-sm">Logo</th>
-            <th className="border p-2 text-xs sm:text-sm">Name</th>
-            <th className="border p-2 text-xs sm:text-sm">Slug</th>
-            <th className="border p-2 text-xs sm:text-sm">Status</th>
-            <th className="border p-2 text-xs sm:text-sm">Action</th>
-          </tr>
-        </thead>
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading brands...</p>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full border min-w-[640px]">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2 text-xs sm:text-sm">Logo</th>
+                <th className="border p-2 text-xs sm:text-sm">Name</th>
+                <th className="border p-2 text-xs sm:text-sm">Slug</th>
+                <th className="border p-2 text-xs sm:text-sm">Status</th>
+                <th className="border p-2 text-xs sm:text-sm">Action</th>
+              </tr>
+            </thead>
 
-        <tbody>
-          {brands.map((b: any) => (
-            <tr key={b._id} className={!b.isActive ? "bg-gray-50 opacity-60" : ""}>
-              <td className="border p-2">
-                {b.logoUrl ? (
-                  <Image
-                    src={b.logoUrl}
-                    alt={b.name}
-                    className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                    width={500}
-                    height={500}
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 flex items-center justify-center text-xs">
-                    No Logo
-                  </div>
-                )}
-              </td>
-              <td className="border p-2 text-xs sm:text-sm">{b.name}</td>
-              <td className="border p-2 text-xs sm:text-sm text-gray-600">{b.slug}</td>
-              <td className="border p-2 text-xs sm:text-sm text-center">
-                {b.isActive !== false ? (
-                  <span className="text-green-600 font-medium">Active</span>
-                ) : (
-                  <span className="text-red-600 font-medium">Disabled</span>
-                )}
-              </td>
-              <td className="border p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
-                <Link
-                  href={`/admin/brands/${b._id}`}
-                  className="text-blue-600 text-xs sm:text-sm"
+            <tbody>
+              {brands.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="border p-4 text-center text-gray-500">
+                    No brands found
+                  </td>
+                </tr>
+              ) : (
+                brands.map((b: any) => (
+                  <tr key={b._id} className={!b.isActive ? "bg-gray-50 opacity-60" : ""}>
+                    <td className="border p-2">
+                      {b.logoUrl ? (
+                        <Image
+                          src={b.logoUrl}
+                          alt={b.name}
+                          className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                          width={500}
+                          height={500}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 flex items-center justify-center text-xs">
+                          No Logo
+                        </div>
+                      )}
+                    </td>
+                    <td className="border p-2 text-xs sm:text-sm">{b.name}</td>
+                    <td className="border p-2 text-xs sm:text-sm text-gray-600">{b.slug}</td>
+                    <td className="border p-2 text-xs sm:text-sm text-center">
+                      {b.isActive !== false ? (
+                        <span className="text-green-600 font-medium">Active</span>
+                      ) : (
+                        <span className="text-red-600 font-medium">Disabled</span>
+                      )}
+                    </td>
+                    <td className="border p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
+                      <Link
+                        href={`/admin/brands/${b._id}`}
+                        className="text-blue-600 text-xs sm:text-sm"
+                      >
+                        Edit
+                      </Link>
+
+                      {b.isActive !== false ? (
+                        <>
+                          <button
+                            className="text-orange-600 text-xs sm:text-sm"
+                            onClick={() => handleDisable(b._id)}
+                          >
+                            Disable
+                          </button>
+                          <button
+                            className="text-red-600 text-xs sm:text-sm"
+                            onClick={() => handleDelete(b._id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="text-green-600 text-xs sm:text-sm"
+                          onClick={() => handleEnable(b._id)}
+                        >
+                          Enable
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          </div>
+
+          {/* Pagination UI */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+              {/* Info text */}
+              <p className="text-xs sm:text-sm text-gray-600">
+                Showing {Math.min((currentPage - 1) * limit + 1, total)}–{Math.min(currentPage * limit, total)} of {total} brands
+              </p>
+
+              {/* Pagination controls */}
+              <div className="flex items-center gap-2">
+                {/* Previous button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
                 >
-                  Edit
-                </Link>
+                  Previous
+                </button>
 
-                {b.isActive !== false ? (
-                  <>
-                    <button
-                      className="text-orange-600 text-xs sm:text-sm"
-                      onClick={() => handleDisable(b._id)}
-                    >
-                      Disable
-                    </button>
-                    <button
-                      className="text-red-600 text-xs sm:text-sm"
-                      onClick={() => handleDelete(b._id)}
-                    >
-                      Delete
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className="text-green-600 text-xs sm:text-sm"
-                    onClick={() => handleEnable(b._id)}
-                  >
-                    Enable
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </div>
+                {/* Page numbers */}
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1.5 border rounded text-sm ${
+                          currentPage === pageNum
+                            ? 'bg-black text-white'
+                            : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Next button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
