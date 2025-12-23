@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAdminContactSubmissions } from "@/lib/admin";
 import { useRouter } from "next/navigation";
 
@@ -38,7 +38,7 @@ export default function AdminContactSubmissionsPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const loadSubmissions = async (page: number = 1) => {
+  const loadSubmissions = useCallback(async (page: number = 1) => {
     try {
       setLoading(true);
       setError(null);
@@ -69,11 +69,11 @@ export default function AdminContactSubmissionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     loadSubmissions(1);
-  }, []);
+  }, [loadSubmissions]);
 
   const handleNextPage = () => {
     if (pagination.hasNextPage) {
