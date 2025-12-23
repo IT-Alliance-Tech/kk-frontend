@@ -8,11 +8,32 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const limit = 10;
 
-  const loadProducts = async () => {
-    const data = await getAdminProducts();
-    // getAdminProducts now returns array directly via ensureArray
-    setProducts(Array.isArray(data) ? data : []);
+  const loadProducts = async (page: number = 1) => {
+    setLoading(true);
+    try {
+      const response = await getAdminProducts({ page, limit });
+      
+      // Extract products and pagination info
+      const productsData = response?.products || response?.data?.products || [];
+      const totalCount = response?.total || response?.data?.total || 0;
+      const totalPagesCount = response?.totalPages || response?.data?.totalPages || 1;
+      
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      setTotal(totalCount);
+      setTotalPages(totalPagesCount);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Failed to load products:", error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadCategoriesAndBrands = async () => {
@@ -29,9 +50,14 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
-    loadProducts();
+    loadProducts(1);
     loadCategoriesAndBrands();
   }, []);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    loadProducts(newPage);
+  };
 
   return (
     <div className="p-3 sm:p-6">
@@ -45,66 +71,141 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border min-w-[640px]">
-        <thead>
-          {/* Reordered columns to: Title, Category, Brand, Price, Action (per product owner request) */}
-          <tr className="bg-gray-100">
-            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Title</th>
-            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Category</th>
-            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Brand</th>
-            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Price</th>
-            <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {products.map((p: any) => {
-            // Show category/brand name instead of ID: prefer product.category.name/product.brand.name, then lookup from categories/brands arrays
-            const categoryName = p?.category?.name 
-              ?? categories?.find(c => String(c._id) === String(p.category))?.name 
-              ?? p.category 
-              ?? '-';
-            
-            const brandName = p?.brand?.name 
-              ?? brands?.find(b => String(b._id) === String(p.brand))?.name 
-              ?? p.brand 
-              ?? '-';
-
-            // Defensive access for product id and title
-            const pid = p?.id || p?._id;
-            const label = p?.title ?? 'product';
-
-            return (
-              <tr key={p._id}>
-                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{p.title}</td>
-                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{categoryName}</td>
-                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{brandName}</td>
-                <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">₹{p.price}</td>
-                <td className="border p-1.5 sm:p-2 space-x-1 sm:space-x-3 whitespace-nowrap">
-                  {/* Open read-only product view page */}
-                  <Link
-                    href={`/admin/products/view/${pid}`}
-                    className="text-green-600 text-xs sm:text-sm"
-                    aria-label={`View ${label}`}
-                  >
-                    View
-                  </Link>
-
-                  <Link
-                    href={`/admin/products/${pid}`}
-                    className="text-blue-600 text-xs sm:text-sm"
-                    aria-label={`Edit ${label}`}
-                  >
-                    Edit
-                  </Link>
-                </td>
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full border min-w-[640px]">
+            <thead>
+              {/* Reordered columns to: Title, Category, Brand, Price, Action (per product owner request) */}
+              <tr className="bg-gray-100">
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Title</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Category</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Brand</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Price</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      </div>
+            </thead>
+
+            <tbody>
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="border p-4 text-center text-gray-500">
+                    No products found
+                  </td>
+                </tr>
+              ) : (
+                products.map((p: any) => {
+                  // Show category/brand name instead of ID: prefer product.category.name/product.brand.name, then lookup from categories/brands arrays
+                  const categoryName = p?.category?.name 
+                    ?? categories?.find(c => String(c._id) === String(p.category))?.name 
+                    ?? p.category 
+                    ?? '-';
+                  
+                  const brandName = p?.brand?.name 
+                    ?? brands?.find(b => String(b._id) === String(p.brand))?.name 
+                    ?? p.brand 
+                    ?? '-';
+
+                  // Defensive access for product id and title
+                  const pid = p?.id || p?._id;
+                  const label = p?.title ?? 'product';
+
+                  return (
+                    <tr key={p._id}>
+                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{p.title}</td>
+                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{categoryName}</td>
+                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{brandName}</td>
+                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">₹{p.price}</td>
+                      <td className="border p-1.5 sm:p-2 space-x-1 sm:space-x-3 whitespace-nowrap">
+                        {/* Open read-only product view page */}
+                        <Link
+                          href={`/admin/products/view/${pid}`}
+                          className="text-green-600 text-xs sm:text-sm"
+                          aria-label={`View ${label}`}
+                        >
+                          View
+                        </Link>
+
+                        <Link
+                          href={`/admin/products/${pid}`}
+                          className="text-blue-600 text-xs sm:text-sm"
+                          aria-label={`Edit ${label}`}
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+              {/* Showing info */}
+              <div className="text-sm text-gray-600">
+                Showing {products.length > 0 ? ((currentPage - 1) * limit + 1) : 0} to {Math.min(currentPage * limit, total)} of {total} products
+              </div>
+
+              {/* Page buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Previous
+                </button>
+
+                {/* Page numbers */}
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1.5 border rounded text-sm ${
+                          currentPage === pageNum
+                            ? 'bg-black text-white'
+                            : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
