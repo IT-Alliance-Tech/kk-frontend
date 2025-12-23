@@ -282,3 +282,12 @@ export function disableCategory(id: string) {
 export function enableCategory(id: string) {
   return apiPatchAuth(`/categories/${id}/enable`, {});
 }
+
+// -------------------- CONTACT SUBMISSIONS --------------------
+export async function getAdminContactSubmissions(params?: { page?: number; limit?: number }) {
+  const page = params?.page || 1;
+  const limit = params?.limit || 10;
+  const data = await apiGetAuth(`/admin/contact-submissions?page=${page}&limit=${limit}`);
+  // Return the full response with pagination info
+  return data;
+}
