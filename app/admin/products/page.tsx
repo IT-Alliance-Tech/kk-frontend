@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getAdminProducts, deleteProduct, getBrands, getCategories } from "@/lib/admin";
 import Link from "next/link";
 
@@ -12,12 +12,64 @@ export default function AdminProductsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  
+  // Filter states
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterName, setFilterName] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterPriceMin, setFilterPriceMin] = useState("");
+  const [filterPriceMax, setFilterPriceMax] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  
   const limit = 10;
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadProducts = async (page: number = 1) => {
+  // Debounce global search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(globalSearch);
+    }, 500); // 500ms delay
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [globalSearch]);
+
+  const loadProducts = useCallback(async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await getAdminProducts({ page, limit });
+      const params: any = { page, limit };
+      
+      // Add filters to params
+      // Priority: debouncedSearch (global) > filterName (advanced filter)
+      if (debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim();
+      } else if (filterName.trim()) {
+        params.search = filterName.trim();
+      }
+      
+      if (filterCategory) {
+        params.category = filterCategory;
+      }
+      if (filterBrand) {
+        params.brand = filterBrand;
+      }
+      if (filterPriceMin) {
+        params.priceMin = filterPriceMin;
+      }
+      if (filterPriceMax) {
+        params.priceMax = filterPriceMax;
+      }
+      
+      const response = await getAdminProducts(params);
       
       // Extract products and pagination info
       const productsData = response?.products || response?.data?.products || [];
@@ -31,10 +83,12 @@ export default function AdminProductsPage() {
     } catch (error) {
       console.error("Failed to load products:", error);
       setProducts([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, filterName, filterCategory, filterBrand, filterPriceMin, filterPriceMax, limit]);
 
   const loadCategoriesAndBrands = async () => {
     try {
@@ -50,14 +104,30 @@ export default function AdminProductsPage() {
   };
 
   useEffect(() => {
-    loadProducts(1);
     loadCategoriesAndBrands();
   }, []);
 
+  // Load products when filters change, reset to page 1
+  useEffect(() => {
+    loadProducts(1);
+  }, [loadProducts]);
+
   const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
+    if (newPage < 1 || newPage > totalPages || loading) return;
     loadProducts(newPage);
   };
+
+  const handleResetFilters = () => {
+    setGlobalSearch("");
+    setDebouncedSearch("");
+    setFilterName("");
+    setFilterCategory("");
+    setFilterBrand("");
+    setFilterPriceMin("");
+    setFilterPriceMax("");
+  };
+
+  const hasActiveFilters = debouncedSearch || filterName || filterCategory || filterBrand || filterPriceMin || filterPriceMax;
 
   return (
     <div className="p-3 sm:p-6">
@@ -70,6 +140,135 @@ export default function AdminProductsPage() {
           + Add Product
         </Link>
       </div>
+
+      {/* Global Search Bar */}
+      <div className="mb-4">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            placeholder="Search products by name..."
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+            className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+          />
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="px-4 py-2 border rounded-md hover:bg-gray-50 transition"
+          >
+            {showFilters ? "Hide Filters" : "Advanced Filters"}
+          </button>
+          {hasActiveFilters && (
+            <button
+              onClick={handleResetFilters}
+              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Advanced Filters Section */}
+      {showFilters && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+          <h3 className="font-semibold mb-3 text-sm sm:text-base">Advanced Filters</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Product Name Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Name
+              </label>
+              <input
+                type="text"
+                placeholder="Filter by name..."
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                <option value="">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Brand Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Brand
+              </label>
+              <select
+                value={filterBrand}
+                onChange={(e) => setFilterBrand(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                <option value="">All Brands</option>
+                {brands.map((brand) => (
+                  <option key={brand._id} value={brand._id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Price Min */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Min Price (₹)
+              </label>
+              <input
+                type="number"
+                placeholder="0"
+                value={filterPriceMin}
+                onChange={(e) => setFilterPriceMin(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Price Max */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Max Price (₹)
+              </label>
+              <input
+                type="number"
+                placeholder="99999"
+                value={filterPriceMax}
+                onChange={(e) => setFilterPriceMax(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results Count */}
+      {!loading && (
+        <div className="mb-3 text-sm text-gray-600">
+          {total > 0 ? (
+            <>
+              Showing {products.length > 0 ? ((currentPage - 1) * limit + 1) : 0} to {Math.min(currentPage * limit, total)} of {total} product{total !== 1 ? 's' : ''}
+              {hasActiveFilters && " (filtered)"}
+            </>
+          ) : (
+            "No products found"
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-8">
@@ -151,7 +350,7 @@ export default function AdminProductsPage() {
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
               {/* Showing info */}
               <div className="text-sm text-gray-600">
-                Showing {products.length > 0 ? ((currentPage - 1) * limit + 1) : 0} to {Math.min(currentPage * limit, total)} of {total} products
+                Page {currentPage} of {totalPages}
               </div>
 
               {/* Page buttons */}
@@ -209,3 +408,4 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
