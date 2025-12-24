@@ -51,6 +51,23 @@ export default function FilterPanel({
     }
   }, [products]);
 
+  // Compute which brands and categories have products in current results
+  const availableBrandIds = useMemo(() => {
+    return new Set(
+      products
+        .map((p) => p.brand?._id?.toString() || p.brand?.id?.toString())
+        .filter(Boolean)
+    );
+  }, [products]);
+
+  const availableCategoryIds = useMemo(() => {
+    return new Set(
+      products
+        .map((p) => p.category?._id?.toString() || p.category?.id?.toString())
+        .filter(Boolean)
+    );
+  }, [products]);
+
   // Price range presets - memoized to prevent re-creation
   const priceRanges = useMemo(
     () => [
@@ -211,10 +228,13 @@ export default function FilterPanel({
               {categories.map((cat) => {
                 const catId =
                   cat._id?.toString() || cat.id?.toString() || "";
+                const hasProducts = availableCategoryIds.has(catId);
                 return (
                   <label
                     key={catId}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                    className={`flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded ${
+                      !hasProducts ? "opacity-50" : ""
+                    }`}
                   >
                     <input
                       type="checkbox"
@@ -222,7 +242,12 @@ export default function FilterPanel({
                       onChange={() => toggleCategory(catId)}
                       className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-gray-700">{cat.name}</span>
+                    <span className="text-sm text-gray-700">
+                      {cat.name}
+                      {!hasProducts && (
+                        <span className="text-xs text-gray-400 ml-1">(0)</span>
+                      )}
+                    </span>
                   </label>
                 );
               })}
@@ -250,10 +275,13 @@ export default function FilterPanel({
               {brands.map((brand) => {
                 const brandId =
                   brand._id?.toString() || brand.id?.toString() || "";
+                const hasProducts = availableBrandIds.has(brandId);
                 return (
                   <label
                     key={brandId}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                    className={`flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded ${
+                      !hasProducts ? "opacity-50" : ""
+                    }`}
                   >
                     <input
                       type="checkbox"
@@ -261,7 +289,12 @@ export default function FilterPanel({
                       onChange={() => toggleBrand(brandId)}
                       className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-gray-700">{brand.name}</span>
+                    <span className="text-sm text-gray-700">
+                      {brand.name}
+                      {!hasProducts && (
+                        <span className="text-xs text-gray-400 ml-1">(0)</span>
+                      )}
+                    </span>
                   </label>
                 );
               })}

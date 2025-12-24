@@ -26,7 +26,14 @@ const nextConfig = {
         hostname: supabaseHostname,
         port: '',
         pathname: '/storage/v1/object/public/**'
-      }] : [])
+      }] : []),
+      // Allow placeholder images
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**'
+      }
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; img-src * data: blob;"
