@@ -145,14 +145,42 @@ export async function adminLogout() {
 }
 
 // -------------------- PRODUCTS --------------------
-export async function getAdminProducts(params?: { page?: number; limit?: number }) {
+export async function getAdminProducts(params?: { 
+  page?: number; 
+  limit?: number;
+  search?: string;
+  category?: string;
+  brand?: string;
+  priceMin?: string;
+  priceMax?: string;
+}) {
   // For backward compatibility: if no params, request a very high limit to get all products
   const effectiveParams = params || { page: 1, limit: 9999 };
   
-  const queryString = '?' + new URLSearchParams({
+  // Build query parameters
+  const queryParams: Record<string, string> = {
     page: String(effectiveParams.page || 1),
     limit: String(effectiveParams.limit || 9999)
-  }).toString();
+  };
+  
+  // Add filter parameters if provided
+  if (effectiveParams.search) {
+    queryParams.search = effectiveParams.search;
+  }
+  if (effectiveParams.category) {
+    queryParams.category = effectiveParams.category;
+  }
+  if (effectiveParams.brand) {
+    queryParams.brand = effectiveParams.brand;
+  }
+  if (effectiveParams.priceMin) {
+    queryParams.priceMin = effectiveParams.priceMin;
+  }
+  if (effectiveParams.priceMax) {
+    queryParams.priceMax = effectiveParams.priceMax;
+  }
+  
+  const queryString = '?' + new URLSearchParams(queryParams).toString();
   
   const data = await apiGetAuth(`/admin/products${queryString}`);
   
@@ -161,7 +189,7 @@ export async function getAdminProducts(params?: { page?: number; limit?: number 
     return ensureArray(data?.products || data, ['items', 'products', 'data']);
   }
   
-  // Backend now returns: { products, total, page, totalPages, limit }
+  // Backend now returns: { products, total, page, totalPages, limit, hasNextPage, hasPrevPage }
   // Return the full response for pagination info
   return data;
 }
