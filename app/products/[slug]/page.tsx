@@ -11,6 +11,7 @@ import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProductCard from "@/components/ProductCard";
 import QuantitySelector from "@/components/QuantitySelector";
+import ReviewsSection from "@/components/ReviewsSection";
 import { Star, ShoppingCart, Heart, Share2, Truck, ShieldCheck } from "lucide-react";
 
 export default function ProductPage() {
@@ -160,14 +161,22 @@ export default function ProductPage() {
                 </h1>
                 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">
-                    <span>4.5</span>
-                    <Star size={14} fill="currentColor" />
-                  </div>
-                  <span className="text-sm text-gray-600 font-medium">1,234 ratings</span>
+                  {product.attributes?.ratingAvg > 0 && (
+                    <>
+                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm">
+                        <span>{product.attributes.ratingAvg.toFixed(1)}</span>
+                        <Star size={14} fill="currentColor" />
+                      </div>
+                      {product.attributes?.ratingCount > 0 && (
+                        <span className="text-sm text-gray-600 font-medium">
+                          {product.attributes.ratingCount} {product.attributes.ratingCount === 1 ? "rating" : "ratings"}
+                        </span>
+                      )}
+                    </>
+                  )}
                   {product.category?.name && (
                     <>
-                      <span className="text-gray-300">•</span>
+                      {product.attributes?.ratingAvg > 0 && <span className="text-gray-300">•</span>}
                       <span className="text-sm text-emerald-700 font-semibold">
                         {product.category.name}
                       </span>
@@ -300,13 +309,13 @@ export default function ProductPage() {
             </TabsContent>
 
             <TabsContent value="reviews" className="px-8 py-8">
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-50 rounded-full mb-4 shadow-sm">
-                  <Star className="text-gray-300" size={36} />
+              {product?._id ? (
+                <ReviewsSection productId={product._id} />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Unable to load reviews</p>
                 </div>
-                <p className="text-gray-700 font-bold text-lg mb-1">No reviews yet</p>
-                <p className="text-sm text-gray-500">Be the first to review this product</p>
-              </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
