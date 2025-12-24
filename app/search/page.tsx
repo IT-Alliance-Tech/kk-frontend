@@ -12,30 +12,32 @@ import { normalizeSrc } from "@/lib/normalizeSrc";
 function SearchPageContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
-
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [allBrands, setAllBrands] = useState<any[]>([]); // All brands from master list
+  const [allCategories, setAllCategories] = useState<any[]>([]); // All categories from master list
   const [brands, setBrands] = useState<any[]>([]); // Brands from search results (for display)
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all brands once on mount
+  // Fetch all brands and categories once on mount
   useEffect(() => {
-    const fetchAllBrands = async () => {
+    const fetchAllFilters = async () => {
       try {
-        const response = await apiGet('/brands');
-        // API returns { success: true, data: [...] }
-        const brandsList = response?.data || [];
-        setAllBrands(brandsList);
+        const [brandsResponse, categoriesResponse] = await Promise.all([
+          apiGet('/brands'),
+          apiGet('/categories')
+        ]);
+        // apiGet already unwraps envelope and returns data array directly
+        setAllBrands(Array.isArray(brandsResponse) ? brandsResponse : []);
+        setAllCategories(Array.isArray(categoriesResponse) ? categoriesResponse : []);
       } catch (err) {
-        console.error("Failed to fetch brands:", err);
-        // Fallback: use empty array, filter will show search result brands
         setAllBrands([]);
+        setAllCategories([]);
       }
     };
 
-    fetchAllBrands();
+    fetchAllFilters();
   }, []); // Run only once on mount
 
   const fetchSearchResults = useCallback(async () => {
@@ -63,7 +65,14 @@ function SearchPageContent() {
   }, [q]);
 
   useEffect(() => {
-    if (q.trim()) fetchSearchResults();
+    if (q.trim()) {
+      fetchSearchResults();
+    } else {
+      // If no query, set loading to false and clear results
+      setLoading(false);
+      setProducts([]);
+      setFilteredProducts([]);
+    }
   }, [q, fetchSearchResults]);
 
   const handleFilterChange = useCallback((filtered: any[]) => {
@@ -84,7 +93,7 @@ function SearchPageContent() {
           <FilterPanel
             products={products}
             brands={allBrands.length > 0 ? allBrands : brands}
-            categories={categories}
+            categories={allCategories.length > 0 ? allCategories : categories}
             onFilterChange={handleFilterChange}
           />
 
