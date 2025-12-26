@@ -399,3 +399,14 @@ export async function getAdminContactSubmissions(params?: { page?: number; limit
   // Return the full response with pagination info
   return data;
 }
+
+// -------------------- HOMEPAGE MANAGEMENT --------------------
+export async function getAdminHomepageBrands() {
+  const data = await apiGetAuth("/admin/homepage/brands");
+  return ensureArray(data, ['items', 'brands', 'data']);
+}
+
+export async function getAdminHomepageCategories() {
+  const data = await apiGetAuth("/admin/homepage/categories");
+  return ensureArray(data, ['items', 'categories', 'data']);
+}

@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Category } from "@/lib/supabase";
-import { getProducts, Product } from "@/lib/api/products.api";
+import { Product } from "@/lib/api/products.api";
+import { buildUrl } from "@/lib/api";
 import HeroCarousel from "@/components/HeroCarousel";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const HomeCategories = dynamic(() => import("@/components/HomeCategories"), { ss
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -25,12 +27,18 @@ export default function HomePage() {
 
   async function fetchData() {
     setLoading(true);
+    setError(false);
     try {
-      // Fetch 8 products for homepage preview using API
-      const items = await getProducts({ limit: 8 });
-      setProducts(Array.isArray(items) ? items.slice(0, 8) : []);
+      // Use lightweight homepage-specific API for random top picks
+      const res = await fetch(buildUrl("/api/homepage/top-picks"), { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+      
+      const json = await res.json();
+      const items = json?.data || [];
+      setProducts(Array.isArray(items) ? items : []);
     } catch (err) {
-      console.error("Failed to fetch products:", err);
+      // Silently handle error - show empty state
+      setError(true);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -53,49 +61,51 @@ export default function HomePage() {
       {/* Categories preview section (4 items) */}
       <HomeCategories />
 
-      {/* Top Products */}
-      <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-10">
-        {/* Header row: centered title + right aligned Explore link */}
-        <div className="relative py-4">
-          <div className="flex items-center justify-center">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">
-              Top Picks for You
-            </h2>
+      {/* Top Products - only show if loading or has products */}
+      {(loading || products.length > 0) && (
+        <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-10">
+          {/* Header row: centered title + right aligned Explore link */}
+          <div className="relative py-4">
+            <div className="flex items-center justify-center">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">
+                Top Picks for You
+              </h2>
+            </div>
+
+            {/* Explore link pinned to right on same horizontal band (desktop) */}
+            <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 hidden sm:block">
+              <Link href="/products" className="text-emerald-600 hover:underline whitespace-nowrap">
+                See more products →
+              </Link>
+            </div>
+
+            {/* Mobile: show explore below title for small screens */}
+            <div className="mt-3 sm:hidden text-right">
+              <Link href="/products" className="text-emerald-600 hover:underline whitespace-nowrap">
+                See more products →
+              </Link>
+            </div>
           </div>
 
-          {/* Explore link pinned to right on same horizontal band (desktop) */}
-          <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 hidden sm:block">
-            <Link href="/products" className="text-emerald-600 hover:underline whitespace-nowrap">
-              See more products →
-            </Link>
-          </div>
-
-          {/* Mobile: show explore below title for small screens */}
-          <div className="mt-3 sm:hidden text-right">
-            <Link href="/products" className="text-emerald-600 hover:underline whitespace-nowrap">
-              See more products →
-            </Link>
-          </div>
-        </div>
-
-        {/* Products preview grid: 8 items, 4 per row on desktop */}
-        <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-4 md:gap-4 lg:gap-6">
-          {loading
-            ? Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse flex flex-row md:flex-col py-3 md:py-0 border-0 md:border rounded-none md:rounded-lg shadow-none md:shadow bg-white"
-                >
-                  <div className="w-24 h-24 md:w-full md:h-40 bg-slate-200 rounded-md md:rounded-none flex-shrink-0" />
-                  <div className="flex-1 ml-3 md:ml-0 p-0 md:p-4">
-                    <div className="h-4 bg-slate-200 rounded mb-2" />
-                    <div className="h-4 bg-slate-200 rounded w-2/3" />
+          {/* Products preview grid: 8 items, 4 per row on desktop */}
+          <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-4 md:gap-4 lg:gap-6">
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="animate-pulse flex flex-row md:flex-col py-3 md:py-0 border-0 md:border rounded-none md:rounded-lg shadow-none md:shadow bg-white"
+                  >
+                    <div className="w-24 h-24 md:w-full md:h-40 bg-slate-200 rounded-md md:rounded-none flex-shrink-0" />
+                    <div className="flex-1 ml-3 md:ml-0 p-0 md:p-4">
+                      <div className="h-4 bg-slate-200 rounded mb-2" />
+                      <div className="h-4 bg-slate-200 rounded w-2/3" />
+                    </div>
                   </div>
-                </div>
-              ))
-            : products.map((p) => <ProductCard key={p._id || p.id} product={p} />)}
-        </div>
-      </section>
+                ))
+              : products.map((p) => <ProductCard key={p._id || p.id} product={p} />)}
+          </div>
+        </section>
+      )}
 
       {/* About Us Section - Premium Glass Morphism Design */}
       <section className="w-full py-12 sm:py-16 md:py-20 relative overflow-hidden">
