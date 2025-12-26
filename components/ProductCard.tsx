@@ -8,7 +8,7 @@ import Image from "next/image";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
 import { Card } from "@/components/ui/card";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 
 export default function ProductCard({ product }: any) {
   const { addItem, updateQty, removeItem, items } = useCart();
@@ -35,6 +35,18 @@ export default function ProductCard({ product }: any) {
     }
     return DefaultProductImage;
   })();
+
+  // Calculate discount percentage (Flipkart-style)
+  const discountPercent = product.mrp && product.mrp > product.price
+    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+    : 0;
+
+  // Extract rating data from attributes (already available in backend model)
+  const ratingAvg = product.attributes?.ratingAvg || 0;
+  const ratingCount = product.attributes?.ratingCount || 0;
+
+  // Check stock status
+  const isOutOfStock = product.stock === 0;
 
   const handleQuantityChange = (newQty: number) => {
     const safeQty = Math.max(0, Number(newQty) || 0);
@@ -64,6 +76,8 @@ export default function ProductCard({ product }: any) {
 
   const onAdd = (e: any) => {
     e.stopPropagation();
+    if (isOutOfStock) return;
+    
     setAdding(true);
 
     try {
@@ -85,71 +99,116 @@ export default function ProductCard({ product }: any) {
   const decreaseQty = () => handleQuantityChange(currentQty - 1);
 
   return (
-    <Card className="group flex flex-col overflow-hidden border border-slate-200 rounded-lg bg-white">
+    <Card className="group relative flex flex-col overflow-hidden border border-slate-200 rounded-xl bg-white hover:shadow-lg transition-shadow duration-200">
+      {/* Out of Stock Overlay Badge */}
+      {isOutOfStock && (
+        <div className="absolute top-2 left-2 z-10 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+          Out of Stock
+        </div>
+      )}
+
+      {/* Discount Badge - Top Right (Flipkart-style) */}
+      {discountPercent > 0 && !isOutOfStock && (
+        <div className="absolute top-2 right-2 z-10 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded shadow-md">
+          {discountPercent}% OFF
+        </div>
+      )}
+
       {/* Image Area - Fixed aspect ratio */}
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative w-full aspect-square bg-slate-50 overflow-hidden">
+        <div className={`relative w-full aspect-square bg-slate-50 overflow-hidden ${isOutOfStock ? 'opacity-60' : ''}`}>
           <Image
             src={imgSrc}
             alt={productTitle}
             fill
-            className="object-cover"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
             unoptimized={typeof imgSrc === "string" && imgSrc.startsWith("http")}
           />
         </div>
       </Link>
 
-      {/* Content Area - Denser spacing, left-aligned */}
-      <div className="flex flex-col p-2.5 gap-1">
-        <Link href={`/products/${product.slug}`}>
-          <h3 className="text-sm font-normal text-slate-900 line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors">
-            {productTitle}
-          </h3>
-        </Link>
-
+      {/* Content Area - Marketplace-grade hierarchy */}
+      <div className="flex flex-col p-3 gap-2">
+        {/* Brand Name - Subtle, muted (Flipkart-style) */}
         {product.brand?.name && (
-          <p className="text-xs text-slate-500 truncate mt-0.5">
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide truncate">
             {product.brand.name}
           </p>
         )}
 
-        <div className="flex items-baseline gap-1.5 mt-1">
-          <span className="text-lg font-bold text-slate-900">
-            ₹{product.price || 0}
+        {/* Product Title - 2 line clamp */}
+        <Link href={`/products/${product.slug}`}>
+          <h3 className="text-sm font-medium text-slate-900 line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors min-h-[2.5rem]">
+            {productTitle}
+          </h3>
+        </Link>
+
+        {/* Rating Section - Fixed height for grid alignment */}
+        <div className="flex items-center gap-2 min-h-[24px]">
+          {ratingAvg > 0 ? (
+            <>
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${
+                ratingAvg >= 4 ? 'bg-emerald-600 text-white' : 
+                ratingAvg >= 3 ? 'bg-yellow-500 text-white' : 
+                'bg-orange-500 text-white'
+              }`}>
+                <span>{ratingAvg.toFixed(1)}</span>
+                <Star size={12} fill="currentColor" />
+              </div>
+              {ratingCount > 0 && (
+                <span className="text-xs text-slate-500">
+                  ({ratingCount.toLocaleString()})
+                </span>
+              )}
+            </>
+          ) : (
+            <div className="invisible">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold">
+                <span>0.0</span>
+                <Star size={12} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Price Section - STRONG emphasis (Flipkart-style) */}
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="text-2xl font-bold text-slate-900">
+            ₹{product.price?.toLocaleString() || 0}
           </span>
           {product.mrp && product.mrp > product.price && (
-            <span className="text-xs text-slate-400 line-through">
-              ₹{product.mrp}
+            <span className="text-sm text-slate-400 line-through">
+              ₹{product.mrp.toLocaleString()}
             </span>
           )}
         </div>
       </div>
 
       {/* Action Area - Fixed height slot */}
-      <div className="px-2.5 pb-2.5">
-        <div className="h-12 flex items-center justify-center">
+      <div className="px-3 pb-3">
+        <div className="h-11 flex items-center justify-center">
           {currentQty === 0 ? (
             <button
               onClick={onAdd}
-              disabled={adding || product.stock === 0}
-              className="w-full h-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-normal rounded-full shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              disabled={adding || isOutOfStock}
+              className="w-full h-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingCart size={18} className="shrink-0" />
-              <span>{adding ? "Adding..." : "Add to Cart"}</span>
+              <span>{isOutOfStock ? "Out of Stock" : adding ? "Adding..." : "Add to Cart"}</span>
             </button>
           ) : (
             <div className="w-full h-full flex items-center gap-2">
               <Link
                 href="/cart"
-                className="flex-1 h-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-normal rounded-full flex items-center justify-center transition-colors"
+                className="flex-1 h-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg flex items-center justify-center transition-colors"
               >
                 Go to Cart
               </Link>
-              <div className="flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden h-10">
+              <div className="flex items-center bg-white border border-slate-300 rounded overflow-hidden h-full shadow-sm">
                 <button
                   onClick={decreaseQty}
-                  className="w-10 h-full flex items-center justify-center text-red-500 hover:bg-red-50 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-10 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
                 >
                   <svg
@@ -163,12 +222,12 @@ export default function ProductCard({ product }: any) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
                   </svg>
                 </button>
-                <div className="w-10 flex items-center justify-center font-semibold text-gray-800 text-base">
+                <div className="w-10 flex items-center justify-center font-semibold text-slate-800 text-base">
                   {currentQty}
                 </div>
                 <button
                   onClick={increaseQty}
-                  className="w-10 h-full flex items-center justify-center text-red-500 hover:bg-red-50 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-10 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
                   <svg
