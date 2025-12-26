@@ -23,6 +23,8 @@ export default function EditCategoryPage({
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showOnHomepage, setShowOnHomepage] = useState(false);
+  const [homepageOrder, setHomepageOrder] = useState<number | "">("");
 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,6 +41,8 @@ export default function EditCategoryPage({
         setName(category.name || "");
         setDescription(category.description || "");
         setImageUrl(category.image_url || category.image || "");
+        setShowOnHomepage(category.showOnHomepage || false);
+        setHomepageOrder(category.homepageOrder || "");
       } catch (err) {
         setStatus("Failed to load category");
       }
@@ -61,15 +65,23 @@ export default function EditCategoryPage({
       return;
     }
 
+    // Validate homepage fields
+    if (showOnHomepage && !homepageOrder) {
+      setStatus("Homepage order is required when showing on homepage");
+      return;
+    }
+
     setStatus("Updating category...");
     setLoading(true);
 
     try {
-      const payload = {
+      const payload: any = {
         name: name.trim(),
         slug: generatedSlug,
         description: description.trim(),
         image_url: imageUrl.trim() || "",
+        showOnHomepage,
+        homepageOrder: showOnHomepage && homepageOrder ? Number(homepageOrder) : null,
       };
 
       await updateCategory(id, payload);
@@ -152,6 +164,54 @@ export default function EditCategoryPage({
               ? "Upload or select a category image from Supabase storage"
               : "Category slug is required to enable image upload"}
           </p>
+        </div>
+
+        {/* Homepage Priority Section */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-md font-semibold mb-3">Homepage Visibility</h3>
+          
+          <div className="space-y-3">
+            {/* Show on Homepage Toggle */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="showOnHomepage"
+                checked={showOnHomepage}
+                onChange={(e) => {
+                  setShowOnHomepage(e.target.checked);
+                  if (!e.target.checked) {
+                    setHomepageOrder("");
+                  }
+                }}
+                className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+              />
+              <label htmlFor="showOnHomepage" className="text-sm font-medium cursor-pointer">
+                Show on Homepage
+              </label>
+            </div>
+
+            {/* Homepage Order Selector */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Homepage Order (1-4) {showOnHomepage && <span className="text-red-500">*</span>}
+              </label>
+              <select
+                value={homepageOrder}
+                onChange={(e) => setHomepageOrder(e.target.value ? Number(e.target.value) : "")}
+                disabled={!showOnHomepage}
+                className={`border p-2 rounded w-full ${!showOnHomepage ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              >
+                <option value="">Select order...</option>
+                <option value="1">1st Position</option>
+                <option value="2">2nd Position</option>
+                <option value="3">3rd Position</option>
+                <option value="4">4th Position</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Controls the display order on homepage (only 4 categories can be shown)
+              </p>
+            </div>
+          </div>
         </div>
 
         {status && (

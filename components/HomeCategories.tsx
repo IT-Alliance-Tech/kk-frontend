@@ -25,15 +25,16 @@ export default function HomeCategories() {
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(buildUrl("/api/categories?limit=4"), { cache: "no-store" });
+        // Use lightweight homepage-specific API
+        const res = await fetch(buildUrl("/api/homepage/categories"), { cache: "no-store" });
         if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`);
         const json = await res.json();
-        const data = json?.data ?? json;
-        const cats: Category[] =
-          Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : Array.isArray(data.categories) ? data.categories : [];
+        const data = json?.data ?? [];
+        
+        const cats: Category[] = Array.isArray(data) ? data : [];
 
         const withImages = await Promise.all(
-          cats.slice(0, 4).map(async (c) => {
+          cats.map(async (c) => {
             const possiblePath = c.imagePath ?? c.image ?? c.imageUrl ?? "";
             let img = "";
             try {
@@ -51,8 +52,11 @@ export default function HomeCategories() {
           setErr(null);
         }
       } catch (e: any) {
-        console.error("HomeCategories fetch error", e);
-        if (mounted) setErr(e?.message ?? "Unknown error");
+        // Silently fail - hide section on error for better UX
+        if (mounted) {
+          setCategories([]);
+          setErr(e?.message ?? "Failed to load");
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -64,28 +68,36 @@ export default function HomeCategories() {
 
   if (loading) {
     return (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Categories</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border p-6 animate-pulse h-48" />
-          ))}
+      <section className="w-full bg-white py-6 sm:py-8">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6">
+          {/* Header skeleton */}
+          <div className="relative py-4 mb-4">
+            <div className="flex items-center justify-center">
+              <div className="h-7 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Grid skeleton matching final layout */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div 
+                key={i} 
+                className="bg-white rounded-lg shadow-sm border p-6 flex flex-col items-center animate-pulse"
+                style={{ minHeight: 220 }}
+              >
+                <div className="w-full h-36 md:h-40 bg-gray-100 rounded mb-4" />
+                <div className="h-6 w-3/4 bg-gray-100 rounded" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
   }
 
-  if (err) {
-    return (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Categories</h2>
-        </div>
-        <div className="text-red-600">Error loading categories: {err}</div>
-      </section>
-    );
+  // Hide section on error or when empty (graceful degradation)
+  if (err || !categories.length) {
+    return null;
   }
 
   return (

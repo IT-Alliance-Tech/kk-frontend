@@ -9,6 +9,8 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [showOnHomepage, setShowOnHomepage] = useState(false);
+  const [homepageOrder, setHomepageOrder] = useState<number | "">("");
 
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,8 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
         setName(brand.name || "");
         setSlug(brand.slug || "");
         setLogoUrl(brand.logoUrl || "");
+        setShowOnHomepage(brand.showOnHomepage || false);
+        setHomepageOrder(brand.homepageOrder || "");
       } catch (err) {
         setStatus("Failed to load brand");
       }
@@ -41,14 +45,22 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
       return;
     }
 
+    // Validate homepage fields
+    if (showOnHomepage && !homepageOrder) {
+      setStatus("Homepage order is required when showing on homepage");
+      return;
+    }
+
     setStatus("Updating brand...");
     setLoading(true);
 
     try {
-      const payload = {
+      const payload: any = {
         name: name.trim(),
         slug: slug.trim(),
         logoUrl: logoUrl.trim() || undefined,
+        showOnHomepage,
+        homepageOrder: showOnHomepage && homepageOrder ? Number(homepageOrder) : null,
       };
 
       await updateBrand(id, payload);
@@ -129,6 +141,54 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
               </svg>
               Browse
             </button>
+          </div>
+        </div>
+
+        {/* Homepage Priority Section */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-md font-semibold mb-3">Homepage Visibility</h3>
+          
+          <div className="space-y-3">
+            {/* Show on Homepage Toggle */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="showOnHomepage"
+                checked={showOnHomepage}
+                onChange={(e) => {
+                  setShowOnHomepage(e.target.checked);
+                  if (!e.target.checked) {
+                    setHomepageOrder("");
+                  }
+                }}
+                className="w-4 h-4 text-black border-gray-300 rounded focus:ring-black"
+              />
+              <label htmlFor="showOnHomepage" className="text-sm font-medium cursor-pointer">
+                Show on Homepage
+              </label>
+            </div>
+
+            {/* Homepage Order Selector */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Homepage Order (1-4) {showOnHomepage && <span className="text-red-500">*</span>}
+              </label>
+              <select
+                value={homepageOrder}
+                onChange={(e) => setHomepageOrder(e.target.value ? Number(e.target.value) : "")}
+                disabled={!showOnHomepage}
+                className={`border p-2 rounded w-full ${!showOnHomepage ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              >
+                <option value="">Select order...</option>
+                <option value="1">1st Position</option>
+                <option value="2">2nd Position</option>
+                <option value="3">3rd Position</option>
+                <option value="4">4th Position</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Controls the display order on homepage (only 4 brands can be shown)
+              </p>
+            </div>
           </div>
         </div>
 

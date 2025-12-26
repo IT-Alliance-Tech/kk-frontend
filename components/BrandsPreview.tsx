@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getBrands } from "@/lib/api/brands.api";
+import { buildUrl } from "@/lib/api";
 import type { Brand } from "@/lib/types/brand";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
@@ -11,23 +11,34 @@ import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_
 export default function BrandsPreview() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadBrands() {
       try {
-        const allBrands = await getBrands();
+        // Use lightweight homepage-specific API
+        const res = await fetch(buildUrl("/api/homepage/brands"), { cache: "no-store" });
+        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+        
+        const json = await res.json();
+        const data = json?.data || [];
+        
         if (!cancelled) {
-          // Take only the first 4 brands and normalize logoUrl
-          const normalized = (allBrands || []).slice(0, 4).map((b: any) => ({
+          // Normalize logoUrl field
+          const normalized = data.map((b: any) => ({
             ...b,
             logoUrl: b.logoUrl || b.logo_url || b.logo || null
           }));
           setBrands(normalized);
         }
-      } catch (error) {
-        console.error("Failed to load brands preview:", error);
+      } catch (err) {
+        // Silently handle error - hide section on failure
+        if (!cancelled) {
+          setError(true);
+          setBrands([]);
+        }
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -45,21 +56,25 @@ export default function BrandsPreview() {
   if (loading) {
     return (
       <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Centered section title */}
-        <div className="flex justify-center mb-4">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">Brands</h2>
+        {/* Header skeleton matching final layout */}
+        <div className="relative py-4 mb-4">
+          <div className="flex items-center justify-center">
+            <div className="h-7 w-24 bg-gray-200 rounded animate-pulse"></div>
+          </div>
         </div>
 
-        {/* Skeleton grid matching the final layout */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {/* Skeleton grid matching the final layout exactly */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
               className="p-4 sm:p-6 bg-white rounded-lg border shadow-sm animate-pulse flex flex-col items-center"
               style={{ minHeight: 140 }}
             >
-              <div className="w-full h-16 sm:h-20 bg-gray-100 rounded" />
-              <div className="mt-3 h-5 w-3/4 bg-gray-100 rounded" />
+              {/* Logo skeleton */}
+              <div className="w-full h-16 sm:h-20 bg-gray-100 rounded mb-3" />
+              {/* Name skeleton */}
+              <div className="h-5 w-3/4 bg-gray-100 rounded" />
             </div>
           ))}
         </div>
@@ -67,7 +82,8 @@ export default function BrandsPreview() {
     );
   }
 
-  if (!brands.length) {
+  // Hide section on error or when empty (graceful degradation)
+  if (error || !brands.length) {
     return null;
   }
 
