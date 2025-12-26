@@ -330,9 +330,41 @@ export async function getCategories() {
   return ensureArray(data, ['items', 'categories', 'data']);
 }
 
-export async function getAdminCategories() {
-  const data = await apiGetAuth("/categories/all");
-  return ensureArray(data, ['items', 'categories', 'data']);
+export async function getAdminCategories(params?: { 
+  page?: number; 
+  limit?: number;
+  search?: string;
+  status?: string;
+}) {
+  // For backward compatibility: if no params, request a very high limit to get all categories
+  const effectiveParams = params || { page: 1, limit: 9999 };
+  
+  // Build query parameters
+  const queryParams: Record<string, string> = {
+    page: String(effectiveParams.page || 1),
+    limit: String(effectiveParams.limit || 9999)
+  };
+  
+  // Add filter parameters if provided
+  if (effectiveParams.search) {
+    queryParams.search = effectiveParams.search;
+  }
+  if (effectiveParams.status) {
+    queryParams.status = effectiveParams.status;
+  }
+  
+  const queryString = '?' + new URLSearchParams(queryParams).toString();
+  
+  const data = await apiGetAuth(`/categories/all${queryString}`);
+  
+  // If no params provided (backward compatibility), extract categories array
+  if (!params) {
+    return ensureArray(data?.categories || data, ['items', 'categories', 'data']);
+  }
+  
+  // Backend now returns: { categories, total, page, totalPages, limit, hasNextPage, hasPrevPage }
+  // Return the full response for pagination info
+  return data;
 }
 
 export function getSingleCategory(id: string) {
