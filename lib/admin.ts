@@ -251,29 +251,41 @@ export async function getBrands() {
   return ensureArray(data, ['items', 'brands', 'data']);
 }
 
-export async function getAdminBrands(params?: { page?: number; limit?: number }) {
-  // If no params provided, fetch all brands (backward compatibility)
-  if (!params || (!params.page && !params.limit)) {
-    const data = await apiGetAuth("/brands/all");
-    return ensureArray(data, ['items', 'brands', 'data']);
+export async function getAdminBrands(params?: { 
+  page?: number; 
+  limit?: number;
+  search?: string;
+  status?: string;
+}) {
+  // For backward compatibility: if no params, request a very high limit to get all brands
+  const effectiveParams = params || { page: 1, limit: 9999 };
+  
+  // Build query parameters
+  const queryParams: Record<string, string> = {
+    page: String(effectiveParams.page || 1),
+    limit: String(effectiveParams.limit || 9999)
+  };
+  
+  // Add filter parameters if provided
+  if (effectiveParams.search) {
+    queryParams.search = effectiveParams.search;
   }
-
-  // Paginated request
-  const { page = 1, limit = 10 } = params;
-  const queryParams = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-  });
-  
-  const data = await apiGetAuth(`/brands/all?${queryParams.toString()}`);
-  
-  // Check if response is paginated (has brands array)
-  if (data && data.brands) {
-    return data; // Return full paginated response
+  if (effectiveParams.status) {
+    queryParams.status = effectiveParams.status;
   }
   
-  // Fallback for non-paginated response
-  return ensureArray(data, ['items', 'brands', 'data']);
+  const queryString = '?' + new URLSearchParams(queryParams).toString();
+  
+  const data = await apiGetAuth(`/brands/all${queryString}`);
+  
+  // If no params provided (backward compatibility), extract brands array
+  if (!params) {
+    return ensureArray(data?.brands || data, ['items', 'brands', 'data']);
+  }
+  
+  // Backend now returns: { brands, total, page, totalPages, limit, hasNextPage, hasPrevPage }
+  // Return the full response for pagination info
+  return data;
 }
 
 export function getSingleBrand(id: string) {

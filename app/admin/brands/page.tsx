@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getAdminBrands, deleteBrand, disableBrand, enableBrand } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,13 +12,53 @@ export default function AdminBrandsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  
+  // Filter states
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filterName, setFilterName] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  
   const router = useRouter();
-  const limit = 10;
+  const limit = 5; // STRICT: 5 brands per page
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadBrands = async (page: number = 1) => {
+  // Debounce global search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(globalSearch);
+    }, 500); // 500ms delay
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [globalSearch]);
+
+  const loadBrands = useCallback(async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await getAdminBrands({ page, limit });
+      const params: any = { page, limit };
+      
+      // Add filters to params
+      // Priority: debouncedSearch (global) > filterName (advanced filter)
+      if (debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim();
+      } else if (filterName.trim()) {
+        params.search = filterName.trim();
+      }
+      
+      if (filterStatus) {
+        params.status = filterStatus;
+      }
+      
+      const response = await getAdminBrands(params);
       
       // Extract brands and pagination info
       const brandsData = response?.brands || response?.data?.brands || [];
@@ -32,10 +72,31 @@ export default function AdminBrandsPage() {
     } catch (error) {
       console.error("Failed to load brands:", error);
       setBrands([]);
+      setTotal(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
+  }, [debouncedSearch, filterName, filterStatus, limit]);
+
+  // Load brands when filters change, reset to page 1
+  useEffect(() => {
+    loadBrands(1);
+  }, [loadBrands]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages || loading) return;
+    loadBrands(newPage);
   };
+
+  const handleResetFilters = () => {
+    setGlobalSearch("");
+    setDebouncedSearch("");
+    setFilterName("");
+    setFilterStatus("");
+  };
+
+  const hasActiveFilters = debouncedSearch || filterName || filterStatus;
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this brand?")) return;
@@ -82,26 +143,96 @@ export default function AdminBrandsPage() {
     }
   };
 
-  useEffect(() => {
-    loadBrands(1);
-  }, []);
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    loadBrands(newPage);
-  };
-
   return (
-    <div className="p-3 sm:p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+    <div className="p-3 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
         <h1 className="text-xl sm:text-2xl font-bold">Brands</h1>
         <Link
           href="/admin/brands/new"
-          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base whitespace-nowrap"
+          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base text-center"
         >
           + Add Brand
         </Link>
       </div>
+
+      {/* Global Search Bar */}
+      <div className="mb-4">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            placeholder="Search brands by name..."
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+            className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+          />
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="px-4 py-2 border rounded-md hover:bg-gray-50 transition"
+          >
+            {showFilters ? "Hide Filters" : "Advanced Filters"}
+          </button>
+          {hasActiveFilters && (
+            <button
+              onClick={handleResetFilters}
+              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Advanced Filters Section */}
+      {showFilters && (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+          <h3 className="font-semibold mb-3 text-sm sm:text-base">Advanced Filters</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Brand Name Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Brand Name
+              </label>
+              <input
+                type="text"
+                placeholder="Filter by name..."
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results Count */}
+      {!loading && (
+        <div className="mb-3 text-sm text-gray-600">
+          {total > 0 ? (
+            <>
+              Showing {brands.length > 0 ? ((currentPage - 1) * limit + 1) : 0} to {Math.min(currentPage * limit, total)} of {total} brand{total !== 1 ? 's' : ''}
+              {hasActiveFilters && " (filtered)"}
+            </>
+          ) : (
+            "No brands found"
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-8">
@@ -113,18 +244,17 @@ export default function AdminBrandsPage() {
             <table className="w-full border min-w-[640px]">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border p-2 text-xs sm:text-sm">Logo</th>
-                <th className="border p-2 text-xs sm:text-sm">Name</th>
-                <th className="border p-2 text-xs sm:text-sm">Slug</th>
-                <th className="border p-2 text-xs sm:text-sm">Status</th>
-                <th className="border p-2 text-xs sm:text-sm">Action</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Logo</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Name</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Status</th>
+                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
               </tr>
             </thead>
 
             <tbody>
               {brands.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="border p-4 text-center text-gray-500">
+                  <td colSpan={4} className="border p-4 text-center text-gray-500">
                     No brands found
                   </td>
                 </tr>
@@ -148,7 +278,6 @@ export default function AdminBrandsPage() {
                       )}
                     </td>
                     <td className="border p-2 text-xs sm:text-sm">{b.name}</td>
-                    <td className="border p-2 text-xs sm:text-sm text-gray-600">{b.slug}</td>
                     <td className="border p-2 text-xs sm:text-sm text-center">
                       {b.isActive !== false ? (
                         <span className="text-green-600 font-medium">Active</span>
@@ -195,20 +324,19 @@ export default function AdminBrandsPage() {
           </table>
           </div>
 
-          {/* Pagination UI */}
+          {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-              {/* Info text */}
-              <p className="text-xs sm:text-sm text-gray-600">
-                Showing {Math.min((currentPage - 1) * limit + 1, total)}–{Math.min(currentPage * limit, total)} of {total} brands
-              </p>
+            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+              {/* Showing info */}
+              <div className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </div>
 
-              {/* Pagination controls */}
-              <div className="flex items-center gap-2">
-                {/* Previous button */}
+              {/* Page buttons */}
+              <div className="flex gap-2">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || loading}
                   className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
                 >
                   Previous
@@ -232,7 +360,8 @@ export default function AdminBrandsPage() {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-1.5 border rounded text-sm ${
+                        disabled={loading}
+                        className={`px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
                           currentPage === pageNum
                             ? 'bg-black text-white'
                             : 'hover:bg-gray-100'
@@ -244,10 +373,9 @@ export default function AdminBrandsPage() {
                   })}
                 </div>
 
-                {/* Next button */}
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || loading}
                   className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
                 >
                   Next
