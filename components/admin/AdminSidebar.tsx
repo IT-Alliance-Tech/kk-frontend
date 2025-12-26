@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { label: "Products", href: "/admin/products", icon: "📦" },
   { label: "Brands", href: "/admin/brands", icon: "🏷️" },
   { label: "Categories", href: "/admin/categories", icon: "📂" },
+  { label: "Homepage", href: "/admin/homepage", icon: "🏠" },
   { label: "Orders", href: "/admin/orders", icon: "🛒" },
   { label: "Coupons", href: "/admin/coupons", icon: "🎟️" },
   { label: "Contact Submissions", href: "/admin/contact-submissions", icon: "📧" },
