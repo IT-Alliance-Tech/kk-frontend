@@ -6,7 +6,8 @@ import Image from "next/image";
 import { buildUrl } from "@/lib/api";
 import type { Brand } from "@/lib/types/brand";
 import { normalizeSrc } from "@/lib/normalizeSrc";
-import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
+import GlobalLoader from "@/components/common/GlobalLoader"; // use default placeholder when product has no image or to replace dummy imports
 
 export default function BrandsPreview() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -56,27 +57,13 @@ export default function BrandsPreview() {
   if (loading) {
     return (
       <section className="max-w-8xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Header skeleton matching final layout */}
         <div className="relative py-4 mb-4">
           <div className="flex items-center justify-center">
-            <div className="h-7 w-24 bg-gray-200 rounded animate-pulse"></div>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">Brands</h2>
           </div>
         </div>
-
-        {/* Skeleton grid matching the final layout exactly */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="p-4 sm:p-6 bg-white rounded-lg border shadow-sm animate-pulse flex flex-col items-center"
-              style={{ minHeight: 140 }}
-            >
-              {/* Logo skeleton */}
-              <div className="w-full h-16 sm:h-20 bg-gray-100 rounded mb-3" />
-              {/* Name skeleton */}
-              <div className="h-5 w-3/4 bg-gray-100 rounded" />
-            </div>
-          ))}
+        <div className="flex justify-center py-12">
+          <GlobalLoader size="large" />
         </div>
       </section>
     );

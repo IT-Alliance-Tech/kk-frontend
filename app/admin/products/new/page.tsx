@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, getBrands, getCategories } from "@/lib/admin";
 import ImagePicker from "@/components/ImagePicker";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function NewProductPage() {
   const [title, setTitle] = useState("");
@@ -271,9 +272,16 @@ export default function NewProductPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400"
+            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400 flex items-center gap-2"
           >
-            {loading ? "Creating..." : "Create Product"}
+            {loading ? (
+              <>
+                <GlobalLoader size="small" className="border-white" />
+                Creating...
+              </>
+            ) : (
+              "Create Product"
+            )}
           </button>
           <button
             type="button"

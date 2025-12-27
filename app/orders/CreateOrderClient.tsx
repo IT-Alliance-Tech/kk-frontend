@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface CreateOrderClientProps {
   items: { product: string; qty: number; price?: number }[];
@@ -264,7 +265,7 @@ export default function CreateOrderClient({
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <GlobalLoader size="small" className="mr-2" />
                 Placing Order...
               </>
             ) : success ? (

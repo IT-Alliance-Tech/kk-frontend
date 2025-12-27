@@ -5,6 +5,7 @@ import { getAdminBrands, deleteBrand, disableBrand, enableBrand } from "@/lib/ad
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function AdminBrandsPage() {
   const [brands, setBrands] = useState<any[]>([]);
@@ -235,8 +236,8 @@ export default function AdminBrandsPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">Loading brands...</p>
+        <div className="text-center py-8 flex justify-center">
+          <GlobalLoader size="large" />
         </div>
       ) : (
         <>

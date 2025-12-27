@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { getAdminCategories, disableCategory, enableCategory, getAdminProducts, getAdminBrands } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -199,8 +200,8 @@ export default function AdminCategoriesPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">Loading categories...</p>
+        <div className="text-center py-8 flex justify-center">
+          <GlobalLoader size="large" />
         </div>
       ) : (
         <>

@@ -26,6 +26,7 @@ import {
   XCircle,
   Truck,
 } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function OrdersList() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -114,13 +115,12 @@ export default function OrdersList() {
     return order.items.reduce((sum, item) => sum + (item.qty || 0), 0);
   };
 
-  // Loading State
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
         <div className="flex flex-col items-center justify-center">
-          <Loader2 className="w-12 h-12 text-red-600 animate-spin mb-4" />
-          <p className="text-gray-600">Loading your orders...</p>
+          <GlobalLoader size="large" />
+          <p className="text-gray-600 mt-4">Loading your orders...</p>
         </div>
       </div>
     );

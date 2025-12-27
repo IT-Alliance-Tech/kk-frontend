@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getAdminContactSubmissions } from "@/lib/admin";
 import { useRouter } from "next/navigation";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface ContactSubmission {
   _id: string;
@@ -158,8 +159,8 @@ export default function AdminContactSubmissionsPage() {
       </div>
 
       {loading && (
-        <div className="text-center py-8 text-gray-600">
-          Loading submissions...
+        <div className="flex justify-center py-12">
+          <GlobalLoader size="large" />
         </div>
       )}
 

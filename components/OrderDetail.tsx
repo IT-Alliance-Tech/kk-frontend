@@ -29,6 +29,7 @@ import {
   Truck,
   XCircle,
 } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 // DEMO PREVIEW MODE — REMOVE AFTER CLIENT DEMO
 // Set to false to use real backend API.
@@ -195,13 +196,12 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     }
   };
 
-  // Loading State
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
         <div className="flex flex-col items-center justify-center">
-          <Loader2 className="w-12 h-12 text-red-600 animate-spin mb-4" />
-          <p className="text-gray-600">Loading order details...</p>
+          <GlobalLoader size="large" />
+          <p className="text-gray-600 mt-4">Loading order details...</p>
         </div>
       </div>
     );

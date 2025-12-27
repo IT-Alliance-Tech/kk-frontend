@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Upload, Image as ImageIcon, Trash2 } from "lucide-react";
 import Image from "next/image";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface ImageFile {
   url: string;
@@ -161,7 +162,7 @@ export default function MediaManagerPage() {
           >
             {uploading ? (
               <>
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <GlobalLoader size="large" className="mb-4" />
                 <span className="text-gray-600">Uploading...</span>
               </>
             ) : (
@@ -202,9 +203,9 @@ export default function MediaManagerPage() {
         </h2>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-500">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            Loading images...
+          <div className="flex flex-col items-center justify-center py-12">
+            <GlobalLoader size="large" />
+            <p className="text-gray-500 mt-4">Loading images...</p>
           </div>
         ) : images.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">

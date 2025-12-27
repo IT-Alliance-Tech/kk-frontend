@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { getUserDashboard, type DashboardData } from "@/lib/api/user.api";
 import { ShoppingBag, DollarSign, Package, ShoppingCart } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 /**
  * UserDashboardClient
@@ -32,10 +33,7 @@ export default function UserDashboardClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
+        <GlobalLoader size="large" />
       </div>
     );
   }

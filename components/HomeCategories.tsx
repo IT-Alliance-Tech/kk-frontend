@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { buildUrl } from "@/lib/api";
 import { getCategoryLogoUrl } from "@/lib/supabaseUrls";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 type Category = {
   _id?: string;
@@ -70,25 +71,13 @@ export default function HomeCategories() {
     return (
       <section className="w-full bg-white py-6 sm:py-8">
         <div className="max-w-8xl mx-auto px-4 sm:px-6">
-          {/* Header skeleton */}
           <div className="relative py-4 mb-4">
             <div className="flex items-center justify-center">
-              <div className="h-7 w-32 bg-gray-200 rounded animate-pulse"></div>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center">Shop by Category</h2>
             </div>
           </div>
-
-          {/* Grid skeleton matching final layout */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div 
-                key={i} 
-                className="bg-white rounded-lg shadow-sm border p-6 flex flex-col items-center animate-pulse"
-                style={{ minHeight: 220 }}
-              >
-                <div className="w-full h-36 md:h-40 bg-gray-100 rounded mb-4" />
-                <div className="h-6 w-3/4 bg-gray-100 rounded" />
-              </div>
-            ))}
+          <div className="flex justify-center py-12">
+            <GlobalLoader size="large" />
           </div>
         </div>
       </section>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface ImageFile {
   url: string;
@@ -247,7 +248,10 @@ export default function ImagePicker({
                   </span>
                 </div>
               ) : uploading ? (
-                <span>Uploading...</span>
+                <div className="flex items-center gap-2">
+                  <GlobalLoader size="small" className="border-blue-600" />
+                  <span>Uploading...</span>
+                </div>
               ) : (
                 <>
                   <span className="text-blue-600 font-medium">
@@ -272,7 +276,9 @@ export default function ImagePicker({
         {/* Image Gallery */}
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className="text-center py-8 flex justify-center">
+              <GlobalLoader size="medium" />
+            </div>
           ) : images.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No images yet. Upload some to get started.

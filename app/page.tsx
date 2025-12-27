@@ -12,6 +12,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import HeroBanner from "@/components/HeroBanner";
 import { normalizeSrc } from "@/lib/normalizeSrc";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 const BrandsPreview = dynamic(() => import("@/components/BrandsPreview"), { ssr: false });
 const HomeCategories = dynamic(() => import("@/components/HomeCategories"), { ssr: false });
@@ -89,20 +90,13 @@ export default function HomePage() {
 
           {/* Products preview grid: 8 items, 4 per row on desktop */}
           <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-4 md:gap-4 lg:gap-6">
-            {loading
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="animate-pulse flex flex-row md:flex-col py-3 md:py-0 border-0 md:border rounded-none md:rounded-lg shadow-none md:shadow bg-white"
-                  >
-                    <div className="w-24 h-24 md:w-full md:h-40 bg-slate-200 rounded-md md:rounded-none flex-shrink-0" />
-                    <div className="flex-1 ml-3 md:ml-0 p-0 md:p-4">
-                      <div className="h-4 bg-slate-200 rounded mb-2" />
-                      <div className="h-4 bg-slate-200 rounded w-2/3" />
-                    </div>
-                  </div>
-                ))
-              : products.map((p) => <ProductCard key={p._id || p.id} product={p} />)}
+            {loading ? (
+              <div className="col-span-4 flex justify-center py-12">
+                <GlobalLoader size="large" />
+              </div>
+            ) : (
+              products.map((p) => <ProductCard key={p._id || p.id} product={p} />)
+            )}
           </div>
         </section>
       )}
