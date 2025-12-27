@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { apiGetAuth } from "@/lib/api";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -70,7 +71,11 @@ export default function AdminOrdersPage() {
     });
   };
 
-  if (loading) return <p className="text-center py-10">Loading orders...</p>;
+  if (loading) return (
+    <div className="flex justify-center py-20">
+      <GlobalLoader size="large" />
+    </div>
+  );
 
   return (
     <div className="space-y-6 p-3 sm:p-4 md:p-6">

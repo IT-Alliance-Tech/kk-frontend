@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory } from "@/lib/admin";
 import ImagePicker from "@/components/ImagePicker";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 function slugify(text: string): string {
   return text
@@ -149,9 +150,16 @@ export default function NewCategoryPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400"
+            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400 flex items-center gap-2"
           >
-            {loading ? "Creating..." : "Create Category"}
+            {loading ? (
+              <>
+                <GlobalLoader size="small" className="border-white" />
+                Creating...
+              </>
+            ) : (
+              "Create Category"
+            )}
           </button>
           <button
             type="button"

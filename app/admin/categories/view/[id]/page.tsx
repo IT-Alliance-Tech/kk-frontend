@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function CategoryViewPage() {
   const params = useParams();
@@ -101,8 +102,8 @@ export default function CategoryViewPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="text-center text-gray-600">Loading...</div>
+      <div className="p-6 flex justify-center">
+        <GlobalLoader size="large" />
       </div>
     );
   }

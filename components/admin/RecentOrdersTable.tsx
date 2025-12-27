@@ -3,6 +3,7 @@
 // NEW - admin demo
 import React, { useState } from "react";
 import Link from "next/link";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface Order {
   id: string;

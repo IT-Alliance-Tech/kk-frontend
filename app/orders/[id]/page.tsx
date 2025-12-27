@@ -24,6 +24,7 @@ import {
   Calendar,
   User,
 } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -110,14 +111,13 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     return user.name || user.email || "N/A";
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="bg-white min-h-screen">
         <div className="container mx-auto px-4 py-12">
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            <span className="ml-3 text-lg text-slate-600">
+          <div className="flex flex-col items-center justify-center py-16">
+            <GlobalLoader size="large" />
+            <span className="ml-3 text-lg text-slate-600 mt-4">
               Loading order details...
             </span>
           </div>

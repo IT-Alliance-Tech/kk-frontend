@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Package, AlertCircle, Search, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Brand } from "@/lib/types";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 function BrandsPageContent() {
   const router = useRouter();
@@ -100,16 +101,8 @@ function BrandsPageContent() {
 
           {/* Loading State */}
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <Card key={i} className="animate-pulse overflow-hidden">
-                  <div className="h-48 bg-slate-200" />
-                  <CardContent className="p-6">
-                    <div className="h-5 bg-slate-200 rounded mb-2" />
-                    <div className="h-4 bg-slate-200 rounded w-2/3" />
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="flex justify-center py-20">
+              <GlobalLoader size="large" />
             </div>
           ) : filteredBrands.length === 0 ? (
             /* Empty State */

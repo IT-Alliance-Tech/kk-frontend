@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { getAdminContactSubmissions } from "@/lib/admin";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface ContactSubmission {
   _id: string;
@@ -69,8 +70,8 @@ export default function RecentContactSubmissions() {
 
       <div className="overflow-x-auto w-full">
         {loading && (
-          <div className="px-3 sm:px-6 py-8 text-center text-sm text-gray-500">
-            Loading recent submissions...
+          <div className="px-3 sm:px-6 py-8 flex justify-center">
+            <GlobalLoader size="medium" />
           </div>
         )}
 

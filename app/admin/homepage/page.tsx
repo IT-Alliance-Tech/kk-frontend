@@ -7,6 +7,7 @@ import {
   updateBrand,
   updateCategory
 } from "@/lib/admin";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 type HomepageItem = {
   _id: string;
@@ -203,9 +204,8 @@ export default function AdminHomepagePage() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Homepage Management</h1>
         </div>
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+        <div className="text-center py-12 flex justify-center">
+          <GlobalLoader size="large" />
         </div>
       </div>
     );

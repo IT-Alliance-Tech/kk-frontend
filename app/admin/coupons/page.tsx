@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { listCoupons, deleteCoupon, type Coupon } from '@/lib/api/coupons.api';
 import { Plus, Pencil, Trash2, Search, Calendar, Tag, TrendingUp } from 'lucide-react';
+import GlobalLoader from '@/components/common/GlobalLoader';
 
 const CouponModal = dynamic(() => import('@/components/admin/CouponModal'), { ssr: false });
 
@@ -138,7 +139,7 @@ export default function AdminCouponsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center h-64">
-          <div className="text-gray-600">Loading coupons...</div>
+          <GlobalLoader size="large" />
         </div>
       </div>
     );

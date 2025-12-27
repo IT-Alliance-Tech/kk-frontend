@@ -9,6 +9,7 @@ import { ShoppingCart, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useCart } from "@/components/CartContext";
 import LogoImg from "@/assets/images/logo.png";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 const CartBadgeClient = dynamic(() => import("./CartBadgeClient"), { ssr: false });
 
@@ -129,7 +130,7 @@ export default function Navbar() {
             </Link>
 
             {loading ? (
-              <span className="text-gray-400 text-sm">Loading...</span>
+              <GlobalLoader size="small" className="border-gray-400" />
             ) : user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
