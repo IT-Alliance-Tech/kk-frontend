@@ -17,13 +17,26 @@ type HomepageItem = {
   homepageOrder: number | null;
 };
 
-/**
- * Admin Homepage Management
- * Centralized control for homepage brands and categories
- */
+type SlotState = {
+  slotNumber: number;
+  assignedItemId: string | null;
+};
+
 export default function AdminHomepagePage() {
-  const [brands, setBrands] = useState<HomepageItem[]>([]);
-  const [categories, setCategories] = useState<HomepageItem[]>([]);
+  const [allBrands, setAllBrands] = useState<HomepageItem[]>([]);
+  const [allCategories, setAllCategories] = useState<HomepageItem[]>([]);
+  const [brandSlots, setBrandSlots] = useState<SlotState[]>([
+    { slotNumber: 1, assignedItemId: null },
+    { slotNumber: 2, assignedItemId: null },
+    { slotNumber: 3, assignedItemId: null },
+    { slotNumber: 4, assignedItemId: null },
+  ]);
+  const [categorySlots, setCategorySlots] = useState<SlotState[]>([
+    { slotNumber: 1, assignedItemId: null },
+    { slotNumber: 2, assignedItemId: null },
+    { slotNumber: 3, assignedItemId: null },
+    { slotNumber: 4, assignedItemId: null },
+  ]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -39,8 +52,34 @@ export default function AdminHomepagePage() {
         getAdminHomepageBrands(),
         getAdminHomepageCategories()
       ]);
-      setBrands(brandsData || []);
-      setCategories(categoriesData || []);
+      
+      setAllBrands(brandsData || []);
+      setAllCategories(categoriesData || []);
+      
+      // Initialize brand slots from backend data
+      const newBrandSlots = [1, 2, 3, 4].map(slotNum => {
+        const assignedBrand = brandsData?.find(
+          (b: HomepageItem) => b.showOnHomepage && b.homepageOrder === slotNum
+        );
+        return {
+          slotNumber: slotNum,
+          assignedItemId: assignedBrand?._id || null
+        };
+      });
+      setBrandSlots(newBrandSlots);
+      
+      // Initialize category slots from backend data
+      const newCategorySlots = [1, 2, 3, 4].map(slotNum => {
+        const assignedCategory = categoriesData?.find(
+          (c: HomepageItem) => c.showOnHomepage && c.homepageOrder === slotNum
+        );
+        return {
+          slotNumber: slotNum,
+          assignedItemId: assignedCategory?._id || null
+        };
+      });
+      setCategorySlots(newCategorySlots);
+      
     } catch (error: any) {
       console.error("Failed to load homepage data:", error);
       showMessage('error', error.message || 'Failed to load data');
@@ -54,77 +93,105 @@ export default function AdminHomepagePage() {
     setTimeout(() => setMessage(null), 5000);
   }
 
-  // Update brand state
-  function updateBrandState(id: string, updates: Partial<HomepageItem>) {
-    setBrands(prev => prev.map(b => 
-      b._id === id ? { ...b, ...updates } : b
+  function assignBrandToSlot(slotNumber: number, itemId: string | null) {
+    setBrandSlots(prev => prev.map(slot => 
+      slot.slotNumber === slotNumber 
+        ? { ...slot, assignedItemId: itemId }
+        : slot
     ));
   }
 
-  // Update category state
-  function updateCategoryState(id: string, updates: Partial<HomepageItem>) {
-    setCategories(prev => prev.map(c => 
-      c._id === id ? { ...c, ...updates } : c
+  function assignCategoryToSlot(slotNumber: number, itemId: string | null) {
+    setCategorySlots(prev => prev.map(slot => 
+      slot.slotNumber === slotNumber 
+        ? { ...slot, assignedItemId: itemId }
+        : slot
     ));
   }
 
-  // Handle brand save
-  async function handleSaveBrand(brand: HomepageItem) {
-    // Validation
-    if (brand.showOnHomepage && !brand.homepageOrder) {
-      showMessage('error', 'Homepage order is required when showing on homepage');
-      return;
-    }
-
-    // Check max 4 brands
-    const enabledBrands = brands.filter(b => b.showOnHomepage);
-    if (brand.showOnHomepage && !brands.find(b => b._id === brand._id && b.showOnHomepage) && enabledBrands.length >= 4) {
-      showMessage('error', 'Maximum 4 brands can be shown on homepage');
-      return;
-    }
-
+  async function saveBrandLayout() {
     setSaving(true);
     try {
-      await updateBrand(brand._id, {
-        showOnHomepage: brand.showOnHomepage,
-        homepageOrder: brand.showOnHomepage ? brand.homepageOrder : null
-      });
-      showMessage('success', `Brand "${brand.name}" updated successfully`);
+      // Get current slot assignments (what user wants)
+      const assignedBrandIds = new Set(
+        brandSlots
+          .filter(s => s.assignedItemId !== null)
+          .map(s => s.assignedItemId)
+      );
+
+      // PHASE 1: CLEAR - Remove all brands currently on homepage that are NOT in the new assignment
+      const brandsToRemove = allBrands.filter(
+        brand => brand.showOnHomepage && !assignedBrandIds.has(brand._id)
+      );
+
+      for (const brand of brandsToRemove) {
+        await updateBrand(brand._id, {
+          showOnHomepage: false
+        });
+      }
+
+      // PHASE 2: ASSIGN - Set new positions for all selected brands
+      for (const slot of brandSlots) {
+        if (slot.assignedItemId) {
+          const brand = allBrands.find(b => b._id === slot.assignedItemId);
+          if (brand && (brand.homepageOrder !== slot.slotNumber || !brand.showOnHomepage)) {
+            await updateBrand(brand._id, {
+              showOnHomepage: true,
+              homepageOrder: slot.slotNumber
+            });
+          }
+        }
+      }
+
+      showMessage('success', 'Brand layout saved successfully');
+      await loadData(); // Refresh to ensure sync
     } catch (error: any) {
-      showMessage('error', error.message || 'Failed to update brand');
-      // Reload to reset state
-      loadData();
+      showMessage('error', error.message || 'Failed to save brand layout');
+      await loadData(); // Reload on error to reset state
     } finally {
       setSaving(false);
     }
   }
 
-  // Handle category save
-  async function handleSaveCategory(category: HomepageItem) {
-    // Validation
-    if (category.showOnHomepage && !category.homepageOrder) {
-      showMessage('error', 'Homepage order is required when showing on homepage');
-      return;
-    }
-
-    // Check max 4 categories
-    const enabledCategories = categories.filter(c => c.showOnHomepage);
-    if (category.showOnHomepage && !categories.find(c => c._id === category._id && c.showOnHomepage) && enabledCategories.length >= 4) {
-      showMessage('error', 'Maximum 4 categories can be shown on homepage');
-      return;
-    }
-
+  async function saveCategoryLayout() {
     setSaving(true);
     try {
-      await updateCategory(category._id, {
-        showOnHomepage: category.showOnHomepage,
-        homepageOrder: category.showOnHomepage ? category.homepageOrder : null
-      });
-      showMessage('success', `Category "${category.name}" updated successfully`);
+      // Get current slot assignments (what user wants)
+      const assignedCategoryIds = new Set(
+        categorySlots
+          .filter(s => s.assignedItemId !== null)
+          .map(s => s.assignedItemId)
+      );
+
+      // PHASE 1: CLEAR - Remove all categories currently on homepage that are NOT in the new assignment
+      const categoriesToRemove = allCategories.filter(
+        category => category.showOnHomepage && !assignedCategoryIds.has(category._id)
+      );
+
+      for (const category of categoriesToRemove) {
+        await updateCategory(category._id, {
+          showOnHomepage: false
+        });
+      }
+
+      // PHASE 2: ASSIGN - Set new positions for all selected categories
+      for (const slot of categorySlots) {
+        if (slot.assignedItemId) {
+          const category = allCategories.find(c => c._id === slot.assignedItemId);
+          if (category && (category.homepageOrder !== slot.slotNumber || !category.showOnHomepage)) {
+            await updateCategory(category._id, {
+              showOnHomepage: true,
+              homepageOrder: slot.slotNumber
+            });
+          }
+        }
+      }
+
+      showMessage('success', 'Category layout saved successfully');
+      await loadData();
     } catch (error: any) {
-      showMessage('error', error.message || 'Failed to update category');
-      // Reload to reset state
-      loadData();
+      showMessage('error', error.message || 'Failed to save category layout');
+      await loadData();
     } finally {
       setSaving(false);
     }
@@ -132,7 +199,7 @@ export default function AdminHomepagePage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Homepage Management</h1>
         </div>
@@ -145,12 +212,12 @@ export default function AdminHomepagePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Homepage Management</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Control which brands and categories appear on the homepage and their display order. Maximum 4 items per section.
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Homepage Management</h1>
+        <p className="mt-2 text-gray-600">
+          Manage what appears on your homepage. Select items for each slot below.
         </p>
       </div>
 
@@ -163,149 +230,144 @@ export default function AdminHomepagePage() {
         </div>
       )}
 
-      {/* Content sections */}
-      <div className="space-y-8">
-        {/* Brands Section */}
-        <HomepageSection
-          title="Homepage Brands"
-          items={brands}
-          onUpdate={updateBrandState}
-          onSave={handleSaveBrand}
-          saving={saving}
-        />
+      {/* Brands Section */}
+      <HomepageSlotSection
+        title="Homepage Brands"
+        slots={brandSlots}
+        allItems={allBrands}
+        onSlotChange={assignBrandToSlot}
+        onSave={saveBrandLayout}
+        saving={saving}
+      />
 
-        {/* Categories Section */}
-        <HomepageSection
-          title="Homepage Categories"
-          items={categories}
-          onUpdate={updateCategoryState}
-          onSave={handleSaveCategory}
-          saving={saving}
-        />
-      </div>
+      <div className="h-12" />
+
+      {/* Categories Section */}
+      <HomepageSlotSection
+        title="Homepage Categories"
+        slots={categorySlots}
+        allItems={allCategories}
+        onSlotChange={assignCategoryToSlot}
+        onSave={saveCategoryLayout}
+        saving={saving}
+      />
     </div>
   );
 }
 
-// Reusable section component
-function HomepageSection({
+function HomepageSlotSection({
   title,
-  items,
-  onUpdate,
+  slots,
+  allItems,
+  onSlotChange,
   onSave,
   saving
 }: {
   title: string;
-  items: HomepageItem[];
-  onUpdate: (id: string, updates: Partial<HomepageItem>) => void;
-  onSave: (item: HomepageItem) => void;
+  slots: SlotState[];
+  allItems: HomepageItem[];
+  onSlotChange: (slotNumber: number, itemId: string | null) => void;
+  onSave: () => void;
   saving: boolean;
 }) {
-  const enabledCount = items.filter(i => i.showOnHomepage).length;
+  const usedSlots = slots.filter(s => s.assignedItemId !== null).length;
+  const availableItems = allItems.filter(item => item.isActive);
+  
+  // Get list of already assigned item IDs for this section
+  const assignedItemIds = new Set(slots.map(s => s.assignedItemId).filter(Boolean));
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {/* Section Header */}
       <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <span className="text-sm text-gray-500">
-            {enabledCount} of 4 slots used
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {usedSlots} of 4 slots filled
+            </p>
+          </div>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            {saving ? 'Saving...' : 'Save Layout'}
+          </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Show on Homepage
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Homepage Order
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {items.map((item) => (
-              <tr key={item._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                  <div className="text-sm text-gray-500">{item.slug}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    item.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {item.isActive ? 'Active' : 'Disabled'}
+      {/* Slots Grid */}
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {slots.map(slot => {
+            const assignedItem = allItems.find(item => item._id === slot.assignedItemId);
+            
+            return (
+              <div
+                key={slot.slotNumber}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-emerald-300 transition-colors"
+              >
+                {/* Slot Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">
+                    Slot {slot.slotNumber}
                   </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={item.showOnHomepage}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      onUpdate(item._id, { 
-                        showOnHomepage: checked,
-                        homepageOrder: checked ? (item.homepageOrder || 1) : null
-                      });
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    disabled={!item.showOnHomepage && enabledCount >= 4}
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <select
-                    value={item.homepageOrder || ''}
-                    onChange={(e) => onUpdate(item._id, { 
-                      homepageOrder: e.target.value ? Number(e.target.value) : null 
-                    })}
-                    disabled={!item.showOnHomepage}
-                    className={`text-sm border rounded px-2 py-1 ${
-                      !item.showOnHomepage 
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                        : 'bg-white text-gray-900'
-                    }`}
-                  >
-                    <option value="">Select order...</option>
-                    <option value="1">1st Position</option>
-                    <option value="2">2nd Position</option>
-                    <option value="3">3rd Position</option>
-                    <option value="4">4th Position</option>
-                  </select>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={() => onSave(item)}
-                    disabled={saving}
-                    className="text-blue-600 hover:text-blue-900 font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
-                  >
-                    {saving ? 'Saving...' : 'Save'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  {assignedItem && (
+                    <button
+                      onClick={() => onSlotChange(slot.slotNumber, null)}
+                      className="text-xs text-red-600 hover:text-red-700 font-medium"
+                      title="Clear slot"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
 
-      {items.length === 0 && (
-        <div className="px-6 py-12 text-center text-gray-500">
-          No items found
+                {/* Slot Content */}
+                {assignedItem ? (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                    <div className="text-sm font-medium text-gray-900 mb-1">
+                      {assignedItem.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {assignedItem.slug}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-400">
+                    <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <p className="text-xs">Empty</p>
+                  </div>
+                )}
+
+                {/* Dropdown Selector */}
+                <select
+                  value={slot.assignedItemId || ''}
+                  onChange={(e) => onSlotChange(slot.slotNumber, e.target.value || null)}
+                  className="mt-3 w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                >
+                  <option value="">Select item...</option>
+                  {availableItems.map(item => {
+                    const isAssignedElsewhere = assignedItemIds.has(item._id) && item._id !== slot.assignedItemId;
+                    return (
+                      <option 
+                        key={item._id} 
+                        value={item._id}
+                        disabled={isAssignedElsewhere}
+                      >
+                        {item.name} {isAssignedElsewhere ? '(In use)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
