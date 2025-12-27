@@ -7,7 +7,8 @@ import { useCart } from "@/components/CartContext";
 import { createOrder } from "@/lib/api/orders.api";
 import { getAddresses } from "@/lib/api/user.api";
 import { getAccessToken } from "@/lib/utils/auth";
-import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
+import GlobalLoader from "@/components/common/GlobalLoader"; // use default placeholder when product has no image or to replace dummy imports
 
 function CheckoutPageContent() {
   const router = useRouter();
@@ -150,7 +151,9 @@ function CheckoutPageContent() {
 
             {/* Address Selection Dropdown */}
             {addressesLoading ? (
-              <div className="mb-4 text-sm text-gray-600">Loading addresses...</div>
+              <div className="mb-4 flex justify-center py-4">
+                <GlobalLoader size="medium" />
+              </div>
             ) : addresses.length > 0 ? (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">

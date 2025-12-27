@@ -21,6 +21,7 @@ import {
   AlertCircle,
   User as UserIcon,
 } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface ProfileFormData {
   name: string;
@@ -270,7 +271,7 @@ export default function UserProfileForm() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <GlobalLoader size="small" className="mr-2" />
                   <span>Saving...</span>
                 </>
               ) : (

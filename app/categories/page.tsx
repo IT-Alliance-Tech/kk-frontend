@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getCategoryLogoUrl } from "@/lib/supabaseUrls";
 import { buildUrl } from "@/lib/api";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 // Helper: safely convert API response to an array for client usage
 function normalizeToArray<T = any>(maybeArray: any): T[] {
@@ -71,36 +72,18 @@ export default function CategoriesPage() {
   if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen">
-        {/* Hero Section */}
         <section className="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 py-16 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl font-bold text-slate-900 mb-4">
               Shop by Category
             </h1>
-            {/* subtitle removed per design update */}
-
-            {/* Removed inner page search bar as per updated UI requirement */}
           </div>
         </section>
 
-        {/* Loading Skeletons */}
         <section className="py-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-
-            {/* Grid Skeletons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-                >
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-6 space-y-3">
-                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-full"></div>
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-center py-20">
+              <GlobalLoader size="large" />
             </div>
           </div>
         </section>

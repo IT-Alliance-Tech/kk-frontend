@@ -8,6 +8,7 @@ import FilterPanel from "@/components/FilterPanel";
 import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import { normalizeSrc } from "@/lib/normalizeSrc";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
@@ -86,7 +87,9 @@ function SearchPageContent() {
       </h1>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center py-20">
+          <GlobalLoader size="large" />
+        </div>
       ) : (
         <div className="flex gap-6">
           {/* Filter Panel - Right Side */}

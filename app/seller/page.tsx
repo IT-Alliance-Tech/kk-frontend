@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Package, ShoppingCart, TrendingUp, Plus } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,7 @@ export default function SellerDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading...</p>
-        </div>
+        <GlobalLoader size="large" />
       </div>
     );
   }

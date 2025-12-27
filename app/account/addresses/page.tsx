@@ -7,6 +7,7 @@ import { MapPin, Plus } from "lucide-react";
 import { getAddresses, deleteAddress } from "@/lib/api/user.api";
 import { useToast } from "@/hooks/use-toast";
 import AddressModal from "@/components/AddressModal";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -80,8 +81,8 @@ export default function AddressesPage() {
           </div>
 
           {loading ? (
-            <div className="bg-white rounded-lg p-12 text-center">
-              <p className="text-gray-600">Loading addresses...</p>
+            <div className="bg-white rounded-lg p-12 flex justify-center">
+              <GlobalLoader size="large" />
             </div>
           ) : addresses.length === 0 ? (
             <div className="bg-white rounded-lg p-12 text-center border border-gray-200 shadow-sm">

@@ -4,6 +4,7 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 function ConfirmationPageContent() {
   const searchParams = useSearchParams();
@@ -31,7 +32,11 @@ function ConfirmationPageContent() {
     if (orderId) fetchOrder();
   }, [orderId, fetchOrder]);
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (loading) return (
+    <div className="p-8 flex justify-center">
+      <GlobalLoader size="large" />
+    </div>
+  );
   if (!order) return <div className="p-8 text-center">Order not found</div>;
 
   return (

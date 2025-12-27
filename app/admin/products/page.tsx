@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getAdminProducts, deleteProduct, getBrands, getCategories } from "@/lib/admin";
 import Link from "next/link";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -271,8 +272,8 @@ export default function AdminProductsPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">Loading products...</p>
+        <div className="text-center py-8 flex justify-center">
+          <GlobalLoader size="large" />
         </div>
       ) : (
         <>

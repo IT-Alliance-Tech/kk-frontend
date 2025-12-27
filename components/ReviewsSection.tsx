@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, MessageSquare, TrendingUp, Loader2 } from "lucide-react";
+import { Star, MessageSquare, TrendingUp } from "lucide-react";
 import { getProductReviews, submitReview, Review } from "@/lib/api/reviews.api";
 import { ApiError } from "@/lib/api";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface ReviewsSectionProps {
   productId: string;
@@ -135,7 +136,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="h-10 w-10 animate-spin rounded-full border-3 border-emerald-600 border-t-transparent" />
+        <GlobalLoader size="large" />
       </div>
     );
   }
@@ -309,7 +310,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
               >
                 {submitting ? (
                   <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <GlobalLoader size="small" className="border-white" />
                     Submitting...
                   </>
                 ) : (
@@ -414,7 +415,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                   >
                     {loadingMore ? (
                       <>
-                        <Loader2 className="animate-spin" size={18} />
+                        <GlobalLoader size="small" className="border-emerald-600" />
                         Loading...
                       </>
                     ) : (

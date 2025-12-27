@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createBrand } from "@/lib/admin";
 import { slugify } from "@/lib/api/brands.api";
 import ImagePicker from "@/components/ImagePicker";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function NewBrandPage() {
   const [name, setName] = useState("");
@@ -105,9 +106,16 @@ export default function NewBrandPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400"
+            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400 flex items-center gap-2"
           >
-            {loading ? "Creating..." : "Create Brand"}
+            {loading ? (
+              <>
+                <GlobalLoader size="small" className="border-white" />
+                Creating...
+              </>
+            ) : (
+              "Create Brand"
+            )}
           </button>
           <button
             type="button"

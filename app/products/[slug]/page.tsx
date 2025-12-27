@@ -13,6 +13,7 @@ import ProductCard from "@/components/ProductCard";
 import QuantitySelector from "@/components/QuantitySelector";
 import ReviewsSection from "@/components/ReviewsSection";
 import { Star, ShoppingCart, Heart, Share2, Truck, ShieldCheck } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function ProductPage() {
   const params = useParams();
@@ -58,11 +59,7 @@ export default function ProductPage() {
   }, [params?.slug]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-600" />
-      </div>
-    );
+    return <GlobalLoader fullPage />;
   }
 
   if (!product) return null;

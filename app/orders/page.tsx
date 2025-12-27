@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getMyOrders } from "@/lib/api/orders.api";
 import { ApiError } from "@/lib/api";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -52,30 +53,13 @@ export default function OrdersPage() {
     return `$${amount.toFixed(2)}`;
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-slate-900">My Orders</h1>
-
-          {/* Skeleton loading */}
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg shadow p-6 animate-pulse"
-              >
-                <div className="h-4 bg-slate-200 rounded w-1/4 mb-4"></div>
-                <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
-                <div className="h-4 bg-slate-200 rounded w-1/3"></div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-8 text-slate-600">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2">Loading orders...</p>
+          <div className="flex justify-center py-20">
+            <GlobalLoader size="large" />
           </div>
         </div>
       </div>

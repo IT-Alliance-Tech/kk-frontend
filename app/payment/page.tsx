@@ -183,6 +183,7 @@ import {
   Eye,
   RefreshCw,
 } from "lucide-react";
+import GlobalLoader from "@/components/common/GlobalLoader";
 import { getOrder } from "@/lib/api/orders.api";
 import type { Order } from "@/lib/types/order";
 import PaymentResult from "@/components/PaymentResult";
@@ -336,14 +337,13 @@ function PaymentPageContent() {
     );
   };
 
-  // Loading State
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 max-w-md w-full">
           <div className="flex flex-col items-center justify-center">
-            <Loader2 className="w-12 h-12 text-red-600 animate-spin mb-4" />
-            <p className="text-gray-600 text-center">
+            <GlobalLoader size="large" />
+            <p className="text-gray-600 text-center mt-4">
               Loading payment details...
             </p>
           </div>
@@ -572,7 +572,7 @@ export default function PaymentPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <Loader2 className="w-12 h-12 text-red-600 animate-spin" />
+          <GlobalLoader size="large" />
         </div>
       }
     >

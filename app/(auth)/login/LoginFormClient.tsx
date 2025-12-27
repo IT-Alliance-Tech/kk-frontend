@@ -22,6 +22,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, LogIn, Smartphone } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface LoginFormClientProps {
   redirectTo?: string;
@@ -262,7 +263,7 @@ export default function LoginFormClient({
           <Button type="submit" className="w-full" disabled={loading} size="lg">
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <GlobalLoader size="small" className="mr-2" />
                 Logging in...
               </>
             ) : (
