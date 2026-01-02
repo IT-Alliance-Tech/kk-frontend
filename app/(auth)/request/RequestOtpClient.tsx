@@ -93,6 +93,16 @@ export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
             <span>Send OTP</span>
           )}
         </button>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => router.push("/login/phone")}
+            className="text-sm text-slate-600 hover:text-emerald-600 underline transition-colors duration-200"
+          >
+            Login using phone number
+          </button>
+        </div>
       </form>
 
       <div className="mt-8 pt-6 border-t border-slate-200 text-center text-sm">
