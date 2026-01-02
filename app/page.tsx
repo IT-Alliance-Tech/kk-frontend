@@ -10,7 +10,6 @@ import { buildUrl } from "@/lib/api";
 import HeroCarousel from "@/components/HeroCarousel";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import HeroBanner from "@/components/HeroBanner";
 import { normalizeSrc } from "@/lib/normalizeSrc";
 import GlobalLoader from "@/components/common/GlobalLoader";
 

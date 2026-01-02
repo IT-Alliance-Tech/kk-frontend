@@ -5,9 +5,14 @@ import {
   getAdminHomepageBrands, 
   getAdminHomepageCategories,
   updateBrand,
-  updateCategory
+  updateCategory,
+  apiGetAuth,
+  apiPostAuth,
+  apiPutAuth,
+  apiDeleteAuth
 } from "@/lib/admin";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import Image from "next/image";
 
 type HomepageItem = {
   _id: string;
@@ -18,6 +23,16 @@ type HomepageItem = {
   homepageOrder: number | null;
 };
 
+type HeroImage = {
+  _id: string;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+};
+
 type SlotState = {
   slotNumber: number;
   assignedItemId: string | null;
@@ -26,6 +41,7 @@ type SlotState = {
 export default function AdminHomepagePage() {
   const [allBrands, setAllBrands] = useState<HomepageItem[]>([]);
   const [allCategories, setAllCategories] = useState<HomepageItem[]>([]);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [brandSlots, setBrandSlots] = useState<SlotState[]>([
     { slotNumber: 1, assignedItemId: null },
     { slotNumber: 2, assignedItemId: null },
@@ -40,22 +56,110 @@ export default function AdminHomepagePage() {
   ]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  // ==================== HERO IMAGES MANAGEMENT ====================
+  
+  async function loadHeroImages() {
+    try {
+      const data = await apiGetAuth("/admin/hero-images");
+      const images = Array.isArray(data) ? data : (data?.data || []);
+      return images;
+    } catch (error) {
+      console.error("Failed to load hero images:", error);
+      return [];
+    }
+  }
+
+  async function handleHeroUpload(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setUploading(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://kk-backend-5c11.onrender.com/api";
+      
+      const res = await fetch(`${API_BASE}/admin/hero-images`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      form.reset();
+      const heroData = await loadHeroImages();
+      setHeroImages(heroData);
+      showMessage('success', 'Hero image uploaded successfully!');
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      showMessage('error', err.message || 'Failed to upload hero image');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function toggleHeroActive(id: string, currentStatus: boolean) {
+    try {
+      await apiPutAuth(`/admin/hero-images/${id}`, { isActive: !currentStatus });
+      const heroData = await loadHeroImages();
+      setHeroImages(heroData);
+      showMessage('success', 'Hero image status updated');
+    } catch (err: any) {
+      console.error("Toggle error:", err);
+      showMessage('error', err.message || 'Failed to update status');
+    }
+  }
+
+  async function updateHeroOrder(id: string, newOrder: number) {
+    try {
+      await apiPutAuth(`/admin/hero-images/${id}`, { displayOrder: newOrder });
+      const heroData = await loadHeroImages();
+      setHeroImages(heroData);
+      showMessage('success', 'Display order updated');
+    } catch (err: any) {
+      console.error("Update error:", err);
+      showMessage('error', err.message || 'Failed to update order');
+    }
+  }
+
+  async function deleteHeroImage(id: string) {
+    if (!confirm("Delete this hero image? This cannot be undone.")) return;
+
+    try {
+      await apiDeleteAuth(`/admin/hero-images/${id}`);
+      const heroData = await loadHeroImages();
+      setHeroImages(heroData);
+      showMessage('success', 'Hero image deleted');
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      showMessage('error', err.message || 'Failed to delete image');
+    }
+  }
+
+  // ==================== DATA LOADING ====================
+
   async function loadData() {
     setLoading(true);
     try {
-      const [brandsData, categoriesData] = await Promise.all([
+      const [brandsData, categoriesData, heroData] = await Promise.all([
         getAdminHomepageBrands(),
-        getAdminHomepageCategories()
+        getAdminHomepageCategories(),
+        loadHeroImages()
       ]);
       
       setAllBrands(brandsData || []);
       setAllCategories(categoriesData || []);
+      setHeroImages(heroData || []);
       
       // Initialize brand slots from backend data
       const newBrandSlots = [1, 2, 3, 4].map(slotNum => {
@@ -230,6 +334,18 @@ export default function AdminHomepagePage() {
         </div>
       )}
 
+      {/* Hero Section */}
+      <HeroSectionManagement
+        heroImages={heroImages}
+        onUpload={handleHeroUpload}
+        onToggleActive={toggleHeroActive}
+        onUpdateOrder={updateHeroOrder}
+        onDelete={deleteHeroImage}
+        uploading={uploading}
+      />
+
+      <div className="h-12" />
+
       {/* Brands Section */}
       <HomepageSlotSection
         title="Homepage Brands"
@@ -367,6 +483,193 @@ function HomepageSlotSection({
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== HERO SECTION MANAGEMENT COMPONENT ====================
+
+function HeroSectionManagement({
+  heroImages,
+  onUpload,
+  onToggleActive,
+  onUpdateOrder,
+  onDelete,
+  uploading
+}: {
+  heroImages: HeroImage[];
+  onUpload: (e: React.FormEvent<HTMLFormElement>) => void;
+  onToggleActive: (id: string, currentStatus: boolean) => void;
+  onUpdateOrder: (id: string, newOrder: number) => void;
+  onDelete: (id: string) => void;
+  uploading: boolean;
+}) {
+  const activeCount = heroImages.filter(img => img.isActive).length;
+  const sortedImages = [...heroImages].sort((a, b) => a.displayOrder - b.displayOrder);
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {/* Section Header */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Homepage Hero Section</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {activeCount} active image{activeCount !== 1 ? 's' : ''} • {heroImages.length} total
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload Form */}
+      <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Upload New Hero Image</h3>
+        <form onSubmit={onUpload} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image File *
+              </label>
+              <input
+                type="file"
+                name="files"
+                accept="image/*"
+                required
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+              <p className="mt-1 text-xs text-gray-500">Recommended: 1920x600px, landscape</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Title (Optional)
+              </label>
+              <input
+                type="text"
+                name="title"
+                placeholder="e.g., Big Sale"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Subtitle (Optional)
+            </label>
+            <input
+              type="text"
+              name="subtitle"
+              placeholder="e.g., Up to 70% off"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={uploading}
+            className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            {uploading ? 'Uploading...' : 'Upload Hero Image'}
+          </button>
+        </form>
+      </div>
+
+      {/* Hero Images List */}
+      <div className="p-6">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Current Hero Images</h3>
+
+        {heroImages.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-sm">No hero images uploaded yet.</p>
+            <p className="text-xs mt-1">Upload your first hero image using the form above.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {sortedImages.map((img) => (
+              <div
+                key={img._id}
+                className={`border rounded-lg p-4 flex gap-4 items-start transition-all ${
+                  img.isActive ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                {/* Image Preview */}
+                <div className="relative w-48 h-28 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                  <Image
+                    src={img.imageUrl}
+                    alt={img.title || "Hero"}
+                    fill
+                    className="object-cover"
+                  />
+                  {!img.isActive && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">Inactive</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image Details */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900">
+                    {img.title || "(No title)"}
+                  </h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {img.subtitle || "(No subtitle)"}
+                  </p>
+                  
+                  <div className="flex items-center gap-4 mt-3">
+                    {/* Display Order */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium text-gray-600">Order:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={img.displayOrder}
+                        onChange={(e) => onUpdateOrder(img._id, parseInt(e.target.value) || 0)}
+                        className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    {/* Status Badge */}
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded ${
+                        img.isActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {img.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => onToggleActive(img._id, img.isActive)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      img.isActive
+                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    }`}
+                  >
+                    {img.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    onClick={() => onDelete(img._id)}
+                    className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
