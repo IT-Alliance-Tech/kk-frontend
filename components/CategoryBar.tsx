@@ -41,7 +41,7 @@ export default function CategoryBar({
       <div className="flex gap-4 sm:gap-6 md:gap-8 items-center overflow-x-auto no-scrollbar px-3 sm:px-6">
         {items.map((c) => {
           const slug = c.slug || c.name?.toLowerCase().replace(/\s+/g, '-');
-          const logoUrl = getCategoryLogoUrl(slug) || c.image_url || '/brand-placeholder.svg';
+          const logoUrl = c.image_url || getCategoryLogoUrl(slug) || '/brand-placeholder.svg';
           
           return (
             <Link
