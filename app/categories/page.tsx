@@ -153,7 +153,7 @@ export default function CategoriesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredCategories.map((category) => {
                 const slug = category.slug || category.name?.toLowerCase().replace(/\s+/g, '-');
-                const logoUrl = getCategoryLogoUrl(slug) || category.image_url || '/brand-placeholder.svg';
+                const logoUrl = category.image_url || getCategoryLogoUrl(slug) || '/brand-placeholder.svg';
                 
                 return (
                   <Link

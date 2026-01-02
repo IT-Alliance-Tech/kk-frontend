@@ -36,15 +36,16 @@ export default function HomeCategories() {
 
         const withImages = await Promise.all(
           cats.map(async (c) => {
-            const possiblePath = c.imagePath ?? c.image ?? c.imageUrl ?? "";
+            // Priority: use imageUrl from API (which is image_url from DB), then fallback to constructed path
+            const apiImageUrl = c.imageUrl ?? c.image ?? "";
             let img = "";
             try {
-              img = getCategoryLogoUrl(possiblePath || (c.slug ?? c._id ?? "")) || "";
+              img = apiImageUrl || getCategoryLogoUrl(c.slug ?? c._id ?? "") || "";
             } catch (e) {
               console.debug("getCategoryLogoUrl error for", c, e);
-              img = "";
+              img = apiImageUrl || "";
             }
-            return { ...c, imageUrl: img || (c.imageUrl ?? "") };
+            return { ...c, imageUrl: img };
           })
         );
 
