@@ -505,171 +505,359 @@ function HeroSectionManagement({
   onDelete: (id: string) => void;
   uploading: boolean;
 }) {
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const activeCount = heroImages.filter(img => img.isActive).length;
   const sortedImages = [...heroImages].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-      {/* Section Header */}
-      <div className="p-6 border-b border-gray-200">
+    <div className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl shadow-sm border border-gray-200/80">
+      {/* Premium Header with Stats */}
+      <div className="relative bg-gradient-to-r from-emerald-600 to-teal-600 px-6 sm:px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Homepage Hero Section</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              {activeCount} active image{activeCount !== 1 ? 's' : ''} • {heroImages.length} total
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Hero Carousel</h2>
+                <p className="text-emerald-50 text-sm mt-0.5">Manage homepage banner images</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Stats Cards */}
+          <div className="flex gap-3">
+            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
+              <div className="text-2xl font-bold text-white">{activeCount}</div>
+              <div className="text-xs text-emerald-50">Active</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/30">
+              <div className="text-2xl font-bold text-white">{heroImages.length}</div>
+              <div className="text-xs text-emerald-50">Total</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Upload Form */}
-      <div className="p-6 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">Upload New Hero Image</h3>
-        <form onSubmit={onUpload} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image File *
-              </label>
-              <input
-                type="file"
-                name="files"
-                accept="image/*"
-                required
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-              />
-              <p className="mt-1 text-xs text-gray-500">Recommended: 1920x600px, landscape</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title (Optional)
-              </label>
-              <input
-                type="text"
-                name="title"
-                placeholder="e.g., Big Sale"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Subtitle (Optional)
-            </label>
-            <input
-              type="text"
-              name="subtitle"
-              placeholder="e.g., Up to 70% off"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={uploading}
-            className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+      {/* Quick Upload Toggle Button */}
+      <div className="px-6 sm:px-8 py-4 bg-gray-50/80 border-b border-gray-200/60">
+        <button
+          onClick={() => setIsUploadOpen(!isUploadOpen)}
+          className="group flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+        >
+          <svg 
+            className={`w-5 h-5 transition-transform duration-300 ${isUploadOpen ? 'rotate-45' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
           >
-            {uploading ? 'Uploading...' : 'Upload Hero Image'}
-          </button>
-        </form>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <span>{isUploadOpen ? 'Close Upload Form' : 'Add New Hero Image'}</span>
+        </button>
       </div>
 
-      {/* Hero Images List */}
-      <div className="p-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">Current Hero Images</h3>
+      {/* Collapsible Upload Form */}
+      <div className={`overflow-hidden transition-all duration-300 ${isUploadOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="px-6 sm:px-8 py-6 bg-gradient-to-b from-gray-50/80 to-white border-b border-gray-200/60">
+          <form onSubmit={(e) => { onUpload(e); setIsUploadOpen(false); }} className="space-y-5">
+            {/* Image Upload - Featured */}
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-800 mb-3">
+                Hero Image <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  name="files"
+                  accept="image/*"
+                  required
+                  className="block w-full text-sm text-gray-600
+                    file:mr-4 file:py-3 file:px-6
+                    file:rounded-xl file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-gradient-to-r file:from-emerald-600 file:to-teal-600
+                    file:text-white file:shadow-md
+                    hover:file:shadow-lg hover:file:scale-[1.02]
+                    file:transition-all file:duration-200
+                    file:cursor-pointer
+                    cursor-pointer
+                    border border-gray-300 rounded-xl
+                    hover:border-emerald-400 transition-colors
+                    bg-white p-3"
+                />
+              </div>
+              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Recommended: 1920×600px • Max 5MB • JPG, PNG, or WebP</span>
+              </div>
+            </div>
 
+            {/* Text Fields Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Headline
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="e.g., Summer Sale 2026"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl
+                    focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100
+                    transition-all duration-200 text-gray-800 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Subheadline
+                </label>
+                <input
+                  type="text"
+                  name="subtitle"
+                  placeholder="e.g., Up to 70% off on all items"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl
+                    focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100
+                    transition-all duration-200 text-gray-800 placeholder-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={uploading}
+                className="flex-1 sm:flex-initial px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600
+                  text-white font-semibold rounded-xl
+                  hover:shadow-lg hover:scale-[1.02]
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                  transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span>Upload Image</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsUploadOpen(false)}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl
+                  hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Hero Images Gallery */}
+      <div className="px-6 sm:px-8 py-6">
         {heroImages.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p className="text-sm">No hero images uploaded yet.</p>
-            <p className="text-xs mt-1">Upload your first hero image using the form above.</p>
+          <div className="text-center py-16 px-4">
+            <div className="inline-flex p-4 bg-gray-100 rounded-2xl mb-4">
+              <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No hero images yet</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+              Start building an engaging homepage by uploading your first hero banner image.
+            </p>
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl
+                hover:bg-emerald-700 hover:shadow-lg transition-all duration-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add First Hero Image
+            </button>
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedImages.map((img) => (
-              <div
+            {sortedImages.map((img, index) => (
+              <HeroImageCard
                 key={img._id}
-                className={`border rounded-lg p-4 flex gap-4 items-start transition-all ${
-                  img.isActive ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200 bg-gray-50'
-                }`}
-              >
-                {/* Image Preview */}
-                <div className="relative w-48 h-28 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                  <Image
-                    src={img.imageUrl}
-                    alt={img.title || "Hero"}
-                    fill
-                    className="object-cover"
-                  />
-                  {!img.isActive && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="text-white text-xs font-semibold">Inactive</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Image Details */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900">
-                    {img.title || "(No title)"}
-                  </h4>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {img.subtitle || "(No subtitle)"}
-                  </p>
-                  
-                  <div className="flex items-center gap-4 mt-3">
-                    {/* Display Order */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium text-gray-600">Order:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={img.displayOrder}
-                        onChange={(e) => onUpdateOrder(img._id, parseInt(e.target.value) || 0)}
-                        className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                      />
-                    </div>
-                    
-                    {/* Status Badge */}
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded ${
-                        img.isActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {img.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => onToggleActive(img._id, img.isActive)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                      img.isActive
-                        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                    }`}
-                  >
-                    {img.isActive ? 'Deactivate' : 'Activate'}
-                  </button>
-                  <button
-                    onClick={() => onDelete(img._id)}
-                    className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+                image={img}
+                index={index}
+                onToggleActive={onToggleActive}
+                onUpdateOrder={onUpdateOrder}
+                onDelete={onDelete}
+              />
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ==================== HERO IMAGE CARD COMPONENT ====================
+
+function HeroImageCard({
+  image,
+  index,
+  onToggleActive,
+  onUpdateOrder,
+  onDelete
+}: {
+  image: HeroImage;
+  index: number;
+  onToggleActive: (id: string, currentStatus: boolean) => void;
+  onUpdateOrder: (id: string, newOrder: number) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${
+      image.isActive 
+        ? 'bg-gradient-to-br from-emerald-50 to-teal-50/50 border-2 border-emerald-200 shadow-md hover:shadow-lg' 
+        : 'bg-white border-2 border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
+    }`}>
+      {/* Order Badge */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs backdrop-blur-md ${
+          image.isActive 
+            ? 'bg-emerald-600/90 text-white shadow-lg' 
+            : 'bg-gray-800/80 text-white'
+        }`}>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+          Position {image.displayOrder}
+        </div>
+      </div>
+
+      {/* Status Badge */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className={`px-3 py-1.5 rounded-lg font-semibold text-xs backdrop-blur-md shadow-lg ${
+          image.isActive 
+            ? 'bg-green-500/90 text-white' 
+            : 'bg-gray-700/80 text-gray-200'
+        }`}>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-2 h-2 rounded-full ${image.isActive ? 'bg-white' : 'bg-gray-400'} animate-pulse`} />
+            {image.isActive ? 'Live' : 'Hidden'}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-4 p-4">
+        {/* Image Preview */}
+        <div className="relative flex-shrink-0 w-full lg:w-80 h-44 rounded-lg overflow-hidden bg-gray-100 shadow-inner">
+          <Image
+            src={image.imageUrl}
+            alt={image.title || "Hero banner"}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {!image.isActive && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex items-end justify-center pb-4">
+              <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-lg">
+                Not Visible on Site
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col justify-between min-w-0">
+          {/* Text Content */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold text-gray-900 leading-tight">
+              {image.title || <span className="text-gray-400 italic">Untitled Banner</span>}
+            </h3>
+            {image.subtitle && (
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {image.subtitle}
+              </p>
+            )}
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Added {new Date(image.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-200/60">
+            {/* Display Order Input */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-gray-600">Display Order:</label>
+              <input
+                type="number"
+                min="0"
+                value={image.displayOrder}
+                onChange={(e) => onUpdateOrder(image._id, parseInt(e.target.value) || 0)}
+                className="w-20 px-3 py-2 text-sm font-semibold text-gray-900 border-2 border-gray-300 rounded-lg
+                  focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+              />
+            </div>
+
+            {/* Spacer */}
+            <div className="flex-1 min-w-[20px]" />
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => onToggleActive(image._id, image.isActive)}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                  image.isActive
+                    ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-300'
+                    : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {image.isActive ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  )}
+                </svg>
+                {image.isActive ? 'Hide' : 'Show'}
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (confirm(`Delete "${image.title || 'this hero image'}"? This action cannot be undone.`)) {
+                    onDelete(image._id);
+                  }
+                }}
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-50 text-red-700 
+                  hover:bg-red-100 border border-red-200 hover:border-red-300
+                  transition-all duration-200 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
