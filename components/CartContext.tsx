@@ -17,6 +17,8 @@ export type CartItem = {
   price: number;
   qty: number; // always a number, never undefined
   image_url?: string;
+  variantId?: string; // optional variant ID
+  variantName?: string; // optional variant name for display
 };
 
 type CartContextValue = {
@@ -25,9 +27,9 @@ type CartContextValue = {
   distinctCount: number;
   total: number;
   addItem: (item: Partial<CartItem>, qty?: number) => Promise<void> | void;
-  removeItem: (id: string) => Promise<void> | void;
+  removeItem: (id: string, variantId?: string) => Promise<void> | void;
   clearCart: () => Promise<void> | void;
-  updateQty: (id: string, qty: number) => Promise<void> | void;
+  updateQty: (id: string, qty: number, variantId?: string) => Promise<void> | void;
 };
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -48,6 +50,8 @@ function normalizeCartItem(raw: any): CartItem {
     price: Number(raw.price) || 0,
     qty: Number(raw.qty) || Number(raw.quantity) || 1,
     image_url: raw.image_url || raw.image || '',
+    variantId: raw.variantId || undefined,
+    variantName: raw.variantName || undefined,
   };
 }
 
@@ -58,6 +62,8 @@ function backendToLocal(cart: BackendCart): CartItem[] {
     price: bi.price,
     qty: bi.qty,
     image_url: bi.image,
+    variantId: bi.variantId,
+    variantName: bi.variantName,
   }));
 }
 
@@ -150,7 +156,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const normalized = normalizeCartItem({ ...item, qty });
     
     setItems((prev) => {
-      const idx = prev.findIndex((p) => p.id === normalized.id);
+      // Find existing item by composite key (id + variantId)
+      const idx = prev.findIndex((p) => 
+        p.id === normalized.id && 
+        (p.variantId || null) === (normalized.variantId || null)
+      );
+      
       if (idx > -1) {
         const copy = [...prev];
         copy[idx] = { ...copy[idx], qty: copy[idx].qty + qty };
@@ -164,7 +175,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         const token = getAccessToken();
         if (!token) return;
-        const serverCart = await apiAddToCart(normalized.id, qty);
+        const serverCart = await apiAddToCart(normalized.id, qty, normalized.variantId);
         applyServerCart(serverCart);
       } catch (e) {
         // silent failure
@@ -172,14 +183,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })();
   };
 
-  const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((p) => p.id !== id));
+  const removeItem = (id: string, variantId?: string) => {
+    setItems((prev) => prev.filter((p) => 
+      !(p.id === id && (p.variantId || null) === (variantId || null))
+    ));
 
     (async () => {
       try {
         const token = getAccessToken();
         if (!token) return;
-        const serverCart = await apiRemoveCartItem(id);
+        const serverCart = await apiRemoveCartItem(id, variantId);
         applyServerCart(serverCart);
       } catch (e) {}
     })();
@@ -198,14 +211,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })();
   };
 
-  const updateQty = (id: string, qty: number) => {
-    setItems((prev) => prev.map((p) => (p.id === id ? { ...p, qty } : p)));
+  const updateQty = (id: string, qty: number, variantId?: string) => {
+    setItems((prev) => prev.map((p) => 
+      (p.id === id && (p.variantId || null) === (variantId || null)) 
+        ? { ...p, qty } 
+        : p
+    ));
 
     (async () => {
       try {
         const token = getAccessToken();
         if (!token) return;
-        const serverCart = await apiUpdateCartItem(id, qty);
+        const serverCart = await apiUpdateCartItem(id, qty, variantId);
         applyServerCart(serverCart);
       } catch (e) {}
     })();
