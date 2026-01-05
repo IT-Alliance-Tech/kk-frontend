@@ -59,16 +59,16 @@ export default function CartClient() {
     }
   }
 
-  async function handleQuantityChange(productId: string, newQty: number) {
+  async function handleQuantityChange(productId: string, newQty: number, variantId?: string) {
     if (isGuestMode) {
       // Use context for guest cart updates
-      contextUpdateQty(productId, newQty);
+      contextUpdateQty(productId, newQty, variantId);
       return;
     }
 
     try {
       setActionLoading(true);
-      const updatedCart = await updateCartItem(productId, newQty);
+      const updatedCart = await updateCartItem(productId, newQty, variantId);
       setCart(updatedCart);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update quantity");
@@ -77,16 +77,16 @@ export default function CartClient() {
     }
   }
 
-  async function handleRemoveItem(productId: string) {
+  async function handleRemoveItem(productId: string, variantId?: string) {
     if (isGuestMode) {
       // Use context for guest cart updates
-      contextRemoveItem(productId);
+      contextRemoveItem(productId, variantId);
       return;
     }
 
     try {
       setActionLoading(true);
-      const updatedCart = await removeCartItem(productId);
+      const updatedCart = await removeCartItem(productId, variantId);
       setCart(updatedCart);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to remove item");
@@ -252,7 +252,9 @@ export default function CartClient() {
         title: item.name,
         price: item.price,
         qty: item.qty || 1,
-        image: item.image_url || ''
+        image: item.image_url || '',
+        variantId: item.variantId,
+        variantName: item.variantName
       }))
     : (cart?.items || []);
   const subtotal = isGuestMode 
@@ -293,10 +295,11 @@ export default function CartClient() {
                 const itemQty = item.qty || item.quantity || 1;
                 const itemPrice = item.price || 0;
                 const itemImage = item.image;
+                const variantName = item.variantName;
                 
                 return (
                 <div
-                  key={itemId}
+                  key={`${itemId}-${item.variantId || 'base'}`}
                   className="flex items-start sm:items-center justify-between gap-3 sm:gap-4 flex-col sm:flex-row border-b pb-3 last:border-0"
                 >
                   <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
@@ -317,9 +320,13 @@ export default function CartClient() {
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm sm:text-base truncate">
                         {itemTitle}
+                        {variantName && (
+                          <span className="text-gray-600 font-normal ml-2">
+                            – {variantName}
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
-                        {/* Removed duplicate quantity display beside unit price — quantity is controlled by the spinner control */}
                         ₹{itemPrice.toFixed(2)}
                       </div>
                     </div>
@@ -328,7 +335,7 @@ export default function CartClient() {
                     <QuantitySelector
                       value={itemQty}
                       onChange={(newQty) =>
-                        handleQuantityChange(itemId, newQty)
+                        handleQuantityChange(itemId, newQty, item.variantId)
                       }
                       size="sm"
                     />
@@ -336,7 +343,7 @@ export default function CartClient() {
                       ₹{(itemPrice * itemQty).toFixed(2)}
                     </div>
                     <button
-                      onClick={() => handleRemoveItem(itemId)}
+                      onClick={() => handleRemoveItem(itemId, item.variantId)}
                       disabled={actionLoading}
                       className="text-red-600 hover:underline text-xs sm:text-sm disabled:opacity-50"
                     >
