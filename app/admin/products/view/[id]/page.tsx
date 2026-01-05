@@ -9,6 +9,7 @@ import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
+import VariantManager from "@/components/admin/VariantManager";
 
 export default function ViewProductPage() {
   const params = useParams();
@@ -279,6 +280,14 @@ export default function ViewProductPage() {
         </div>
 
       </div>
+
+      {/* Product Variants Section */}
+      {productId && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4">Available Sizes & Prices</h2>
+          <VariantManager productId={productId} />
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="mt-6 flex gap-3">

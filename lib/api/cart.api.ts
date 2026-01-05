@@ -18,6 +18,8 @@ export interface BackendCartItem {
   price: number;
   title: string;
   image: string;
+  variantId?: string;
+  variantName?: string;
 }
 
 /**
@@ -108,15 +110,21 @@ export async function getCart(): Promise<BackendCart> {
  * Add product to cart
  * @param productId - Product ID
  * @param qty - Quantity to add (default: 1)
+ * @param variantId - Optional variant ID
  * @returns Updated cart
  */
 export async function addToCart(
   productId: string,
   qty: number = 1,
+  variantId?: string,
 ): Promise<BackendCart> {
+  const payload: any = { productId, qty };
+  if (variantId) {
+    payload.variantId = variantId;
+  }
   return fetchWithAuth("/api/cart", {
     method: "POST",
-    body: JSON.stringify({ productId, qty }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -124,27 +132,41 @@ export async function addToCart(
  * Update cart item quantity
  * @param productId - Product ID
  * @param qty - New quantity (0 or negative removes item)
+ * @param variantId - Optional variant ID (required if item has variant)
  * @returns Updated cart
  */
 export async function updateCartItem(
   productId: string,
   qty: number,
+  variantId?: string,
 ): Promise<BackendCart> {
+  const payload: any = { productId, qty };
+  if (variantId) {
+    payload.variantId = variantId;
+  }
   return fetchWithAuth("/api/cart/item", {
     method: "PATCH",
-    body: JSON.stringify({ productId, qty }),
+    body: JSON.stringify(payload),
   });
 }
 
 /**
  * Remove item from cart
  * @param productId - Product ID to remove
+ * @param variantId - Optional variant ID (required if item has variant)
  * @returns Updated cart
  */
-export async function removeCartItem(productId: string): Promise<BackendCart> {
+export async function removeCartItem(
+  productId: string,
+  variantId?: string,
+): Promise<BackendCart> {
+  const payload: any = { productId };
+  if (variantId) {
+    payload.variantId = variantId;
+  }
   return fetchWithAuth("/api/cart/item", {
     method: "DELETE",
-    body: JSON.stringify({ productId }),
+    body: JSON.stringify(payload),
   });
 }
 

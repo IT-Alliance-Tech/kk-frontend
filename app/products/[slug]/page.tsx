@@ -12,8 +12,21 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProductCard from "@/components/ProductCard";
 import QuantitySelector from "@/components/QuantitySelector";
 import ReviewsSection from "@/components/ReviewsSection";
+import VariantSelector from "@/components/VariantSelector";
 import { Star, ShoppingCart, Heart, Share2, Truck, ShieldCheck } from "lucide-react";
 import GlobalLoader from "@/components/common/GlobalLoader";
+
+interface Variant {
+  _id: string;
+  name: string;
+  price: number;
+  mrp: number;
+  stock: number;
+  sku?: string;
+  attributes?: Record<string, string>;
+  images?: string[];
+  isActive: boolean;
+}
 
 export default function ProductPage() {
   const params = useParams();
@@ -25,8 +38,20 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [similarProducts, setSimilarProducts] = useState<any[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
+  
+  // Variant state
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [variants, setVariants] = useState<Variant[]>([]);
 
-  const cartItem = items.find((item) => item.id === product?._id);
+  // Determine effective product data (variant overrides if selected)
+  const effectivePrice = selectedVariant?.price ?? product?.price ?? 0;
+  const effectiveMrp = selectedVariant?.mrp ?? product?.mrp ?? 0;
+  const effectiveStock = selectedVariant?.stock ?? product?.stock ?? 0;
+  
+  const cartItem = items.find((item) => 
+    item.id === product?._id && 
+    (!selectedVariant || item.variantId === selectedVariant._id)
+  );
   const currentQty = cartItem?.qty || 0;
 
   useEffect(() => {
@@ -37,6 +62,18 @@ export default function ProductPage() {
       const data = await apiGet(`/products/${slug}`);
       const p = data?.product || data;
       setProduct(p);
+
+      // Check if product has variants
+      if (p?.variants && p.variants.length > 0) {
+        setVariants(p.variants);
+        // Auto-select first available variant
+        const firstActive = p.variants.find((v: Variant) => v.isActive && v.stock > 0);
+        if (firstActive) {
+          setSelectedVariant(firstActive);
+        } else {
+          setSelectedVariant(p.variants[0]);
+        }
+      }
 
       // Fetch similar products using new API endpoint
       if (p?._id) {
@@ -64,25 +101,48 @@ export default function ProductPage() {
 
   if (!product) return null;
 
+  // Use variant images if available and variant is selected
+  let productImages = product.images;
+  if (selectedVariant?.images && selectedVariant.images.length > 0) {
+    productImages = selectedVariant.images;
+  }
+
   const images =
-    Array.isArray(product.images) && product.images.length > 0
-      ? product.images.map(normalizeSrc)
+    Array.isArray(productImages) && productImages.length > 0
+      ? productImages.map(normalizeSrc)
       : [DefaultProductImage];
 
   const mainImage = images[selectedImage];
 
   const discount =
-    product.mrp && product.mrp > product.price
-      ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+    effectiveMrp && effectiveMrp > effectivePrice
+      ? Math.round(((effectiveMrp - effectivePrice) / effectiveMrp) * 100)
       : 0;
 
-  const inStock = product.stock !== 0;
+  const inStock = effectiveStock !== 0;
+
+  const handleVariantChange = (variant: Variant) => {
+    setSelectedVariant(variant);
+    setSelectedImage(0); // Reset to first image when variant changes
+  };
 
   const handleQty = (qty: number) => {
-    if (qty === 0) removeItem(product._id);
-    else if (currentQty === 0)
-      addItem({ id: product._id, name: product.title, price: product.price, image_url: mainImage }, qty);
-    else updateQty(product._id, qty);
+    const itemPayload = {
+      id: product._id,
+      name: product.title,
+      price: effectivePrice,
+      image_url: typeof mainImage === 'string' ? mainImage : mainImage.src,
+      variantId: selectedVariant?._id,
+      variantName: selectedVariant?.name
+    };
+
+    if (qty === 0) {
+      removeItem(product._id, selectedVariant?._id);
+    } else if (currentQty === 0) {
+      addItem(itemPayload, qty);
+    } else {
+      updateQty(product._id, qty, selectedVariant?._id);
+    }
   };
 
   return (
@@ -185,22 +245,39 @@ export default function ProductPage() {
               {/* Pricing Section */}
               <div className="py-5 mb-6 border-y border-gray-200 bg-gray-50/50 -mx-8 lg:-mx-10 px-8 lg:px-10">
                 <div className="flex items-baseline gap-3 flex-wrap mb-1.5">
-                  <span className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">
-                    ₹{product.price.toLocaleString()}
-                  </span>
-                  {product.mrp && product.mrp > product.price && (
+                  {variants.length > 0 && !selectedVariant ? (
+                    <span className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">
+                      From ₹{Math.min(...variants.map(v => v.price)).toLocaleString()}
+                    </span>
+                  ) : (
                     <>
-                      <span className="text-xl line-through text-gray-400 font-medium">
-                        ₹{product.mrp.toLocaleString()}
+                      <span className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">
+                        ₹{effectivePrice.toLocaleString()}
                       </span>
-                      <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
-                        Save ₹{(product.mrp - product.price).toLocaleString()}
-                      </span>
+                      {effectiveMrp && effectiveMrp > effectivePrice && (
+                        <>
+                          <span className="text-xl line-through text-gray-400 font-medium">
+                            ₹{effectiveMrp.toLocaleString()}
+                          </span>
+                          <span className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
+                            Save ₹{(effectiveMrp - effectivePrice).toLocaleString()}
+                          </span>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 font-medium">Inclusive of all taxes</p>
               </div>
+
+              {/* Variant Selector */}
+              {variants.length > 0 && (
+                <VariantSelector
+                  variants={variants}
+                  selectedVariantId={selectedVariant?._id || null}
+                  onVariantChange={handleVariantChange}
+                />
+              )}
 
               {/* Stock Status */}
               <div className="mb-6">
