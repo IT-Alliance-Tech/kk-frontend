@@ -132,6 +132,19 @@ export default function AdminHomepagePage() {
     }
   }
 
+  async function updateHeroText(id: string, title: string, subtitle: string) {
+    try {
+      await apiPutAuth(`/admin/hero-images/${id}`, { title, subtitle });
+      const heroData = await loadHeroImages();
+      setHeroImages(heroData);
+      showMessage('success', 'Hero text updated');
+    } catch (err: any) {
+      console.error("Update error:", err);
+      showMessage('error', err.message || 'Failed to update text');
+      throw err;
+    }
+  }
+
   async function deleteHeroImage(id: string) {
     if (!confirm("Delete this hero image? This cannot be undone.")) return;
 
@@ -340,6 +353,7 @@ export default function AdminHomepagePage() {
         onUpload={handleHeroUpload}
         onToggleActive={toggleHeroActive}
         onUpdateOrder={updateHeroOrder}
+        onUpdateText={updateHeroText}
         onDelete={deleteHeroImage}
         uploading={uploading}
       />
@@ -495,6 +509,7 @@ function HeroSectionManagement({
   onUpload,
   onToggleActive,
   onUpdateOrder,
+  onUpdateText,
   onDelete,
   uploading
 }: {
@@ -502,6 +517,7 @@ function HeroSectionManagement({
   onUpload: (e: React.FormEvent<HTMLFormElement>) => void;
   onToggleActive: (id: string, currentStatus: boolean) => void;
   onUpdateOrder: (id: string, newOrder: number) => void;
+  onUpdateText: (id: string, title: string, subtitle: string) => Promise<void>;
   onDelete: (id: string) => void;
   uploading: boolean;
 }) {
@@ -703,6 +719,7 @@ function HeroSectionManagement({
                 index={index}
                 onToggleActive={onToggleActive}
                 onUpdateOrder={onUpdateOrder}
+                onUpdateText={onUpdateText}
                 onDelete={onDelete}
               />
             ))}
@@ -720,15 +737,45 @@ function HeroImageCard({
   index,
   onToggleActive,
   onUpdateOrder,
+  onUpdateText,
   onDelete
 }: {
   image: HeroImage;
   index: number;
   onToggleActive: (id: string, currentStatus: boolean) => void;
   onUpdateOrder: (id: string, newOrder: number) => void;
+  onUpdateText: (id: string, title: string, subtitle: string) => Promise<void>;
   onDelete: (id: string) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState(image.title);
+  const [editSubtitle, setEditSubtitle] = useState(image.subtitle);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  // Sync modal state when image changes or modal opens
+  useEffect(() => {
+    if (isEditModalOpen) {
+      setEditTitle(image.title);
+      setEditSubtitle(image.subtitle);
+      setEditError('');
+    }
+  }, [isEditModalOpen, image.title, image.subtitle]);
+
+  const handleEditSave = async () => {
+    setSaving(true);
+    setEditError('');
+    try {
+      await onUpdateText(image._id, editTitle, editSubtitle);
+      setIsEditModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to update hero text:', err);
+      setEditError(err.message || 'Failed to update');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${
@@ -817,11 +864,21 @@ function HeroImageCard({
               />
             </div>
 
-            {/* Spacer */}
-            <div className="flex-1 min-w-[20px]" />
+            {/* Spacer - Hidden on mobile, shown on md+ */}
+            <div className="hidden md:flex md:flex-1 md:min-w-[20px]" />
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-300"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+              
               <button
                 onClick={() => onToggleActive(image._id, image.isActive)}
                 className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center gap-2 ${
@@ -859,6 +916,89 @@ function HeroImageCard({
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Edit Hero Text</h2>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {editError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                  {editError}
+                </div>
+              )}
+
+              {/* Title Input */}
+              <div>
+                <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 mb-2">
+                  Headline
+                </label>
+                <input
+                  type="text"
+                  id="edit-title"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="e.g., Summer Sale 2026"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Subtitle Input */}
+              <div>
+                <label htmlFor="edit-subtitle" className="block text-sm font-medium text-gray-700 mb-2">
+                  Subheadline
+                </label>
+                <input
+                  type="text"
+                  id="edit-subtitle"
+                  value={editSubtitle}
+                  onChange={(e) => setEditSubtitle(e.target.value)}
+                  placeholder="e.g., Up to 70% off on all items"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleEditSave}
+                  disabled={saving}
+                  className="flex-1 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg
+                    hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-all duration-200"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={saving}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg
+                    hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
