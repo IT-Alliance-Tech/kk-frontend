@@ -22,7 +22,6 @@ export function normalizeBrandsResponse(response: any): Brand[] {
     return response.data;
   }
 
-  console.warn("Unexpected brands response format:", response);
   return [];
 }
 

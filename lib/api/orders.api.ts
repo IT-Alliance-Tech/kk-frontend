@@ -143,7 +143,6 @@ export async function getOrders(): Promise<Order[]> {
       orders = response.data.orders;
     } else {
       // Unknown response shape - return empty array
-      console.warn("Unexpected orders response shape:", response);
       return [];
     }
 
@@ -153,7 +152,6 @@ export async function getOrders(): Promise<Order[]> {
       const hasItems = order.items && Array.isArray(order.items);
 
       if (!hasId || !hasItems) {
-        console.warn("Invalid order object:", order);
         return false;
       }
 

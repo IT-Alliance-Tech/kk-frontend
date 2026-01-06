@@ -51,9 +51,6 @@ export default function ImagePicker({
     try {
       const token = localStorage.getItem("adminToken") || document.cookie.split("; ").find((row) => row.startsWith("adminToken="))?.split("=")[1];
 
-      // TODO: Remove debug log after testing
-      console.log("[DEBUG] Fetching images with token:", token ? "present" : "missing");
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/upload/admin?folder=${folder}`,
         {

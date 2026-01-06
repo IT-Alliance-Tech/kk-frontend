@@ -16,6 +16,7 @@ import { normalizeSrc } from "@/lib/normalizeSrc";
 import QuantitySelector from "@/components/QuantitySelector";
 import { getAccessToken } from "@/lib/utils/auth";
 import { useCart } from "@/components/CartContext";
+import { useToast } from "@/components/ToastContext";
 
 export default function CartClient() {
   const [cart, setCart] = useState<BackendCart | null>(null);
@@ -28,6 +29,8 @@ export default function CartClient() {
   const [appliedCouponData, setAppliedCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  
+  const { showToast } = useToast();
   const [couponLoading, setCouponLoading] = useState(false);
   const router = useRouter();
   
@@ -71,7 +74,8 @@ export default function CartClient() {
       const updatedCart = await updateCartItem(productId, newQty, variantId);
       setCart(updatedCart);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update quantity");
+      const errorMessage = err instanceof Error ? err.message : "Failed to update quantity. Please try again.";
+      showToast(errorMessage, "error");
     } finally {
       setActionLoading(false);
     }
@@ -89,7 +93,8 @@ export default function CartClient() {
       const updatedCart = await removeCartItem(productId, variantId);
       setCart(updatedCart);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to remove item");
+      const errorMessage = err instanceof Error ? err.message : "Failed to remove item. Please try again.";
+      showToast(errorMessage, "error");
     } finally {
       setActionLoading(false);
     }
@@ -120,7 +125,8 @@ export default function CartClient() {
       setAppliedCouponData(null);
       setCouponError("");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to clear cart");
+      const errorMessage = err instanceof Error ? err.message : "Failed to clear cart. Please try again.";
+      showToast(errorMessage, "error");
     } finally {
       setActionLoading(false);
     }
@@ -161,7 +167,7 @@ export default function CartClient() {
         setDiscount(0); // Reset percentage discount since we're using flat discount amount
         setCouponError("");
         // Show success message
-        alert(result.message || "Coupon applied successfully!");
+        showToast(result.message || "Coupon applied successfully!", "success");
       } else {
         setCouponError(result.error || "Failed to apply coupon");
         setDiscountAmount(0);

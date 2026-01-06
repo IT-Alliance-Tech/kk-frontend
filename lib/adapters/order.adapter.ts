@@ -22,7 +22,6 @@ export function normalizeOrdersResponse(response: any): Order[] {
     return response.data;
   }
 
-  console.warn("Unexpected orders response format:", response);
   return [];
 }
 

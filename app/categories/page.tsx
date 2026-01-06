@@ -50,10 +50,6 @@ export default function CategoriesPage() {
         const rawCategories = await res.json();
         // Convert to array if the API returned an object wrapper (safe fallback)
         const categories = normalizeToArray<Category>(rawCategories);
-        // debugging: log when normalization was needed — remove after fix confirmed
-        if (!Array.isArray(rawCategories)) {
-          console.log("[DEBUG] categories raw response shape (normalized):", JSON.stringify(rawCategories));
-        }
         setCategories(categories);
       } catch (err: any) {
         setError(err.message);
