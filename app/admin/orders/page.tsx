@@ -30,8 +30,6 @@ export default function AdminOrdersPage() {
           Array.isArray(res?.items) ? res.items :
           Array.isArray(res?.data) ? res.data :
           [];
-        console.log("admin orders response:", res);
-        console.log("admin orders list:", ordersList);
         setOrders(ordersList);
       } catch (err) {
         console.error("Failed to load admin orders", err);

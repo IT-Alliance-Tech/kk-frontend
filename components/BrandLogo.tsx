@@ -56,7 +56,6 @@ export default function BrandLogo({
 
   const handleError = () => {
     if (!hasError && imgSrc !== fallbackSrc) {
-      console.warn(`Failed to load brand logo for: ${name} (${slug})`);
       setHasError(true);
       setImgSrc(fallbackSrc);
     }

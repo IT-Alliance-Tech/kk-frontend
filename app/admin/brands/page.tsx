@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import { getErrorMessage, isAuthError } from "@/lib/utils/errorHandler";
 
 export default function AdminBrandsPage() {
   const [brands, setBrands] = useState<any[]>([]);
@@ -13,6 +14,7 @@ export default function AdminBrandsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   
   // Filter states
   const [globalSearch, setGlobalSearch] = useState("");
@@ -102,14 +104,16 @@ export default function AdminBrandsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this brand?")) return;
     try {
+      setErrorMessage("");
       await deleteBrand(id);
       loadBrands(currentPage);
     } catch (err: any) {
       console.error("Brand deletion error:", err);
-      alert(err.message || "Failed to delete brand");
+      const message = getErrorMessage(err, "Failed to delete brand. Please try again.");
+      setErrorMessage(message);
       
       // Handle 401 Unauthorized - redirect to login
-      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+      if (isAuthError(err)) {
         router.push("/admin/login");
       }
     }
@@ -118,13 +122,15 @@ export default function AdminBrandsPage() {
   const handleDisable = async (id: string) => {
     if (!confirm("Are you sure you want to disable this brand?")) return;
     try {
+      setErrorMessage("");
       await disableBrand(id);
       loadBrands(currentPage);
     } catch (err: any) {
       console.error("Brand disable error:", err);
-      alert(err.message || "Failed to disable brand");
+      const message = getErrorMessage(err, "Failed to disable brand. Please try again.");
+      setErrorMessage(message);
       
-      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+      if (isAuthError(err)) {
         router.push("/admin/login");
       }
     }
@@ -132,13 +138,15 @@ export default function AdminBrandsPage() {
 
   const handleEnable = async (id: string) => {
     try {
+      setErrorMessage("");
       await enableBrand(id);
       loadBrands(currentPage);
     } catch (err: any) {
       console.error("Brand enable error:", err);
-      alert(err.message || "Failed to enable brand");
+      const message = getErrorMessage(err, "Failed to enable brand. Please try again.");
+      setErrorMessage(message);
       
-      if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
+      if (isAuthError(err)) {
         router.push("/admin/login");
       }
     }
@@ -155,6 +163,19 @@ export default function AdminBrandsPage() {
           + Add Brand
         </Link>
       </div>
+
+      {/* Error Message Display */}
+      {errorMessage && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 text-sm">{errorMessage}</p>
+          <button
+            onClick={() => setErrorMessage("")}
+            className="mt-2 text-red-600 text-sm underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Global Search Bar */}
       <div className="mb-4">

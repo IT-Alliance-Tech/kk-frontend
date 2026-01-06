@@ -36,9 +36,6 @@ export default function EditProductPage() {
           getCategories(),
         ]);
 
-        // Log full response for debugging
-        console.log('PRODUCT FETCH RESPONSE:', productRes);
-
         // Defensive access to product in response
         // After apiGetAuth unwrapping, check multiple possible paths
         const product = productRes?.product || productRes?.data?.product || null;

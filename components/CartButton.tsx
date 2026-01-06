@@ -1,16 +1,18 @@
 "use client";
 import { useCart } from "@/components/CartContext";
+import { useToast } from "@/components/ToastContext";
 
 export default function CartButton() {
   const { items, total, clearCart } = useCart();
+  const { showToast } = useToast();
 
   const handleBuyNow = async () => {
     if (items.length === 0) {
-      alert("Your cart is empty!");
+      showToast("Your cart is empty", "info");
       return;
     }
 
-    alert(`Order placed for ₹${total.toFixed(2)} (${items.length} items)`);
+    showToast(`Order placed for ₹${total.toFixed(2)} (${items.length} items)`, "success");
 
     // ✅ Clear cart after purchase
     clearCart();

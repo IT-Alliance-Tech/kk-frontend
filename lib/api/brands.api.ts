@@ -51,19 +51,14 @@ export async function getBrand(slug: string): Promise<Brand | null> {
   
   try {
     // Primary attempt: backend should handle slug/id/variations
-    console.log(`🔍 Attempting to fetch brand: ${slug}`);
     const response = await apiFetch<BrandApiResponse>(`/brands/${encodedSlug}`);
     
     // ADAPTER: Normalize response using adapter
     const brand = normalizeBrandResponse(response);
-    console.log(`✅ Brand found via direct API call: ${brand.name}`);
     return brand;
   } catch (primaryError: any) {
-    console.log(`⚠️ Primary brand fetch failed for "${slug}":`, primaryError?.message || primaryError);
-    
     // Fallback: fetch all brands and search client-side
     try {
-      console.log(`🔄 Attempting client-side brand search for: ${slug}`);
       const allBrands = await getBrands();
       
       // Normalize the search slug
@@ -89,14 +84,12 @@ export async function getBrand(slug: string): Promise<Brand | null> {
       });
       
       if (brand) {
-        console.log(`✅ Brand found via client-side search: ${brand.name}`);
         return brand;
       }
       
-      console.log(`❌ Brand not found after all attempts: ${slug}`);
       return null;
     } catch (fallbackError) {
-      console.error("❌ Fallback brand search failed:", fallbackError);
+      console.error("Fallback brand search failed:", fallbackError);
       return null;
     }
   }
