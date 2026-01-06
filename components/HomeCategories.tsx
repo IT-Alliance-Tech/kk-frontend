@@ -42,7 +42,6 @@ export default function HomeCategories() {
             try {
               img = apiImageUrl || getCategoryLogoUrl(c.slug ?? c._id ?? "") || "";
             } catch (e) {
-              console.debug("getCategoryLogoUrl error for", c, e);
               img = apiImageUrl || "";
             }
             return { ...c, imageUrl: img };

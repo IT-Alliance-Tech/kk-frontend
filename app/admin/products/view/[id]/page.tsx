@@ -33,9 +33,6 @@ export default function ViewProductPage() {
           getCategories(),
         ]);
 
-        // Log full response for debugging
-        console.log('VIEW PRODUCT RESPONSE:', productRes);
-
         // Defensive access to product in response
         // After apiGetAuth unwrapping, check multiple possible paths
         const fetchedProduct = productRes?.product || productRes?.data?.product || null;

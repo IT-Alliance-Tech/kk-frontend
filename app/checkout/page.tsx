@@ -9,10 +9,13 @@ import { getAddresses } from "@/lib/api/user.api";
 import { getAccessToken } from "@/lib/utils/auth";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
 import GlobalLoader from "@/components/common/GlobalLoader"; // use default placeholder when product has no image or to replace dummy imports
+import { useToast } from "@/components/ToastContext";
+import { getErrorMessage } from "@/lib/utils/errorHandler";
 
 function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const { items, clearCart } = useCart();
 
   const [loading, setLoading] = useState(false);
@@ -88,11 +91,11 @@ function CheckoutPageContent() {
   // 🛒 Handle order placement
   async function handlePlaceOrder() {
     if (!items || items.length === 0) {
-      alert("Cart is empty");
+      showToast("Your cart is empty", "info");
       return;
     }
     if (!name || !phone || !address || !city || !pin) {
-      alert("Please fill all required address fields");
+      showToast("Please fill all required address fields", "error");
       return;
     }
 
@@ -132,7 +135,8 @@ function CheckoutPageContent() {
       router.push(`/payment?orderId=${order._id || order.id}`);
     } catch (err: any) {
       console.error("Order placement error:", err);
-      alert("Failed to place order: " + err.message);
+      const message = getErrorMessage(err, "Failed to place order. Please try again.");
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
