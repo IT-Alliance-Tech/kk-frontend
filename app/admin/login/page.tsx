@@ -34,6 +34,10 @@ export default function AdminLoginPage() {
       // Store token and admin info
       localStorage.setItem("adminToken", token);
       localStorage.setItem("adminUser", JSON.stringify(admin || {}));
+      
+      // Notify auth provider to update state
+      window.dispatchEvent(new Event('auth:update'));
+      
       router.push("/admin");
     } catch (err: any) {
       console.error("Admin login error:", err);

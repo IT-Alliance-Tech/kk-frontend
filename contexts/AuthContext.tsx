@@ -165,11 +165,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+
+    const onAuthUpdate = () => {
+      // Handle auth:update event dispatched by login flows (including admin)
+      const storedToken = typeof window !== "undefined" 
+        ? (localStorage.getItem("token") || localStorage.getItem("adminToken"))
+        : null;
+      const storedUser = typeof window !== "undefined"
+        ? (localStorage.getItem("user") || localStorage.getItem("adminUser"))
+        : null;
+      
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        try {
+          const parsed = JSON.parse(storedUser);
+          setUser(parsed);
+        } catch (e) {
+          // If parse fails, fetch from backend
+          if (storedToken) {
+            loadBackendProfile(storedToken);
+          }
+        }
+      }
+    };
+
     window.addEventListener("storage", onStorage);
+    window.addEventListener("auth:update", onAuthUpdate);
 
     return () => {
       data?.subscription?.unsubscribe?.();
       window.removeEventListener("storage", onStorage);
+      window.removeEventListener("auth:update", onAuthUpdate);
     };
   }, []);
 
@@ -194,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
 
     if (typeof window !== "undefined") {
-      window.location.replace("/login");
+      window.location.replace("/");
     }
   }, [supabase]);
 

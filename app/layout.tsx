@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideFooter = pathname.startsWith('/admin');
+  const hideFooter = pathname.startsWith('/admin') || pathname.startsWith('/account');
 
   useEffect(() => {
     if (typeof window !== "undefined") {

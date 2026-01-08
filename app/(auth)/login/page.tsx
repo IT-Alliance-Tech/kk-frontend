@@ -11,7 +11,7 @@ interface LoginPageProps {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
-  const redirectTo = params.redirect || "/orders";
+  const redirectTo = params.redirect || "/";
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -44,11 +44,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
         </div>
 
-        <RequestOtpClient purpose="login" />
-
-        {redirectTo && (
-          <input type="hidden" name="redirectTo" value={redirectTo} />
-        )}
+        <RequestOtpClient purpose="login" redirectTo={redirectTo} />
       </div>
     </div>
   );

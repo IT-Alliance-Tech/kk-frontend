@@ -117,11 +117,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const storedToken = localStorage.getItem("token");
+      // Check for both regular user token and admin token
+      const storedToken = localStorage.getItem("token") || localStorage.getItem("adminToken");
 
       if (storedToken) {
         setToken(storedToken);
-        const cached = localStorage.getItem("user");
+        const cached = localStorage.getItem("user") || localStorage.getItem("adminUser");
         if (cached) {
           try {
             const parsed = JSON.parse(cached);
@@ -163,8 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     init();
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "token") {
-        const t = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (e.key === "token" || e.key === "adminToken") {
+        const t = typeof window !== "undefined" 
+          ? (localStorage.getItem("token") || localStorage.getItem("adminToken"))
+          : null;
         if (t) {
           setToken(t);
           // Only fetch if we don't already have user data
@@ -177,8 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
       }
-      if (e.key === "user") {
-        const u = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      if (e.key === "user" || e.key === "adminUser") {
+        const u = typeof window !== "undefined" 
+          ? (localStorage.getItem("user") || localStorage.getItem("adminUser"))
+          : null;
         if (u) {
           try {
             const parsed = JSON.parse(u);
@@ -194,8 +199,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+
+    const onAuthUpdate = () => {
+      // Handle auth:update event dispatched by login flows
+      const storedToken = typeof window !== "undefined" 
+        ? (localStorage.getItem("token") || localStorage.getItem("adminToken"))
+        : null;
+      const storedUser = typeof window !== "undefined"
+        ? (localStorage.getItem("user") || localStorage.getItem("adminUser"))
+        : null;
+      
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        try {
+          const parsed = JSON.parse(storedUser);
+          setUser(parsed);
+          setProfile(parsed);
+        } catch (e) {
+          // If parse fails, fetch from backend
+          fetchProfileFromBackend(storedToken);
+        }
+      }
+    };
+
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("auth:update", onAuthUpdate);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("auth:update", onAuthUpdate);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -221,6 +253,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
       } catch (e) {
         console.error("localStorage clear error:", e);
       }
@@ -246,13 +280,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Redirect after everything is cleared
     if (typeof window !== "undefined") {
-      window.location.replace("/login");
+      window.location.replace("/");
     }
   };
 
   const refreshUser = async () => {
     // Don't set loading to true on refresh to prevent UI flicker
-    const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const storedToken = typeof window !== "undefined" 
+      ? (localStorage.getItem("token") || localStorage.getItem("adminToken"))
+      : null;
     
     if (storedToken) {
       setToken(storedToken);
