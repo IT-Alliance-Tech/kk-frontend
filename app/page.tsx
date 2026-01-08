@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -16,34 +16,124 @@ import GlobalLoader from "@/components/common/GlobalLoader";
 const BrandsPreview = dynamic(() => import("@/components/BrandsPreview"), { ssr: false });
 const HomeCategories = dynamic(() => import("@/components/HomeCategories"), { ssr: false });
 
+const PRODUCTS_PER_BATCH = 8;
+const MAX_PRODUCTS = 40;
+
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [seed, setSeed] = useState<number | null>(null);
+  
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
 
+  // Initial load
   useEffect(() => {
-    fetchData();
+    fetchInitialData();
   }, []);
 
-  async function fetchData() {
+  // Setup IntersectionObserver for infinite scroll
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore || products.length >= MAX_PRODUCTS) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && !loadingMore && hasMore && products.length < MAX_PRODUCTS) {
+          loadMoreProducts();
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px", // Trigger 200px before reaching the element
+        threshold: 0.1,
+      }
+    );
+
+    observerRef.current = observer;
+
+    if (loadMoreTriggerRef.current) {
+      observer.observe(loadMoreTriggerRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loading, loadingMore, products.length]);
+
+  async function fetchInitialData() {
     setLoading(true);
     setError(false);
     try {
-      // Use lightweight homepage-specific API for random top picks
-      const res = await fetch(buildUrl("/api/homepage/top-picks"), { cache: "no-store" });
+      const res = await fetch(
+        buildUrl(`/api/homepage/top-picks?limit=${PRODUCTS_PER_BATCH}&offset=0`),
+        { cache: "no-store" }
+      );
+      
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       
       const json = await res.json();
       const items = json?.data || [];
+      const receivedSeed = json?.seed;
+      const receivedHasMore = json?.hasMore ?? false;
+      
       setProducts(Array.isArray(items) ? items : []);
+      setSeed(receivedSeed);
+      setHasMore(receivedHasMore && items.length < MAX_PRODUCTS);
     } catch (err) {
-      // Silently handle error - show empty state
       setError(true);
       setProducts([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
   }
+
+  const loadMoreProducts = useCallback(async () => {
+    if (loadingMore || !hasMore || products.length >= MAX_PRODUCTS || !seed) {
+      return;
+    }
+
+    setLoadingMore(true);
+    try {
+      const offset = products.length;
+      const res = await fetch(
+        buildUrl(`/api/homepage/top-picks?limit=${PRODUCTS_PER_BATCH}&offset=${offset}&seed=${seed}`),
+        { cache: "no-store" }
+      );
+      
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
+      
+      const json = await res.json();
+      const items = json?.data || [];
+      const receivedHasMore = json?.hasMore ?? false;
+      
+      if (Array.isArray(items) && items.length > 0) {
+        setProducts(prev => {
+          // Prevent duplicates
+          const existingIds = new Set(prev.map(p => p._id || p.id));
+          const newProducts = items.filter(item => !existingIds.has(item._id || item.id));
+          return [...prev, ...newProducts];
+        });
+      }
+      
+      setHasMore(receivedHasMore && (products.length + items.length) < MAX_PRODUCTS);
+    } catch (err) {
+      console.error('Failed to load more products:', err);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, products, seed]);
+
+  const showViewMoreButton = products.length >= MAX_PRODUCTS || (!hasMore && products.length > 0);
 
   return (
     <div className="bg-white min-h-screen">
@@ -87,7 +177,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Products preview grid: 8 items, 4 per row on desktop */}
+          {/* Products preview grid: 8 items initially, then load more */}
           <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-4 md:gap-4 lg:gap-6">
             {loading ? (
               <div className="col-span-4 flex justify-center py-12">
@@ -97,6 +187,32 @@ export default function HomePage() {
               products.map((p) => <ProductCard key={p._id || p.id} product={p} />)
             )}
           </div>
+
+          {/* Loading more indicator */}
+          {loadingMore && (
+            <div className="flex justify-center py-8">
+              <GlobalLoader size="medium" />
+            </div>
+          )}
+
+          {/* Infinite scroll trigger (invisible element) */}
+          {!loading && hasMore && !showViewMoreButton && products.length < MAX_PRODUCTS && (
+            <div ref={loadMoreTriggerRef} className="h-10 w-full" />
+          )}
+
+          {/* View More button after reaching 40 products */}
+          {!loading && showViewMoreButton && (
+            <div className="flex justify-center mt-8">
+              <Link href="/products">
+                <Button 
+                  size="lg"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  View More Products
+                </Button>
+              </Link>
+            </div>
+          )}
         </section>
       )}
 
