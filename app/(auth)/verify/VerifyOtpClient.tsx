@@ -94,8 +94,8 @@ export default function VerifyOtpClient({
       // Notify the provider in the same tab immediately
       window.dispatchEvent(new Event('auth:update'));
 
-      // Redirect to orders page by default, or specified redirect destination
-      const destination = redirectTo || "/orders";
+      // Redirect to homepage by default, or specified redirect destination
+      const destination = redirectTo || "/";
       router.push(destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to verify OTP");

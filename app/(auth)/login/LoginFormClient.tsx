@@ -29,7 +29,7 @@ interface LoginFormClientProps {
 }
 
 export default function LoginFormClient({
-  redirectTo = "/orders",
+  redirectTo = "/",
 }: LoginFormClientProps) {
   const router = useRouter();
   const { refreshUser } = useAuth();

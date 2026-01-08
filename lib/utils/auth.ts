@@ -19,7 +19,7 @@ export function getAccessToken(): string | null {
   }
 
   // Try localStorage with common key names
-  const storageKeys = ["accessToken", "access", "token"];
+  const storageKeys = ["accessToken", "access", "token", "adminToken"];
 
   for (const key of storageKeys) {
     const token = localStorage.getItem(key);

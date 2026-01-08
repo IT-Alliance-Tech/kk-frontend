@@ -11,7 +11,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ShoppingBag, User, MapPin, Heart } from "lucide-react";
+import { ShoppingBag, User, MapPin } from "lucide-react";
 
 const UserDashboardClient = dynamic(
   () => import("@/components/UserDashboardClient"),
@@ -43,13 +43,6 @@ export default function AccountPage() {
       href: "/account/addresses",
       icon: <MapPin className="w-6 h-6" />,
       color: "bg-purple-50 text-purple-600",
-    },
-    {
-      title: "Wishlist",
-      description: "View your saved items",
-      href: "/account/wishlist",
-      icon: <Heart className="w-6 h-6" />,
-      color: "bg-red-50 text-red-600",
     },
   ];
 

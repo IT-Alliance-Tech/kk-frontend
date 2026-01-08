@@ -8,9 +8,10 @@ import GlobalLoader from "@/components/common/GlobalLoader";
 
 interface RequestOtpClientProps {
   purpose: "login" | "signup" | "forgot";
+  redirectTo?: string;
 }
 
-export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
+export default function RequestOtpClient({ purpose, redirectTo }: RequestOtpClientProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,8 @@ export default function RequestOtpClient({ purpose }: RequestOtpClientProps) {
       // Navigate to verify page after brief delay
       setTimeout(() => {
         const encodedEmail = encodeURIComponent(email);
-        router.push(`/auth/verify?email=${encodedEmail}&purpose=${purpose}`);
+        const redirectParam = redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : '';
+        router.push(`/auth/verify?email=${encodedEmail}&purpose=${purpose}${redirectParam}`);
       }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send OTP");

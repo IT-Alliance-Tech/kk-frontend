@@ -2,7 +2,7 @@
  * Dashboard Layout Component
  * Provides a responsive layout with sidebar navigation for user account pages
  * Features:
- * - Left sidebar with navigation links (Dashboard, Profile, Orders, Addresses, Wishlist)
+ * - Left sidebar with navigation links (Dashboard, Profile, Orders, Addresses)
  * - Top navigation bar with title, cart button, and logout
  * - Mobile-responsive collapsible sidebar
  * - Clean white/red theme matching site design
@@ -24,7 +24,6 @@ import {
   User,
   ShoppingBag,
   MapPin,
-  Heart,
   Menu,
   X,
   LogOut,
@@ -67,11 +66,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       label: "Addresses",
       href: "/account/addresses",
       icon: <MapPin className="w-5 h-5" />,
-    },
-    {
-      label: "Wishlist",
-      href: "/account/wishlist",
-      icon: <Heart className="w-5 h-5" />,
     },
   ];
 
@@ -246,8 +240,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </aside>
 
         {/* Main Content Area (right column) */}
-        {/* ACCOUNT-REDESIGN-BYPASS — 2025-12-05 (REVERT BEFORE PUSH) */}
-        {/* Right column is an internal scroll container so the left sidebar doesn't move */}
         <main className="flex-1 min-w-0">
           <div
             className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8"
@@ -257,89 +249,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               WebkitOverflowScrolling: "touch",
             }}
           >
-            {/* --- RIGHT SIDE: REDESIGNED (START) --- */}
-            {/* Welcome card */}
-            <div className="bg-white rounded-lg p-6 shadow-sm mb-6 border">
-              <h2 className="text-2xl font-bold text-slate-900">Welcome back, there! 👋</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Manage your account, track orders, and update your preferences.
-              </p>
-            </div>
-
-            {/* Feature cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Link
-                href="/account/profile"
-                className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col"
-              >
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded bg-blue-50 mb-3">
-                  <User className="w-5 h-5 text-blue-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-slate-900">Profile</h3>
-                <p className="text-xs text-slate-500 mt-1">Update your personal information</p>
-              </Link>
-
-              <Link
-                href="/account/orders"
-                className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col"
-              >
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded bg-emerald-50 mb-3">
-                  <ShoppingBag className="w-5 h-5 text-emerald-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-slate-900">Orders</h3>
-                <p className="text-xs text-slate-500 mt-1">View your order history</p>
-              </Link>
-
-              <Link
-                href="/account/addresses"
-                className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col"
-              >
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded bg-purple-50 mb-3">
-                  <MapPin className="w-5 h-5 text-purple-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-slate-900">Addresses</h3>
-                <p className="text-xs text-slate-500 mt-1">Manage your addresses</p>
-              </Link>
-
-              <Link
-                href="/account/wishlist"
-                className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col"
-              >
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded bg-pink-50 mb-3">
-                  <Heart className="w-5 h-5 text-pink-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-slate-900">Wishlist</h3>
-                <p className="text-xs text-slate-500 mt-1">View your saved items</p>
-              </Link>
-            </div>
-
-            {/* Account info */}
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
-              <h4 className="text-lg font-medium text-slate-900 mb-4">Account Information</h4>
-              <div className="divide-y">
-                <div className="py-4 flex items-center justify-between">
-                  <div className="text-sm text-slate-600">Email</div>
-                  <div className="text-sm text-slate-900">Not set</div>
-                </div>
-                <div className="py-4 flex items-center justify-between">
-                  <div className="text-sm text-slate-600">Name</div>
-                  <div className="text-sm text-slate-900">Not set</div>
-                </div>
-                <div className="py-4 flex items-center justify-between">
-                  <div className="text-sm text-slate-600">Phone</div>
-                  <div className="text-sm text-slate-900">Not set</div>
-                </div>
-                <div className="py-4 flex items-center justify-between">
-                  <div className="text-sm text-slate-600">Member Since</div>
-                  <div className="text-sm text-slate-900">Recently</div>
-                </div>
-              </div>
-            </div>
-
-            {/* preserve original {children} for dynamic pages, but keep it under the redesigned area (commented) */}
-            {/* ORIGINAL-CHILDREN-PRESERVED — COMMENTED — REVERTABLE */}
-            {/* <div className="mt-6">{children}</div> */}
-            {/* --- RIGHT SIDE: REDESIGNED (END) --- */}
+            {children}
           </div>
         </main>
       </div>
