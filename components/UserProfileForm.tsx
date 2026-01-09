@@ -1,12 +1,7 @@
 /**
- * User Profile Form Component
- * Allows users to view and edit their profile information
- * Features:
- * - Form fields for name, email, phone
- * - Real-time validation
- * - Loading and error states
- * - Success notifications
- * - Responsive design
+ * User Profile Form Component - REDESIGNED
+ * Modern, premium form with enhanced UX
+ * Features floating labels, smooth animations, and clean validation
  */
 
 "use client";
@@ -20,6 +15,9 @@ import {
   Check,
   AlertCircle,
   User as UserIcon,
+  Mail,
+  Phone,
+  Camera,
 } from "lucide-react";
 import GlobalLoader from "@/components/common/GlobalLoader";
 
@@ -141,133 +139,185 @@ export default function UserProfileForm() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-6 sm:p-8">
-        {/* Profile Picture Section */}
-        <div className="flex items-center gap-6 pb-6 mb-6 border-b border-gray-200">
-          <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
-            <UserIcon className="w-10 h-10 text-red-600" />
-          </div>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      {/* Header Section with Premium Design */}
+      <div className="bg-gradient-to-r from-slate-50 to-white p-6 sm:p-8 border-b border-slate-200">
+        <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            <h2 className="text-2xl font-bold text-slate-900 mb-1">Profile Settings</h2>
+            <p className="text-sm text-slate-600">
+              Update your personal information and preferences
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 sm:p-8">
+        {/* Profile Picture Section - Premium */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 mb-8 border-b border-slate-200">
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-xl shadow-emerald-500/20">
+              <UserIcon className="w-12 h-12 text-white" />
+            </div>
+            <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-xl shadow-lg border-2 border-slate-200 flex items-center justify-center group-hover:bg-emerald-50 group-hover:border-emerald-500 transition-all duration-200">
+              <Camera className="w-5 h-5 text-slate-600 group-hover:text-emerald-600" />
+            </button>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               Profile Picture
             </h3>
-            <p className="text-sm text-gray-600 mb-2">
-              Update your profile photo
+            <p className="text-sm text-slate-600 mb-3">
+              Upload a profile photo to personalize your account
             </p>
-            <button className="text-sm text-red-600 hover:text-red-700 font-medium">
+            <button className="px-4 py-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-all duration-200">
               Change Photo
             </button>
           </div>
         </div>
 
-        {/* Success Message */}
+        {/* Success Message - Modern */}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-            <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <p className="text-sm text-green-800">
-              Profile updated successfully!
-            </p>
+          <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-l-4 border-emerald-500 rounded-xl flex items-center gap-3 animate-in slide-in-from-top duration-300">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Check className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-emerald-900">Success!</p>
+              <p className="text-sm text-emerald-700">Profile updated successfully</p>
+            </div>
           </div>
         )}
 
-        {/* Error Message */}
+        {/* Error Message - Modern */}
         {apiError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <p className="text-sm text-red-800">{apiError}</p>
+          <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-red-100/50 border-l-4 border-red-500 rounded-xl flex items-center gap-3 animate-in slide-in-from-top duration-300">
+            <div className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/20">
+              <AlertCircle className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-900">Error</p>
+              <p className="text-sm text-red-700">{apiError}</p>
+            </div>
           </div>
         )}
 
-        {/* Profile Form */}
+        {/* Profile Form - Modern Floating Labels */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name Field */}
-          <div>
+          {/* Name Field - Modern */}
+          <div className="relative">
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="absolute -top-2.5 left-3 px-2 text-xs font-medium text-slate-700 bg-white z-10"
             >
               Full Name *
             </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
-                errors.name
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-300 bg-white"
-              }`}
-              placeholder="Enter your full name"
-            />
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ${
+                  errors.name
+                    ? "border-red-300 bg-red-50/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+                placeholder="Enter your full name"
+              />
+            </div>
             {errors.name && (
-              <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.name}
+              </p>
             )}
           </div>
 
-          {/* Email Field */}
-          <div>
+          {/* Email Field - Modern */}
+          <div className="relative">
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="absolute -top-2.5 left-3 px-2 text-xs font-medium text-slate-700 bg-white z-10"
             >
               Email Address *
             </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
-                errors.email
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-300 bg-white"
-              }`}
-              placeholder="your.email@example.com"
-            />
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ${
+                  errors.email
+                    ? "border-red-300 bg-red-50/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+                placeholder="your.email@example.com"
+              />
+            </div>
             {errors.email && (
-              <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.email}
+              </p>
             )}
           </div>
 
-          {/* Phone Field */}
-          <div>
+          {/* Phone Field - Modern */}
+          <div className="relative">
             <label
               htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="absolute -top-2.5 left-3 px-2 text-xs font-medium text-slate-700 bg-white z-10"
             >
               Phone Number
             </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
-                errors.phone
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-300 bg-white"
-              }`}
-              placeholder="+1 (555) 123-4567"
-            />
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ${
+                  errors.phone
+                    ? "border-red-300 bg-red-50/50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
+                }`}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
             {errors.phone && (
-              <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.phone}
+              </p>
             )}
-            <p className="mt-2 text-xs text-gray-500">
-              Optional. Include country code for international numbers.
-            </p>
+            {!errors.phone && (
+              <p className="mt-2 text-xs text-slate-500">
+                Optional. Include country code for international numbers.
+              </p>
+            )}
           </div>
 
-          {/* Submit Button */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          {/* Submit Button - Premium */}
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="px-6 py-3 text-sm font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-8 py-3 text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {loading ? (
                 <>

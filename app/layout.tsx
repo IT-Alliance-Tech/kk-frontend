@@ -16,6 +16,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const hideFooter = pathname.startsWith('/admin') || pathname.startsWith('/account');
+  const hideNavbar = pathname.startsWith('/account');
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -30,7 +31,7 @@ export default function RootLayout({
         <CartProvider>
           <ClientProviders>
             <ToastProvider>
-              <Navbar />
+              {!hideNavbar && <Navbar />}
               <main className="min-h-screen bg-gray-50">{children}</main>
               {!hideFooter && <Footer />}
             </ToastProvider>
