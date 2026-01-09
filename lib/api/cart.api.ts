@@ -102,7 +102,7 @@ async function fetchWithAuth(
  * @returns Cart with items and total
  */
 export async function getCart(): Promise<BackendCart> {
-  const data = await fetchWithAuth("/api/cart");
+  const data = await fetchWithAuth("/cart");
   return data || { items: [], total: 0 };
 }
 
@@ -122,7 +122,7 @@ export async function addToCart(
   if (variantId) {
     payload.variantId = variantId;
   }
-  return fetchWithAuth("/api/cart", {
+  return fetchWithAuth("/cart", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -144,7 +144,7 @@ export async function updateCartItem(
   if (variantId) {
     payload.variantId = variantId;
   }
-  return fetchWithAuth("/api/cart/item", {
+  return fetchWithAuth("/cart/item", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
@@ -164,7 +164,7 @@ export async function removeCartItem(
   if (variantId) {
     payload.variantId = variantId;
   }
-  return fetchWithAuth("/api/cart/item", {
+  return fetchWithAuth("/cart/item", {
     method: "DELETE",
     body: JSON.stringify(payload),
   });
@@ -175,7 +175,7 @@ export async function removeCartItem(
  * @returns Empty cart
  */
 export async function clearCart(): Promise<BackendCart> {
-  return fetchWithAuth("/api/cart/clear", {
+  return fetchWithAuth("/cart/clear", {
     method: "POST",
   });
 }

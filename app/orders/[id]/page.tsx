@@ -9,6 +9,7 @@ import { use, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getOrder } from "@/lib/api/orders.api";
+import { getReturnRequestsByOrder, type ReturnRequest } from "@/lib/api/returns.api";
 import type { Order, OrderUser } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +24,10 @@ import {
   CreditCard,
   Calendar,
   User,
+  RotateCcw,
 } from "lucide-react";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import ReturnRequestModal from "@/components/ReturnRequestModal";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;
@@ -36,6 +39,19 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    productId: string;
+    productName: string;
+    productImage?: string;
+    productPrice?: number;
+    quantity?: number;
+  }>({
+    isOpen: false,
+    productId: "",
+    productName: "",
+  });
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -58,6 +74,14 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         setError("Order not found");
       } else {
         setOrder(data);
+        // Fetch return requests for this order
+        try {
+          const returns = await getReturnRequestsByOrder(id);
+          setReturnRequests(returns);
+        } catch (err) {
+          // Silently fail - return requests are optional
+          console.error("Failed to fetch return requests:", err);
+        }
       }
     } catch (err) {
       const errorMessage =
@@ -109,6 +133,52 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     if (!user) return "N/A";
     if (typeof user === "string") return user;
     return user.name || user.email || "N/A";
+  };
+
+  // Check if a return request exists for a specific product
+  const getReturnRequestForProduct = (productId: string): ReturnRequest | undefined => {
+    return returnRequests.find((req) => req.productId === productId || req.productId._id === productId);
+  };
+
+  // Check if order is eligible for returns (not cancelled, not too old, etc.)
+  const isOrderEligibleForReturns = (): boolean => {
+    if (!order) return false;
+    // Future-safe: Add eligibility checks here (e.g., delivery date, order status)
+    const ineligibleStatuses = ["cancelled", "rejected"];
+    return !ineligibleStatuses.includes(order.status?.toLowerCase() || "");
+  };
+
+  // Open return modal for a specific product
+  const openReturnModal = (
+    productId: string,
+    productName: string,
+    productImage?: string,
+    productPrice?: number,
+    quantity?: number
+  ) => {
+    setModalState({
+      isOpen: true,
+      productId,
+      productName,
+      productImage,
+      productPrice,
+      quantity,
+    });
+  };
+
+  // Close return modal
+  const closeReturnModal = () => {
+    setModalState({
+      isOpen: false,
+      productId: "",
+      productName: "",
+    });
+  };
+
+  // Handle successful return request submission
+  const handleReturnSuccess = () => {
+    // Refetch order to update return requests
+    fetchOrder();
   };
 
   if (loading) {
@@ -209,26 +279,79 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {order.items?.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex-grow">
-                        <p className="font-medium">
-                          {typeof item.product === "string"
-                            ? item.product
-                            : item.name || "Product"}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          Quantity: {item.qty}
-                        </p>
+                  {order.items?.map((item, index) => {
+                    const productId = typeof item.product === "string" ? item.product : "";
+                    const productName = item.name || "Product";
+                    const productImage = undefined; // Image not in OrderItem type
+                    const productPrice = item.price;
+                    const quantity = item.qty;
+                    const returnRequest = getReturnRequestForProduct(productId);
+
+                    return (
+                      <div key={index}>
+                        <div className="flex items-start justify-between gap-4">
+                          {/* Product info */}
+                          <div className="flex-grow">
+                            <p className="font-medium">{productName}</p>
+                            <p className="text-sm text-slate-500">
+                              Quantity: {quantity}
+                            </p>
+                          </div>
+
+                          {/* Price */}
+                          <div className="text-right">
+                            <p className="font-semibold">
+                              {formatCurrency(productPrice)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Return status or button */}
+                        {returnRequest ? (
+                          <div className="mt-2 flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={`
+                                ${
+                                  returnRequest.status === "pending"
+                                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                    : returnRequest.status === "approved"
+                                      ? "bg-green-50 text-green-700 border-green-200"
+                                      : returnRequest.status === "rejected"
+                                        ? "bg-red-50 text-red-700 border-red-200"
+                                        : "bg-blue-50 text-blue-700 border-blue-200"
+                                }
+                              `}
+                            >
+                              Return {returnRequest.actionType}: {returnRequest.status}
+                            </Badge>
+                          </div>
+                        ) : (
+                          isOrderEligibleForReturns() && (
+                            <div className="mt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  openReturnModal(
+                                    productId,
+                                    productName,
+                                    productImage,
+                                    productPrice,
+                                    quantity
+                                  )
+                                }
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Return / Replace / Refund
+                              </Button>
+                            </div>
+                          )
+                        )}
                       </div>
-                      <p className="font-semibold">
-                        {formatCurrency(item.price)}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <Separator className="my-4" />
                 <div className="space-y-2">
@@ -386,6 +509,21 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </div>
         </div>
       </section>
+
+      {/* Return Request Modal */}
+      {order && (
+        <ReturnRequestModal
+          isOpen={modalState.isOpen}
+          onClose={closeReturnModal}
+          orderId={id}
+          productId={modalState.productId}
+          productName={modalState.productName}
+          productImage={modalState.productImage}
+          productPrice={modalState.productPrice}
+          quantity={modalState.quantity}
+          onSuccess={handleReturnSuccess}
+        />
+      )}
     </div>
   );
 }
