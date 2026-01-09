@@ -246,3 +246,26 @@ export async function applyCouponForUser(code: string, cartItems: any[]) {
   const data = await response.json();
   return data.data || data;
 }
+
+/**
+ * Get active coupons for users (PUBLIC endpoint)
+ * GET /api/coupons/active
+ * Returns only active, valid coupons without admin-only fields
+ */
+export async function getActiveCoupons() {
+  const response = await fetch(`${API_BASE}/coupons/active`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to fetch active coupons' }));
+    throw new Error(error.error?.message || error.message || 'Failed to fetch active coupons');
+  }
+
+  const data = await response.json();
+  return data.data || data;
+}
+
