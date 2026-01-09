@@ -9,14 +9,19 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getMyOrders } from "@/lib/api/orders.api";
+import { getMyReturnRequests, type ReturnRequest } from "@/lib/api/returns.api";
 import { ApiError } from "@/lib/api";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import ReturnRequestModal from "@/components/ReturnRequestModal";
 
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
+  const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
+  const [activeTab, setActiveTab] = useState<"orders" | "returns">("orders");
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -25,6 +30,15 @@ export default function OrdersPage() {
 
       const data = await getMyOrders();
       setOrders(data);
+
+      // Also fetch return requests
+      try {
+        const returns = await getMyReturnRequests(1, 50);
+        setReturnRequests(returns.returnRequests || []);
+      } catch (err) {
+        // Silently fail for return requests
+        console.error("Failed to fetch return requests:", err);
+      }
     } catch (err) {
       setError(err as ApiError);
 
@@ -185,7 +199,7 @@ export default function OrdersPage() {
   }
 
   // Empty state
-  if (orders.length === 0) {
+  if (orders.length === 0 && returnRequests.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
@@ -200,6 +214,26 @@ export default function OrdersPage() {
               You haven&apos;t placed any orders. Start shopping!
             </p>
 
+            {/* Demo Button for Empty State */}
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+              <div className="flex flex-col gap-3">
+                <div>
+                  <h3 className="font-semibold text-blue-900 mb-1">
+                    Have questions about Return / Refund?
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    Try our demo to see how the return process works
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDemoModal(true)}
+                  className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+                >
+                  Try Demo
+                </button>
+              </div>
+            </div>
+
             <Link
               href="/products"
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition"
@@ -208,6 +242,19 @@ export default function OrdersPage() {
             </Link>
           </div>
         </div>
+
+        {/* Demo Modal */}
+        <ReturnRequestModal
+          isOpen={showDemoModal}
+          onClose={() => setShowDemoModal(false)}
+          orderId="DEMO-ORDER-001"
+          productId="DEMO-PRODUCT-001"
+          productName="Prestige Pressure Cooker (Demo)"
+          productPrice={1999}
+          quantity={1}
+          onSuccess={fetchOrders}
+          isDemo={true}
+        />
       </div>
     );
   }
@@ -226,108 +273,284 @@ export default function OrdersPage() {
           </button>
         </div>
 
-        {/* Orders grid - responsive */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {orders.map((order: any) => {
-            const orderId = order._id || order.id || "unknown";
-            const shortId = orderId.toString().slice(0, 8).toUpperCase();
-            const createdDate = formatDate(order.createdAt || order.created_at);
-            const status = order.status || "pending";
-            const total =
-              order.total || order.totalPrice || order.total_price || 0;
-            const items = order.items || [];
+        {/* Demo Button */}
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-1">
+                Have questions about Return / Refund?
+              </h3>
+              <p className="text-sm text-blue-700">
+                Try our demo to see how the return process works
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDemoModal(true)}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+            >
+              Try Demo
+            </button>
+          </div>
+        </div>
 
-            return (
-              <div
-                key={orderId}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
-              >
-                {/* Order header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg text-slate-900">
-                      #{shortId}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1">{createdDate}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      status === "delivered"
-                        ? "bg-green-100 text-green-800"
-                        : status === "shipped"
-                          ? "bg-blue-100 text-blue-800"
-                          : status === "processing"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : status === "cancelled"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-slate-100 text-slate-800"
-                    }`}
-                  >
-                    {status}
-                  </span>
-                </div>
+        {/* Tab Navigation */}
+        <div className="mb-6 border-b border-slate-200">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`px-4 py-2 font-medium border-b-2 transition ${
+                activeTab === "orders"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Orders ({orders.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("returns")}
+              className={`px-4 py-2 font-medium border-b-2 transition ${
+                activeTab === "returns"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Return Requests ({returnRequests.length})
+            </button>
+          </div>
+        </div>
 
-                {/* Order details */}
-                <div className="border-t border-slate-200 pt-4">
-                  <div className="mb-3">
-                    <p className="text-sm font-medium text-slate-700 mb-2">
-                      Items:
-                    </p>
-                    <ul className="space-y-1">
-                      {items.slice(0, 3).map((item: any, idx: number) => {
-                        const itemName =
-                          item.title ||
-                          item.name ||
-                          item.product?.name ||
-                          "Unknown";
-                        const qty = item.qty || item.quantity || 1;
-
-                        return (
-                          <li
-                            key={idx}
-                            className="text-sm text-slate-600 flex justify-between"
-                          >
-                            <span className="truncate flex-1">{itemName}</span>
-                            <span className="ml-2 text-slate-500">×{qty}</span>
-                          </li>
-                        );
-                      })}
-                      {items.length > 3 && (
-                        <li className="text-xs text-slate-500 italic">
-                          +{items.length - 3} more item(s)
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-
-                  {/* Total */}
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <span className="text-sm font-medium text-slate-700">
-                      Total:
-                    </span>
-                    <span className="text-lg font-bold text-slate-900">
-                      {formatCurrency(total)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* View details link */}
+        {/* Orders Tab */}
+        {activeTab === "orders" && (
+          <>
+            {orders.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+                <div className="text-6xl mb-4">📦</div>
+                <h2 className="text-2xl font-bold mb-2 text-slate-900">
+                  No Orders Yet
+                </h2>
+                <p className="text-slate-600 mb-6">
+                  You haven&apos;t placed any orders. Start shopping!
+                </p>
                 <Link
-                  href={`/orders/${orderId}`}
-                  className="mt-4 block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg transition"
+                  href="/products"
+                  className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition"
                 >
-                  View Details
+                  Browse Products
                 </Link>
               </div>
-            );
-          })}
-        </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {orders.map((order: any) => {
+                  const orderId = order._id || order.id || "unknown";
+                  const shortId = orderId.toString().slice(0, 8).toUpperCase();
+                  const createdDate = formatDate(order.createdAt || order.created_at);
+                  const status = order.status || "pending";
+                  const total =
+                    order.total || order.totalPrice || order.total_price || 0;
+                  const items = order.items || [];
+
+                  return (
+                    <div
+                      key={orderId}
+                      className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6"
+                    >
+                      {/* Order header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg text-slate-900">
+                            #{shortId}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1">{createdDate}</p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            status === "delivered"
+                              ? "bg-green-100 text-green-800"
+                              : status === "shipped"
+                                ? "bg-blue-100 text-blue-800"
+                                : status === "processing"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : status === "cancelled"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-slate-100 text-slate-800"
+                          }`}
+                        >
+                          {status}
+                        </span>
+                      </div>
+
+                      {/* Order details */}
+                      <div className="border-t border-slate-200 pt-4">
+                        <div className="mb-3">
+                          <p className="text-sm font-medium text-slate-700 mb-2">
+                            Items:
+                          </p>
+                          <ul className="space-y-1">
+                            {items.slice(0, 3).map((item: any, idx: number) => {
+                              const itemName =
+                                item.title ||
+                                item.name ||
+                                item.product?.name ||
+                                "Unknown";
+                              const qty = item.qty || item.quantity || 1;
+
+                              return (
+                                <li
+                                  key={idx}
+                                  className="text-sm text-slate-600 flex justify-between"
+                                >
+                                  <span className="truncate flex-1">{itemName}</span>
+                                  <span className="ml-2 text-slate-500">×{qty}</span>
+                                </li>
+                              );
+                            })}
+                            {items.length > 3 && (
+                              <li className="text-xs text-slate-500 italic">
+                                +{items.length - 3} more item(s)
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+
+                        {/* Total */}
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                          <span className="text-sm font-medium text-slate-700">
+                            Total:
+                          </span>
+                          <span className="text-lg font-bold text-slate-900">
+                            {formatCurrency(total)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* View details link */}
+                      <Link
+                        href={`/orders/${orderId}`}
+                        className="mt-4 block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg transition"
+                      >
+                        View Details
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Return Requests Tab */}
+        {activeTab === "returns" && (
+          <>
+            {returnRequests.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+                <div className="text-6xl mb-4">📋</div>
+                <h2 className="text-2xl font-bold mb-2 text-slate-900">
+                  No Return Requests
+                </h2>
+                <p className="text-slate-600">
+                  You haven&apos;t submitted any return requests yet.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {returnRequests.map((request) => {
+                  const productName =
+                    typeof request.productId === "string"
+                      ? request.productId
+                      : request.productId?.name || "Unknown Product";
+                  const orderId = request.orderId || "";
+                  const shortOrderId =
+                    typeof orderId === "string"
+                      ? orderId.slice(0, 8).toUpperCase()
+                      : "N/A";
+
+                  return (
+                    <div
+                      key={request._id}
+                      className="bg-white rounded-lg shadow p-6"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg text-slate-900">
+                            {productName}
+                          </h3>
+                          <p className="text-sm text-slate-600 mt-1">
+                            Order #{shortOrderId}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            request.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : request.status === "approved"
+                                ? "bg-green-100 text-green-800"
+                                : request.status === "rejected"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {request.status}
+                        </span>
+                      </div>
+
+                      <div className="border-t border-slate-200 pt-4 space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Action:</span>
+                          <span className="font-medium capitalize">
+                            {request.actionType}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Issue:</span>
+                          <span className="font-medium capitalize">
+                            {request.issueType.replace("-", " ")}
+                          </span>
+                        </div>
+                        {request.issueDescription && (
+                          <div className="pt-2">
+                            <p className="text-slate-600 mb-1">Description:</p>
+                            <p className="text-slate-900 bg-slate-50 p-2 rounded">
+                              {request.issueDescription}
+                            </p>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Submitted:</span>
+                          <span className="text-slate-500">
+                            {formatDate(request.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-slate-500">
-          <p>Showing {orders.length} order(s)</p>
+          {activeTab === "orders" ? (
+            <p>Showing {orders.length} order(s)</p>
+          ) : (
+            <p>Showing {returnRequests.length} return request(s)</p>
+          )}
         </div>
       </div>
+
+      {/* Demo Modal */}
+      <ReturnRequestModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        orderId="DEMO-ORDER-001"
+        productId="DEMO-PRODUCT-001"
+        productName="Prestige Pressure Cooker (Demo)"
+        productPrice={1999}
+        quantity={1}
+        onSuccess={fetchOrders}
+        isDemo={true}
+      />
     </div>
   );
 }
