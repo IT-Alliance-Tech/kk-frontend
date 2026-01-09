@@ -94,7 +94,12 @@ export default function AdminHomepagePage() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+
+      if (!res.ok) {
+        const errorMessage = data?.error?.message || "Upload failed";
+        throw new Error(errorMessage);
+      }
 
       form.reset();
       const heroData = await loadHeroImages();
@@ -524,6 +529,8 @@ function HeroSectionManagement({
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const activeCount = heroImages.filter(img => img.isActive).length;
   const sortedImages = [...heroImages].sort((a, b) => a.displayOrder - b.displayOrder);
+  const MAX_HERO_IMAGES = 8;
+  const isAtLimit = heroImages.length >= MAX_HERO_IMAGES;
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl shadow-sm border border-gray-200/80">
@@ -560,24 +567,38 @@ function HeroSectionManagement({
 
       {/* Quick Upload Toggle Button */}
       <div className="px-6 sm:px-8 py-4 bg-gray-50/80 border-b border-gray-200/60">
-        <button
-          onClick={() => setIsUploadOpen(!isUploadOpen)}
-          className="group flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
-        >
-          <svg 
-            className={`w-5 h-5 transition-transform duration-300 ${isUploadOpen ? 'rotate-45' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+        {isAtLimit ? (
+          <div className="flex items-start gap-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+            <svg className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-amber-900 mb-1">Maximum Limit Reached</h4>
+              <p className="text-sm text-amber-800">
+                You have reached the maximum of {MAX_HERO_IMAGES} hero images. Please delete an existing image to add a new one.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsUploadOpen(!isUploadOpen)}
+            className="group flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          <span>{isUploadOpen ? 'Close Upload Form' : 'Add New Hero Image'}</span>
-        </button>
+            <svg 
+              className={`w-5 h-5 transition-transform duration-300 ${isUploadOpen ? 'rotate-45' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>{isUploadOpen ? 'Close Upload Form' : 'Add New Hero Image'}</span>
+          </button>
+        )}
       </div>
 
       {/* Collapsible Upload Form */}
-      <div className={`overflow-hidden transition-all duration-300 ${isUploadOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className={`overflow-hidden transition-all duration-300 ${isUploadOpen && !isAtLimit ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="px-6 sm:px-8 py-6 bg-gradient-to-b from-gray-50/80 to-white border-b border-gray-200/60">
           <form onSubmit={(e) => { onUpload(e); setIsUploadOpen(false); }} className="space-y-5">
             {/* Image Upload - Featured */}
