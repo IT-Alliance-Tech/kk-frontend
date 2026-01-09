@@ -85,7 +85,19 @@ function CheckoutPageContent() {
 
   function handleAddressSelect(index: number) {
     setSelectedAddressIndex(index);
-    prefillAddress(addresses[index]);
+    if (index === -1) {
+      // User wants to enter new address - clear form
+      setName("");
+      setPhone("");
+      setAddress("");
+      setLine2("");
+      setCity("");
+      setState("");
+      setPin("");
+    } else {
+      // Pre-fill with selected address
+      prefillAddress(addresses[index]);
+    }
   }
 
   // 🛒 Handle order placement
@@ -153,18 +165,18 @@ function CheckoutPageContent() {
               Delivery Address
             </h2>
 
-            {/* Address Selection Dropdown */}
+            {/* Address Selection Dropdown - Only show when user has multiple addresses */}
             {addressesLoading ? (
               <div className="mb-4 flex justify-center py-4">
                 <GlobalLoader size="medium" />
               </div>
-            ) : addresses.length > 0 ? (
+            ) : addresses.length > 1 ? (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Saved Address
+                  Select Delivery Address
                 </label>
                 <select
-                  className="w-full border rounded px-3 py-2 text-sm sm:text-base"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
                   value={selectedAddressIndex}
                   onChange={(e) => handleAddressSelect(Number(e.target.value))}
                 >
@@ -177,7 +189,22 @@ function CheckoutPageContent() {
                   <option value={-1}>+ Enter New Address</option>
                 </select>
               </div>
+            ) : addresses.length === 1 ? (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <p className="text-sm text-emerald-700">
+                  <span className="font-medium">Using saved address:</span> {addresses[0]?.name} - {addresses[0]?.city}
+                </p>
+              </div>
             ) : null}
+
+            {/* Form Fields - Always editable */}
+            {addresses.length === 0 && !addressesLoading && (
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  No saved addresses found. Please enter your delivery address below.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <input
