@@ -219,7 +219,7 @@ export default function OrdersPage() {
               <div className="flex flex-col gap-3">
                 <div>
                   <h3 className="font-semibold text-blue-900 mb-1">
-                    Have questions about Return / Refund?
+                    Have questions about Returns?
                   </h3>
                   <p className="text-sm text-blue-700">
                     Try our demo to see how the return process works
@@ -278,7 +278,7 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-blue-900 mb-1">
-                Have questions about Return / Refund?
+                Have questions about Returns?
               </h3>
               <p className="text-sm text-blue-700">
                 Try our demo to see how the return process works
@@ -464,6 +464,13 @@ export default function OrdersPage() {
                       ? orderId.slice(0, 8).toUpperCase()
                       : "N/A";
 
+                  // Map action types for display (backward compatible)
+                  const displayActionType = request.actionType === "return_refund" 
+                    ? "Return + Refund" 
+                    : request.actionType === "return"
+                    ? "Return Only"
+                    : request.actionType; // Fallback for legacy data
+
                   return (
                     <div
                       key={request._id}
@@ -497,7 +504,7 @@ export default function OrdersPage() {
                         <div className="flex justify-between">
                           <span className="text-slate-600">Action:</span>
                           <span className="font-medium capitalize">
-                            {request.actionType}
+                            {displayActionType}
                           </span>
                         </div>
                         <div className="flex justify-between">

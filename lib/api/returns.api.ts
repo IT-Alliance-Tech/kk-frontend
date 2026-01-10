@@ -1,6 +1,6 @@
 /**
  * Return Requests API client
- * Handles all return/replace/refund related API calls
+ * Handles all return and refund related API calls
  */
 
 import { apiFetch, ApiError } from "@/lib/api";
@@ -72,7 +72,7 @@ async function fetchWithAuth(path: string, opts: RequestInit = {}): Promise<any>
 export interface CreateReturnRequestPayload {
   orderId: string;
   productId: string;
-  actionType: "return" | "replace" | "refund";
+  actionType: "return" | "return_refund";
   issueType: "damaged" | "wrong-item" | "quality-issue" | "late-delivery" | "others";
   issueDescription?: string;
   isDemo?: boolean;
@@ -86,7 +86,7 @@ export interface ReturnRequest {
   userId: string;
   orderId: string;
   productId: any;
-  actionType: "return" | "replace" | "refund";
+  actionType: "return" | "return_refund";
   issueType: "damaged" | "wrong-item" | "quality-issue" | "late-delivery" | "others";
   issueDescription?: string;
   status: "pending" | "approved" | "rejected" | "completed";
