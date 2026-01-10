@@ -1,6 +1,6 @@
 /**
  * Return Request Modal Component
- * Allows users to request return, replacement, or refund for order items
+ * Allows users to request return (with or without refund) for order items
  */
 
 "use client";
@@ -34,7 +34,7 @@ export default function ReturnRequestModal({
   onSuccess,
   isDemo = false,
 }: ReturnRequestModalProps) {
-  const [actionType, setActionType] = useState<"return" | "replace" | "refund">("return");
+  const [actionType, setActionType] = useState<"return" | "return_refund">("return");
   const [issueType, setIssueType] = useState<
     "damaged" | "wrong-item" | "quality-issue" | "late-delivery" | "others"
   >("damaged");
@@ -115,7 +115,7 @@ export default function ReturnRequestModal({
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">
-            Return / Replace / Refund
+            Request Return
           </h2>
           <button
             onClick={onClose}
@@ -187,9 +187,8 @@ export default function ReturnRequestModal({
                 </label>
                 <div className="space-y-2">
                   {[
-                    { value: "return", label: "Return & Refund" },
-                    { value: "replace", label: "Replace Product" },
-                    { value: "refund", label: "Refund Only" },
+                    { value: "return", label: "Return Only" },
+                    { value: "return_refund", label: "Return + Refund" },
                   ].map((option) => (
                     <label
                       key={option.value}
@@ -201,7 +200,7 @@ export default function ReturnRequestModal({
                         value={option.value}
                         checked={actionType === option.value}
                         onChange={(e) =>
-                          setActionType(e.target.value as "return" | "replace" | "refund")
+                          setActionType(e.target.value as "return" | "return_refund")
                         }
                         disabled={loading}
                         className="w-4 h-4 text-blue-600"
