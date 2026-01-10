@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { apiGetAuth } from "@/lib/api";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import ReturnStatusBadge from "@/components/ReturnStatusBadge";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -12,8 +13,17 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800",
 };
 
+interface ReturnRequest {
+  _id: string;
+  productId: string | { _id: string; name: string };
+  status: string;
+  actionType: "return" | "return_refund";
+  createdAt: string;
+}
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
+  const [returnRequests, setReturnRequests] = useState<Record<string, ReturnRequest[]>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -31,6 +41,9 @@ export default function AdminOrdersPage() {
           Array.isArray(res?.data) ? res.data :
           [];
         setOrders(ordersList);
+        
+        // Load return requests
+        await loadReturnRequests();
       } catch (err) {
         console.error("Failed to load admin orders", err);
       }
@@ -38,6 +51,28 @@ export default function AdminOrdersPage() {
     }
     loadOrders();
   }, []);
+
+  // Load all return requests and group by orderId
+  async function loadReturnRequests() {
+    try {
+      const res = await apiGetAuth("/admin/returns");
+      const returns = res?.returnRequests || [];
+      
+      // Group by orderId
+      const grouped: Record<string, ReturnRequest[]> = {};
+      returns.forEach((ret: ReturnRequest) => {
+        const orderId = typeof ret.productId === 'object' ? ret.productId._id : ret.productId;
+        if (!grouped[orderId]) {
+          grouped[orderId] = [];
+        }
+        grouped[orderId].push(ret);
+      });
+      
+      setReturnRequests(grouped);
+    } catch (err) {
+      console.error("Failed to load return requests", err);
+    }
+  }
 
   const filteredOrders = orders
     .filter((order: any) => {
@@ -133,6 +168,8 @@ export default function AdminOrdersPage() {
                 const customerName = order.shippingAddress?.name || "Unknown";
                 const customerEmail =
                   order.shippingAddress?.email || "N/A";
+                const orderReturns = returnRequests[order._id] || [];
+                const hasReturns = orderReturns.length > 0;
 
                 return (
                   <tr key={order._id} className="hover:bg-gray-50 border-b">
@@ -152,14 +189,27 @@ export default function AdminOrdersPage() {
                     </td>
 
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full font-semibold whitespace-nowrap ${
-                          statusColors[order.status] ||
-                          "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {order.status}
-                      </span>
+                      <div className="flex flex-col gap-2">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full font-semibold whitespace-nowrap ${
+                            statusColors[order.status] ||
+                            "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                        {hasReturns && (
+                          <div className="flex flex-wrap gap-1">
+                            {orderReturns.map((ret: ReturnRequest) => (
+                              <ReturnStatusBadge 
+                                key={ret._id} 
+                                status={ret.status}
+                                size="sm"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm whitespace-nowrap">
