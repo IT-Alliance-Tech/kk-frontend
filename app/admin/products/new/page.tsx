@@ -5,6 +5,18 @@ import { useRouter } from "next/navigation";
 import { createProduct, getBrands, getCategories } from "@/lib/admin";
 import ImagePicker from "@/components/ImagePicker";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import InlineSizeManager from "@/components/admin/InlineSizeManager";
+
+interface Size {
+  _id?: string;
+  name: string;
+  sku?: string;
+  price: number;
+  mrp: number;
+  stock: number;
+  isDefault: boolean;
+  isActive: boolean;
+}
 
 export default function NewProductPage() {
   const [title, setTitle] = useState("");
@@ -16,12 +28,15 @@ export default function NewProductPage() {
   const [stock, setStock] = useState("");
   const [images, setImages] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [hasSizes, setHasSizes] = useState(false);
+  const [sizes, setSizes] = useState<Size[]>([]);
   const [showImagePicker, setShowImagePicker] = useState(false);
 
   const [brands, setBrands] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
   const [status, setStatus] = useState("");
+  const [sizeErrors, setSizeErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -60,21 +75,61 @@ export default function NewProductPage() {
       setStatus("Category is required");
       return;
     }
-    if (!price || parseFloat(price) <= 0) {
-      setStatus("Valid price is required");
-      return;
-    }
-    if (!mrp || parseFloat(mrp) <= 0) {
-      setStatus("Valid MRP is required");
-      return;
-    }
-    if (parseFloat(price) > parseFloat(mrp)) {
-      setStatus("Price cannot be greater than MRP");
-      return;
-    }
-    if (stock && parseFloat(stock) < 0) {
-      setStatus("Stock cannot be negative");
-      return;
+
+    // Validate sizes if enabled
+    if (hasSizes) {
+      const errors: string[] = [];
+      
+      if (sizes.length === 0) {
+        errors.push("At least one size is required when 'Has Multiple Sizes' is enabled");
+      }
+      
+      const defaultSizes = sizes.filter(s => s.isDefault);
+      if (defaultSizes.length === 0) {
+        errors.push("Please mark one size as default");
+      } else if (defaultSizes.length > 1) {
+        errors.push("Only one size can be marked as default");
+      }
+      
+      sizes.forEach((size, index) => {
+        if (!size.name.trim()) {
+          errors.push(`Size ${index + 1}: Name is required`);
+        }
+        if (size.price <= 0) {
+          errors.push(`Size ${index + 1}: Price must be greater than 0`);
+        }
+        if (size.mrp <= 0) {
+          errors.push(`Size ${index + 1}: MRP must be greater than 0`);
+        }
+        if (size.price > size.mrp) {
+          errors.push(`Size ${index + 1}: Price cannot be greater than MRP`);
+        }
+      });
+
+      if (errors.length > 0) {
+        setSizeErrors(errors);
+        setStatus("Please fix size validation errors");
+        return;
+      }
+      setSizeErrors([]);
+    } else {
+      // If sizes are not enabled, validate base price/mrp/stock
+      if (!price || parseFloat(price) <= 0) {
+        setStatus("Valid price is required");
+        return;
+      }
+      if (!mrp || parseFloat(mrp) <= 0) {
+        setStatus("Valid MRP is required");
+        return;
+      }
+      if (parseFloat(price) > parseFloat(mrp)) {
+        setStatus("Price cannot be greater than MRP");
+        return;
+      }
+      if (stock && parseFloat(stock) < 0) {
+        setStatus("Stock cannot be negative");
+        return;
+      }
     }
 
     setStatus("Creating product...");
@@ -86,17 +141,30 @@ export default function NewProductPage() {
         ? images.split(",").map((url) => url.trim()).filter((url) => url.length > 0)
         : [];
 
-      const payload = {
+      const payload: any = {
         title: title.trim(),
         brandId,
         categoryId,
         description: description.trim(),
-        price: parseFloat(price),
-        mrp: parseFloat(mrp),
-        stock: stock ? parseFloat(stock) : 0,
+        hasSizes,
         images: imageArray,
         isActive,
       };
+
+      // If hasSizes is true, include variants and use dummy values for product-level fields
+      if (hasSizes) {
+        payload.variants = sizes.map(({ _id, ...rest }) => rest); // Remove _id for new variants
+        // Use default variant's price/stock for product-level fields (required by schema)
+        const defaultSize = sizes.find(s => s.isDefault) || sizes[0];
+        payload.price = defaultSize.price;
+        payload.mrp = defaultSize.mrp;
+        payload.stock = defaultSize.stock;
+      } else {
+        // Use form values for product-level fields
+        payload.price = parseFloat(price);
+        payload.mrp = parseFloat(mrp);
+        payload.stock = stock ? parseFloat(stock) : 0;
+      }
 
       const result = await createProduct(payload);
 
@@ -183,45 +251,91 @@ export default function NewProductPage() {
         </div>
 
         {/* Price and MRP */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Price *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="0.00"
-              required
-              className="border p-2 rounded w-full"
-            />
+        {!hasSizes && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Price *</label>
+              <input
+                type="number"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                required={!hasSizes}
+                className="border p-2 rounded w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">MRP *</label>
+              <input
+                type="number"
+                step="0.01"
+                value={mrp}
+                onChange={(e) => setMrp(e.target.value)}
+                placeholder="0.00"
+                required={!hasSizes}
+                className="border p-2 rounded w-full"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">MRP *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={mrp}
-              onChange={(e) => setMrp(e.target.value)}
-              placeholder="0.00"
-              required
-              className="border p-2 rounded w-full"
-            />
-          </div>
-        </div>
+        )}
 
         {/* Stock */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Stock</label>
-          <input
-            type="number"
-            step="1"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            placeholder="0"
-            className="border p-2 rounded w-full"
-          />
+        {!hasSizes && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Stock</label>
+            <input
+              type="number"
+              step="1"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              placeholder="0"
+              className="border p-2 rounded w-full"
+            />
+          </div>
+        )}
+
+        {/* Has Multiple Sizes Toggle */}
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="checkbox"
+              id="hasSizes"
+              checked={hasSizes}
+              onChange={(e) => {
+                setHasSizes(e.target.checked);
+                if (!e.target.checked) {
+                  setSizes([]);
+                  setSizeErrors([]);
+                }
+              }}
+              className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+            />
+            <label htmlFor="hasSizes" className="text-sm font-medium">
+              Does this product have multiple sizes?
+            </label>
+          </div>
+          {hasSizes && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> When sizes are enabled, each size will have its own price, MRP, and stock. 
+                You must add at least one size and mark one as the default.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Size Manager */}
+        {hasSizes && (
+          <div>
+            <label className="block text-sm font-medium mb-3">Product Sizes *</label>
+            <InlineSizeManager 
+              sizes={sizes} 
+              onChange={setSizes}
+              errors={sizeErrors}
+            />
+          </div>
+        )}
 
         {/* Images */}
         <div>
