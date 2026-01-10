@@ -9,11 +9,25 @@ import { normalizeSrc } from "@/lib/normalizeSrc";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
 import { Card } from "@/components/ui/card";
 import { ShoppingCart, Star } from "lucide-react";
+import SizeSelectionModal from "@/components/SizeSelectionModal";
+
+interface Variant {
+  _id: string;
+  name: string;
+  price: number;
+  mrp: number;
+  stock: number;
+  isDefault: boolean;
+  isActive: boolean;
+}
 
 export default function ProductCard({ product }: any) {
   const { addItem, updateQty, removeItem, items } = useCart();
   const { showToast } = useToast();
   const [adding, setAdding] = useState(false);
+  const [showSizeModal, setShowSizeModal] = useState(false);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
 
   const productIdKey = product._id || product.id || product.productId || "";
   const cartItem = items.find(
@@ -22,6 +36,11 @@ export default function ProductCard({ product }: any) {
   const currentQty = Math.max(0, Number(cartItem?.qty) || 0);
 
   const productTitle = product.title || product.name || "Untitled Product";
+
+  // Get pricing from default variant if available, otherwise use product price
+  const effectivePrice = product.defaultVariant?.price ?? product.price ?? 0;
+  const effectiveMrp = product.defaultVariant?.mrp ?? product.mrp ?? 0;
+  const effectiveStock = product.defaultVariant?.stock ?? product.stock ?? 0;
 
   const imgSrc = (() => {
     if (Array.isArray(product.images) && product.images.length > 0) {
@@ -37,8 +56,8 @@ export default function ProductCard({ product }: any) {
   })();
 
   // Calculate discount percentage (Flipkart-style)
-  const discountPercent = product.mrp && product.mrp > product.price
-    ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+  const discountPercent = effectiveMrp && effectiveMrp > effectivePrice
+    ? Math.round(((effectiveMrp - effectivePrice) / effectiveMrp) * 100)
     : 0;
 
   // Extract rating data from attributes (already available in backend model)
@@ -46,7 +65,7 @@ export default function ProductCard({ product }: any) {
   const ratingCount = product.attributes?.ratingCount || 0;
 
   // Check stock status
-  const isOutOfStock = product.stock === 0;
+  const isOutOfStock = effectiveStock === 0;
 
   const handleQuantityChange = (newQty: number) => {
     const safeQty = Math.max(0, Number(newQty) || 0);
@@ -60,7 +79,7 @@ export default function ProductCard({ product }: any) {
           {
             id: productIdKey,
             name: productTitle,
-            price: product.price || 0,
+            price: effectivePrice || 0,
             image_url: typeof imgSrc === "string" ? imgSrc : imgSrc.src,
           },
           safeQty
@@ -74,17 +93,45 @@ export default function ProductCard({ product }: any) {
     }
   };
 
-  const onAdd = (e: any) => {
+  const onAdd = async (e: any) => {
     e.stopPropagation();
     if (isOutOfStock) return;
     
-    setAdding(true);
+    // If product has multiple sizes, show size selection modal
+    if (product.hasSizes) {
+      // Fetch variants
+      setLoadingVariants(true);
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://kk-backend-5c11.onrender.com/api';
+        const res = await fetch(`${API_BASE}/products/${product.slug}/variants`);
+        const data = await res.json();
+        
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setVariants(data.data);
+          setShowSizeModal(true);
+        } else {
+          // Fallback to adding product without variant
+          addDirectToCart();
+        }
+      } catch (error) {
+        console.error('Failed to load variants:', error);
+        addDirectToCart();
+      } finally {
+        setLoadingVariants(false);
+      }
+    } else {
+      // No sizes, add directly
+      addDirectToCart();
+    }
+  };
 
+  const addDirectToCart = () => {
+    setAdding(true);
     try {
       addItem({
         id: productIdKey,
         name: productTitle,
-        price: product.price || 0,
+        price: effectivePrice || 0,
         image_url: typeof imgSrc === "string" ? imgSrc : imgSrc.src,
       });
       showToast("Added to cart!", "success");
@@ -92,6 +139,25 @@ export default function ProductCard({ product }: any) {
       showToast("Failed to add", "error");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleSizeSelect = (variant: Variant, quantity: number) => {
+    try {
+      addItem(
+        {
+          id: productIdKey,
+          name: productTitle,
+          price: variant.price,
+          image_url: typeof imgSrc === "string" ? imgSrc : imgSrc.src,
+          variantId: variant._id,
+          variantName: variant.name,
+        },
+        quantity
+      );
+      showToast(`Added ${quantity}x ${variant.name} to cart!`, "success");
+    } catch {
+      showToast("Failed to add", "error");
     }
   };
 
@@ -175,11 +241,11 @@ export default function ProductCard({ product }: any) {
         {/* Price Section - STRONG emphasis (Flipkart-style) */}
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-bold text-slate-900">
-            ₹{product.price?.toLocaleString() || 0}
+            ₹{effectivePrice?.toLocaleString() || 0}
           </span>
-          {product.mrp && product.mrp > product.price && (
+          {effectiveMrp && effectiveMrp > effectivePrice && (
             <span className="text-sm text-slate-400 line-through">
-              ₹{product.mrp.toLocaleString()}
+              ₹{effectiveMrp.toLocaleString()}
             </span>
           )}
         </div>
@@ -191,11 +257,19 @@ export default function ProductCard({ product }: any) {
           {currentQty === 0 ? (
             <button
               onClick={onAdd}
-              disabled={adding || isOutOfStock}
+              disabled={adding || loadingVariants || isOutOfStock}
               className="w-full h-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <ShoppingCart size={18} className="shrink-0" />
-              <span>{isOutOfStock ? "Out of Stock" : adding ? "Adding..." : "Add to Cart"}</span>
+              <span>
+                {isOutOfStock 
+                  ? "Out of Stock" 
+                  : loadingVariants 
+                  ? "Loading..." 
+                  : adding 
+                  ? "Adding..." 
+                  : "Add to Cart"}
+              </span>
             </button>
           ) : (
             <div className="w-full h-full flex items-center gap-2">
@@ -250,6 +324,17 @@ export default function ProductCard({ product }: any) {
           )}
         </div>
       </div>
+
+      {/* Size Selection Modal */}
+      {showSizeModal && variants.length > 0 && (
+        <SizeSelectionModal
+          isOpen={showSizeModal}
+          onClose={() => setShowSizeModal(false)}
+          variants={variants}
+          productTitle={productTitle}
+          onSelect={handleSizeSelect}
+        />
+      )}
     </Card>
   );
 }

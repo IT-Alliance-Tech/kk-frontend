@@ -26,6 +26,7 @@ interface Variant {
   attributes?: Record<string, string>;
   images?: string[];
   isActive: boolean;
+  isDefault?: boolean;
 }
 
 export default function ProductPage() {
@@ -66,9 +67,13 @@ export default function ProductPage() {
       // Check if product has variants
       if (p?.variants && p.variants.length > 0) {
         setVariants(p.variants);
-        // Auto-select first available variant
+        // Auto-select default variant first, otherwise first available variant
+        const defaultVariant = p.variants.find((v: Variant) => v.isDefault === true);
         const firstActive = p.variants.find((v: Variant) => v.isActive && v.stock > 0);
-        if (firstActive) {
+        
+        if (defaultVariant && defaultVariant.isActive) {
+          setSelectedVariant(defaultVariant);
+        } else if (firstActive) {
           setSelectedVariant(firstActive);
         } else {
           setSelectedVariant(p.variants[0]);
