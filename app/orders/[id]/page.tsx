@@ -323,7 +323,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                                 }
                               `}
                             >
-                              Return {returnRequest.actionType}: {returnRequest.status}
+                              {returnRequest.actionType === "return_refund" 
+                                ? "Return + Refund" 
+                                : returnRequest.actionType === "return"
+                                ? "Return Only"
+                                : returnRequest.actionType}: {returnRequest.status}
                             </Badge>
                           </div>
                         ) : (
@@ -344,7 +348,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                               >
                                 <RotateCcw className="h-4 w-4 mr-2" />
-                                Return / Replace / Refund
+                                Request Return
                               </Button>
                             </div>
                           )
