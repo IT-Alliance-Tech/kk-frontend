@@ -195,7 +195,7 @@ export default function InlineSizeManager({ sizes, onChange, errors = [] }: Inli
         {sizes.length === 0 && (
           <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
             <p className="mb-2">No sizes added yet</p>
-            <p className="text-sm">Click "Add Size" below to create your first size option</p>
+            <p className="text-sm">Click &quot;Add Size&quot; below to create your first size option</p>
           </div>
         )}
       </div>
