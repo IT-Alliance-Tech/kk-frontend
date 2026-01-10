@@ -1,11 +1,11 @@
-// Read-only Product View page — displays product details without edit controls
+// Product View page — displays product details with edit controls and size management
 
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getSingleProduct, getBrands, getCategories } from "@/lib/admin";
-import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // use default placeholder when product has no image or to replace dummy imports
+import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
