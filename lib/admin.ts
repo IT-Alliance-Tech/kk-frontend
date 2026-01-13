@@ -410,3 +410,17 @@ export async function getAdminHomepageCategories() {
   const data = await apiGetAuth("/admin/homepage/categories");
   return ensureArray(data, ['items', 'categories', 'data']);
 }
+
+export async function getAdminTopPicksConfig() {
+  const data = await apiGetAuth("/admin/homepage/top-picks");
+  return data?.data || { pinnedProductIds: [], pinnedProducts: [] };
+}
+
+export async function updateAdminTopPicks(pinnedProductIds: string[]) {
+  return apiPutAuth("/admin/homepage/top-picks", { pinnedProductIds });
+}
+
+export async function searchProductsForTopPicks(search: string = '', limit: number = 20) {
+  const data = await apiGetAuth(`/admin/homepage/products-search?search=${encodeURIComponent(search)}&limit=${limit}`);
+  return ensureArray(data, ['items', 'products', 'data']);
+}
