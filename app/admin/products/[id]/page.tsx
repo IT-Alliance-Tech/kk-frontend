@@ -3,6 +3,22 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getSingleProduct, updateProduct, getBrands, getCategories } from "@/lib/admin";
 import InlineSizeManager from "@/components/admin/InlineSizeManager";
+import { 
+  ArrowLeft, 
+  Save, 
+  X,
+  Package, 
+  FileText,
+  Tag, 
+  Layers,
+  DollarSign,
+  Image as ImageIcon,
+  ToggleLeft,
+  AlertCircle,
+  CheckCircle,
+  Info,
+  Loader2
+} from "lucide-react";
 
 interface Size {
   _id?: string;
@@ -225,292 +241,406 @@ export default function EditProductPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-2xl mx-auto">
-        <p className="text-gray-600">Loading product...</p>
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+              <p className="text-slate-600 font-medium">Loading product...</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!title && status) {
     return (
-      <div className="p-6 max-w-2xl mx-auto">
-        <p className="text-red-600">{status}</p>
-        <button
-          onClick={() => router.push("/admin/products")}
-          className="mt-4 px-4 py-2 rounded border"
-        >
-          Back to Products
-        </button>
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading Product</h2>
+            <p className="text-red-600 mb-6">{status}</p>
+            <button
+              onClick={() => router.push("/admin/products")}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Products
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Title *</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Product title"
-            required
-            className="border p-2 rounded w-full"
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Product description"
-            rows={4}
-            className="border p-2 rounded w-full"
-          />
-        </div>
-
-        {/* Brand Dropdown */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Brand *</label>
-          <select
-            value={brandId}
-            onChange={(e) => setBrandId(e.target.value)}
-            required
-            className="border p-2 rounded w-full"
-          >
-            <option value="">Select Brand</option>
-            {brands.map((brand) => (
-              <option key={brand._id} value={brand._id}>
-                {brand.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Category Dropdown */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Category *</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            required
-            className="border p-2 rounded w-full"
-          >
-            <option value="">Select Category</option>
-            {categories.map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Price and MRP */}
-        {!hasSizes && (
-          <div className="grid grid-cols-2 gap-4">
+    <div className="p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/admin/products")}
+              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <div>
-              <label className="block text-sm font-medium mb-1">Price *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.00"
-                required={!hasSizes}
-                className="border p-2 rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">MRP *</label>
-              <input
-                type="number"
-                step="0.01"
-                value={mrp}
-                onChange={(e) => setMrp(e.target.value)}
-                placeholder="0.00"
-                required={!hasSizes}
-                className="border p-2 rounded w-full"
-              />
+              <h1 className="text-2xl font-bold text-slate-900">Edit Product</h1>
+              <p className="text-sm text-slate-500 mt-0.5">Update product details and settings</p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Stock */}
-        {!hasSizes && (
-          <div>
-            <label className="block text-sm font-medium mb-1">Stock</label>
-            <input
-              type="number"
-              step="1"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              placeholder="0"
-              className="border p-2 rounded w-full"
-            />
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information Card */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-emerald-600" />
+                <h2 className="font-semibold text-slate-900">Basic Information</h2>
+              </div>
+            </div>
+            <div className="p-6 space-y-5">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Product Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter product title"
+                  required
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
 
-        {/* Has Multiple Sizes Toggle */}
-        <div className="border-t pt-4">
-          <div className="flex items-center gap-3 mb-4">
-            <input
-              type="checkbox"
-              id="hasSizes"
-              checked={hasSizes}
-              onChange={(e) => {
-                setHasSizes(e.target.checked);
-                if (!e.target.checked) {
-                  setSizes([]);
-                  setSizeErrors([]);
-                }
-              }}
-              className="w-5 h-5 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-            />
-            <label htmlFor="hasSizes" className="text-sm font-medium">
-              Does this product have multiple sizes?
-            </label>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <FileText className="w-4 h-4 inline mr-1" />
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter product description"
+                  rows={4}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 placeholder:text-slate-400 resize-none"
+                />
+              </div>
+
+              {/* Brand and Category Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <Tag className="w-4 h-4 inline mr-1" />
+                    Brand <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={brandId}
+                    onChange={(e) => setBrandId(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 bg-white"
+                  >
+                    <option value="">Select Brand</option>
+                    {brands.map((brand) => (
+                      <option key={brand._id} value={brand._id}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <Layers className="w-4 h-4 inline mr-1" />
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 bg-white"
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
-          {hasSizes && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> When sizes are enabled, each size will have its own price, MRP, and stock. 
-                You must have at least one size and mark one as the default.
-              </p>
+
+          {/* Pricing Card - Only shown when no sizes */}
+          {!hasSizes && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                  <h2 className="font-semibold text-slate-900">Pricing & Inventory</h2>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Selling Price (₹) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="0.00"
+                      required={!hasSizes}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      MRP (₹) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={mrp}
+                      onChange={(e) => setMrp(e.target.value)}
+                      placeholder="0.00"
+                      required={!hasSizes}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Stock Quantity
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      value={stock}
+                      onChange={(e) => setStock(e.target.value)}
+                      placeholder="0"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Size Manager */}
-        {hasSizes && (
-          <div>
-            <label className="block text-sm font-medium mb-3">Product Sizes *</label>
-            <InlineSizeManager 
-              sizes={sizes} 
-              onChange={setSizes}
-              errors={sizeErrors}
-            />
+          {/* Size Variants Card */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-emerald-600" />
+                <h2 className="font-semibold text-slate-900">Product Sizes</h2>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3">
+                  <ToggleLeft className="w-5 h-5 text-slate-500" />
+                  <div>
+                    <p className="font-medium text-slate-900">Multiple Size Options</p>
+                    <p className="text-sm text-slate-500">Enable if this product has different sizes/variants</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="hasSizes"
+                    checked={hasSizes}
+                    onChange={(e) => {
+                      setHasSizes(e.target.checked);
+                      if (!e.target.checked) {
+                        setSizes([]);
+                        setSizeErrors([]);
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              {/* Info banner when sizes enabled */}
+              {hasSizes && (
+                <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-1">Size Variants Enabled</p>
+                    <p>Each size will have its own price, MRP, and stock. You must have at least one size and mark one as the default.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Size Manager */}
+              {hasSizes && (
+                <div className="mt-4">
+                  <InlineSizeManager 
+                    sizes={sizes} 
+                    onChange={setSizes}
+                    errors={sizeErrors}
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        )}
 
-        {/* Images */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Image URLs (comma-separated)</label>
-          <div className="flex gap-2">
-            <input
-              value={images}
-              onChange={(e) => setImages(e.target.value)}
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-              className="border p-2 rounded w-full"
-            />
+          {/* Images Card */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-emerald-600" />
+                <h2 className="font-semibold text-slate-900">Add Images for Product</h2>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-slate-700">
+                  Image URLs <span className="text-slate-400">(comma-separated)</span>
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    value={images}
+                    onChange={(e) => setImages(e.target.value)}
+                    placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                    className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowImageUploadModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-700 font-medium"
+                    title="Browse Images"
+                  >
+                    <ImageIcon className="w-5 h-5" />
+                    Browse
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Enter multiple image URLs separated by commas, or use the Browse button to select from your media library.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Card */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+              <h2 className="font-semibold text-slate-900">Product Status</h2>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-3">
+                  {isActive ? (
+                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  ) : (
+                    <X className="w-5 h-5 text-slate-400" />
+                  )}
+                  <div>
+                    <p className="font-medium text-slate-900">Active Status</p>
+                    <p className="text-sm text-slate-500">
+                      {isActive ? 'Product is visible to customers' : 'Product is hidden from customers'}
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Message */}
+          {status && (
+            <div className={`flex items-center gap-3 p-4 rounded-xl ${
+              status.includes("successfully") 
+                ? "bg-emerald-50 border border-emerald-200 text-emerald-700" 
+                : "bg-red-50 border border-red-200 text-red-700"
+            }`}>
+              {status.includes("successfully") ? (
+                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              )}
+              <span className="font-medium">{status}</span>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:bg-slate-300 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Update Product
+                </>
+              )}
+            </button>
             <button
               type="button"
-              onClick={() => setShowImageUploadModal(true)}
-              className="px-3 py-2 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1 whitespace-nowrap"
-              title="Browse Images"
+              onClick={() => router.push("/admin/products")}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                />
-              </svg>
-              Browse
+              <X className="w-4 h-4" />
+              Cancel
             </button>
           </div>
-        </div>
+        </form>
 
-        {/* isActive Toggle */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="w-4 h-4"
-          />
-          <label htmlFor="isActive" className="text-sm">
-            Active
-          </label>
-        </div>
-
-        {/* Status message */}
-        {status && (
-          <div className={`text-sm ${status.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
-            {status}
+        {/* Image Upload Modal */}
+        {showImageUploadModal && (
+          <div 
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowImageUploadModal(false)}
+          >
+            <div 
+              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center">
+                  <ImageIcon className="w-10 h-10 text-slate-400" />
+                </div>
+              </div>
+              <h2 className="text-xl font-bold text-center text-slate-900 mb-2">Product Image Upload</h2>
+              <p className="text-slate-500 text-center mb-6">
+                Product image upload coming soon
+              </p>
+              <button
+                onClick={() => setShowImageUploadModal(false)}
+                className="w-full px-4 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
-
-        {/* Buttons */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 rounded bg-black text-white disabled:bg-gray-400"
-          >
-            {saving ? "Saving..." : "Update Product"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/products")}
-            className="px-4 py-2 rounded border"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-
-      {/* Image Upload Modal */}
-      {showImageUploadModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={() => setShowImageUploadModal(false)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center mb-4">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-16 w-16 text-gray-400" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-center mb-2">Product Image Upload</h2>
-            <p className="text-gray-600 text-center mb-6">
-              Product image upload coming soon
-            </p>
-            <button
-              onClick={() => setShowImageUploadModal(false)}
-              className="w-full px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

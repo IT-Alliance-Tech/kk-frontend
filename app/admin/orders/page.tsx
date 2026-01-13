@@ -1,17 +1,23 @@
+/**
+ * Admin Orders Page - Redesigned
+ * Modern order management with status badges, filters, and detail view
+ */
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { apiGetAuth } from "@/lib/api";
-import GlobalLoader from "@/components/common/GlobalLoader";
-import ReturnStatusBadge from "@/components/ReturnStatusBadge";
+import Link from "next/link";
+import { Eye, Package, Calendar, User, CreditCard, Truck, X } from "lucide-react";
 
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800",
-  processing: "bg-blue-100 text-blue-800",
-  shipped: "bg-purple-100 text-purple-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-};
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminTable, TableActionMenu, TableActionButton } from "@/components/admin/ui/AdminTable";
+import { AdminBadge, StatusBadge } from "@/components/admin/ui/AdminBadge";
+import { AdminEmptyState } from "@/components/admin/ui/AdminEmptyState";
+import { AdminFilterBar, AdminFilterSelect } from "@/components/admin/ui/AdminFilterBar";
+import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
+import { AdminModal } from "@/components/admin/ui/AdminModal";
+import ReturnStatusBadge from "@/components/ReturnStatusBadge";
 
 interface ReturnRequest {
   _id: string;
@@ -29,7 +35,6 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  // 🔥 FETCH REAL API DATA
   useEffect(() => {
     async function loadOrders() {
       try {
@@ -41,8 +46,6 @@ export default function AdminOrdersPage() {
           Array.isArray(res?.data) ? res.data :
           [];
         setOrders(ordersList);
-        
-        // Load return requests
         await loadReturnRequests();
       } catch (err) {
         console.error("Failed to load admin orders", err);
@@ -52,13 +55,11 @@ export default function AdminOrdersPage() {
     loadOrders();
   }, []);
 
-  // Load all return requests and group by orderId
   async function loadReturnRequests() {
     try {
       const res = await apiGetAuth("/admin/returns");
       const returns = res?.returnRequests || [];
       
-      // Group by orderId
       const grouped: Record<string, ReturnRequest[]> = {};
       returns.forEach((ret: ReturnRequest) => {
         const orderId = typeof ret.productId === 'object' ? ret.productId._id : ret.productId;
@@ -104,177 +105,302 @@ export default function AdminOrdersPage() {
     });
   };
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <GlobalLoader size="large" />
-    </div>
-  );
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', { 
+      style: 'currency', 
+      currency: 'INR',
+      maximumFractionDigits: 0 
+    }).format(price || 0);
+  };
+
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "pending", label: "Pending" },
+    { value: "processing", label: "Processing" },
+    { value: "shipped", label: "Shipped" },
+    { value: "delivered", label: "Delivered" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
+
+  // Order stats
+  const orderStats = {
+    total: orders.length,
+    pending: orders.filter(o => o.status === "pending").length,
+    processing: orders.filter(o => o.status === "processing").length,
+    shipped: orders.filter(o => o.status === "shipped").length,
+    delivered: orders.filter(o => o.status === "delivered").length,
+  };
+
+  // Table columns
+  const columns = [
+    {
+      key: "orderId",
+      header: "Order ID",
+      render: (order: any) => (
+        <span className="font-mono text-sm text-slate-900">
+          #{order._id.slice(-8).toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      key: "customer",
+      header: "Customer",
+      render: (order: any) => (
+        <div>
+          <p className="font-medium text-slate-900">{order.shippingAddress?.name || "Unknown"}</p>
+          <p className="text-xs text-slate-500">{order.shippingAddress?.email || "N/A"}</p>
+        </div>
+      ),
+    },
+    {
+      key: "date",
+      header: "Date",
+      className: "hidden lg:table-cell",
+      render: (order: any) => (
+        <span className="text-slate-600 text-sm whitespace-nowrap">
+          {formatDate(order.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (order: any) => {
+        const orderReturns = returnRequests[order._id] || [];
+        const hasReturns = orderReturns.length > 0;
+        return (
+          <div className="flex flex-col gap-1.5">
+            <StatusBadge status={order.status} />
+            {hasReturns && (
+              <div className="flex flex-wrap gap-1">
+                {orderReturns.slice(0, 2).map((ret: ReturnRequest) => (
+                  <ReturnStatusBadge 
+                    key={ret._id} 
+                    status={ret.status}
+                    size="sm"
+                  />
+                ))}
+                {orderReturns.length > 2 && (
+                  <AdminBadge variant="secondary" size="sm">
+                    +{orderReturns.length - 2}
+                  </AdminBadge>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "total",
+      header: "Total",
+      render: (order: any) => (
+        <span className="font-semibold text-slate-900">
+          {formatPrice(order.total)}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[80px]",
+      render: (order: any) => (
+        <TableActionMenu>
+          <TableActionButton 
+            onClick={() => setSelectedOrder(order)} 
+            icon={<Eye className="w-4 h-4" />} 
+            label="View Details" 
+          />
+        </TableActionMenu>
+      ),
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <AdminLoadingState fullPage message="Loading orders..." />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 p-3 sm:p-4 md:p-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Orders</h2>
-        <p className="text-xs sm:text-sm text-gray-600 mt-1">
-          View and manage customer orders
-        </p>
-      </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <AdminPageHeader
+        title="Orders"
+        description="View and manage customer orders"
+        badge={
+          <AdminBadge variant="secondary" size="lg">
+            {orders.length} orders
+          </AdminBadge>
+        }
+      />
 
-      {/* Search + Filter */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <input
-            type="text"
-            placeholder="Search by order ID, customer name, or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm"
-          />
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto px-3 sm:px-4 py-2 border rounded-lg text-sm"
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { label: "Total", value: orderStats.total, color: "bg-slate-100 text-slate-700" },
+          { label: "Pending", value: orderStats.pending, color: "bg-amber-50 text-amber-700" },
+          { label: "Processing", value: orderStats.processing, color: "bg-blue-50 text-blue-700" },
+          { label: "Shipped", value: orderStats.shipped, color: "bg-purple-50 text-purple-700" },
+          { label: "Delivered", value: orderStats.delivered, color: "bg-emerald-50 text-emerald-700" },
+        ].map((stat) => (
+          <div 
+            key={stat.label}
+            className={`${stat.color} rounded-xl p-3 sm:p-4 text-center`}
           >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
+            <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
+            <p className="text-xs sm:text-sm font-medium opacity-80">{stat.label}</p>
+          </div>
+        ))}
       </div>
+
+      {/* Filters */}
+      <AdminCard>
+        <AdminFilterBar
+          searchValue={searchTerm}
+          searchPlaceholder="Search by order ID, customer name, or email..."
+          onSearchChange={setSearchTerm}
+        >
+          <AdminFilterSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            placeholder="All Statuses"
+            options={statusOptions.slice(1)}
+            className="w-full sm:w-44"
+          />
+        </AdminFilterBar>
+      </AdminCard>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px]">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Order ID</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider hidden lg:table-cell">
-                  Date
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Total</th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredOrders.map((order: any) => {
-                const customerName = order.shippingAddress?.name || "Unknown";
-                const customerEmail =
-                  order.shippingAddress?.email || "N/A";
-                const orderReturns = returnRequests[order._id] || [];
-                const hasReturns = orderReturns.length > 0;
-
-                return (
-                  <tr key={order._id} className="hover:bg-gray-50 border-b">
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm whitespace-nowrap">
-                      <span className="font-mono">{order._id}</span>
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="font-medium text-xs sm:text-sm">{customerName}</div>
-                      <div className="text-xs text-gray-500">
-                        {customerEmail}
-                      </div>
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 hidden lg:table-cell text-xs sm:text-sm whitespace-nowrap">
-                      {formatDate(order.createdAt)}
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="flex flex-col gap-2">
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full font-semibold whitespace-nowrap ${
-                            statusColors[order.status] ||
-                            "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                        {hasReturns && (
-                          <div className="flex flex-wrap gap-1">
-                            {orderReturns.map((ret: ReturnRequest) => (
-                              <ReturnStatusBadge 
-                                key={ret._id} 
-                                status={ret.status}
-                                size="sm"
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm whitespace-nowrap">
-                      ₹{(order.total || 0).toFixed(2)}
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="text-blue-600 text-xs sm:text-sm hover:underline"
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredOrders.length === 0 && (
-          <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">No orders found</div>
+      <AdminCard padding="none">
+        {filteredOrders.length === 0 ? (
+          <AdminEmptyState
+            type={searchTerm || statusFilter ? "no-results" : "no-data"}
+            title={searchTerm || statusFilter ? "No orders found" : "No orders yet"}
+            description={
+              searchTerm || statusFilter
+                ? "Try adjusting your search or filters."
+                : "Orders will appear here once customers start purchasing."
+            }
+            action={
+              searchTerm || statusFilter
+                ? { label: "Clear Filters", onClick: () => { setSearchTerm(""); setStatusFilter(""); } }
+                : undefined
+            }
+          />
+        ) : (
+          <AdminTable
+            columns={columns}
+            data={filteredOrders}
+            keyExtractor={(order) => order._id}
+            onRowClick={(order) => setSelectedOrder(order)}
+          />
         )}
-      </div>
+      </AdminCard>
 
       {/* Order Details Modal */}
-      {selectedOrder && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={() => setSelectedOrder(null)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center mb-4">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-16 w-16 text-gray-400" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
-                />
-              </svg>
+      <AdminModal
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        title={`Order #${selectedOrder?._id.slice(-8).toUpperCase()}`}
+        description={selectedOrder ? formatDate(selectedOrder.createdAt) : ""}
+        size="lg"
+      >
+        {selectedOrder && (
+          <div className="space-y-6">
+            {/* Order Status */}
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Package className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Order Status</p>
+                  <StatusBadge status={selectedOrder.status} />
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-slate-500">Total Amount</p>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatPrice(selectedOrder.total)}
+                </p>
+              </div>
             </div>
-            <h2 className="text-xl font-semibold text-center mb-2">Order Details</h2>
-            <p className="text-gray-600 text-center mb-6">
-              Order details view coming soon
-            </p>
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="w-full px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
-            >
-              Close
-            </button>
+
+            {/* Customer Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 border border-slate-200 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <h4 className="font-medium text-slate-900">Customer</h4>
+                </div>
+                <p className="text-sm text-slate-700">{selectedOrder.shippingAddress?.name}</p>
+                <p className="text-sm text-slate-500">{selectedOrder.shippingAddress?.email}</p>
+                <p className="text-sm text-slate-500">{selectedOrder.shippingAddress?.phone}</p>
+              </div>
+
+              <div className="p-4 border border-slate-200 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <Truck className="w-4 h-4 text-slate-400" />
+                  <h4 className="font-medium text-slate-900">Shipping Address</h4>
+                </div>
+                <p className="text-sm text-slate-700">{selectedOrder.shippingAddress?.address}</p>
+                <p className="text-sm text-slate-500">
+                  {selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state}
+                </p>
+                <p className="text-sm text-slate-500">{selectedOrder.shippingAddress?.pincode}</p>
+              </div>
+            </div>
+
+            {/* Order Items */}
+            <div>
+              <h4 className="font-medium text-slate-900 mb-3">Order Items</h4>
+              <div className="space-y-3">
+                {selectedOrder.items?.map((item: any, index: number) => (
+                  <div 
+                    key={index}
+                    className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg"
+                  >
+                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-slate-200">
+                      <Package className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-slate-900 truncate">
+                        {item.productId?.title || item.name || "Product"}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        Qty: {item.quantity} × {formatPrice(item.price)}
+                      </p>
+                    </div>
+                    <p className="font-semibold text-slate-900">
+                      {formatPrice(item.quantity * item.price)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment Info */}
+            <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
+              <div className="flex items-center gap-3">
+                <CreditCard className="w-5 h-5 text-slate-400" />
+                <div>
+                  <p className="text-sm text-slate-500">Payment Method</p>
+                  <p className="font-medium text-slate-900 capitalize">
+                    {selectedOrder.paymentMethod || "N/A"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-slate-500">Payment Status</p>
+                <StatusBadge status={selectedOrder.paymentStatus || "pending"} />
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </AdminModal>
     </div>
   );
 }

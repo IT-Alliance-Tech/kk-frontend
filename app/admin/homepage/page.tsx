@@ -11,7 +11,9 @@ import {
   apiPutAuth,
   apiDeleteAuth
 } from "@/lib/admin";
-import GlobalLoader from "@/components/common/GlobalLoader";
+import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
+import { CheckCircle, AlertCircle, Home } from "lucide-react";
 import Image from "next/image";
 
 type HomepageItem = {
@@ -322,32 +324,36 @@ export default function AdminHomepagePage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Homepage Management</h1>
-        </div>
-        <div className="text-center py-12 flex justify-center">
-          <GlobalLoader size="large" />
-        </div>
+      <div className="p-6 space-y-6">
+        <AdminPageHeader
+          title="Homepage Management"
+          description="Manage what appears on your homepage"
+        />
+        <AdminLoadingState message="Loading homepage data..." />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Homepage Management</h1>
-        <p className="mt-2 text-gray-600">
-          Manage what appears on your homepage. Select items for each slot below.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Homepage Management"
+        description="Manage hero carousel, featured brands, and categories"
+      />
 
       {/* Toast Message */}
       {message && (
-        <div className={`mb-6 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+        <div className={`flex items-center gap-3 p-4 rounded-xl ${
+          message.type === 'success' 
+            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
+          {message.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          )}
           {message.text}
         </div>
       )}
