@@ -12,11 +12,12 @@ import {
   apiDeleteAuth,
   getAdminTopPicksConfig,
   updateAdminTopPicks,
-  searchProductsForTopPicks
+  searchProductsForTopPicks,
+  browseProductsForTopPicks
 } from "@/lib/admin";
 import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
-import { CheckCircle, AlertCircle, Home, Search, X, GripVertical, Star, Package } from "lucide-react";
+import { CheckCircle, AlertCircle, Home, Search, X, GripVertical, Star, Package, ChevronLeft, ChevronRight, Grid3X3 } from "lucide-react";
 import Image from "next/image";
 
 type HomepageItem = {
@@ -1122,6 +1123,15 @@ function TopPicksSection({
   const [searchResults, setSearchResults] = useState<TopPickProduct[]>([]);
   const [searching, setSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  
+  // Browse state
+  const [browseProducts, setBrowseProducts] = useState<TopPickProduct[]>([]);
+  const [browsePage, setBrowsePage] = useState(1);
+  const [browseLoading, setBrowseLoading] = useState(false);
+  const [browsePagination, setBrowsePagination] = useState({ 
+    page: 1, totalPages: 1, hasNext: false, hasPrev: false, totalCount: 0 
+  });
+  const [showBrowse, setShowBrowse] = useState(false);
 
   // Search products
   useEffect(() => {
@@ -1144,6 +1154,27 @@ function TopPicksSection({
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Load browse products when browse is opened or page changes
+  useEffect(() => {
+    if (!showBrowse) return;
+    
+    const loadBrowseProducts = async () => {
+      setBrowseLoading(true);
+      try {
+        const result = await browseProductsForTopPicks(browsePage, 10);
+        setBrowseProducts(result.products || []);
+        setBrowsePagination(result.pagination);
+      } catch (error) {
+        console.error('Browse error:', error);
+        setBrowseProducts([]);
+      } finally {
+        setBrowseLoading(false);
+      }
+    };
+    
+    loadBrowseProducts();
+  }, [showBrowse, browsePage]);
 
   const selectedIds = new Set(products.map(p => p._id));
 
@@ -1254,6 +1285,113 @@ function TopPicksSection({
           </div>
         )}
       </div>
+
+      {/* Browse Products Section */}
+      {products.length < 8 && (
+        <div className="px-6 pb-6">
+          {/* Toggle Browse Button */}
+          <button
+            onClick={() => {
+              setShowBrowse(!showBrowse);
+              if (!showBrowse) setBrowsePage(1);
+            }}
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors mb-4"
+          >
+            <Grid3X3 className="w-4 h-4" />
+            <span>{showBrowse ? 'Hide Browse' : 'Browse All Products'}</span>
+            <ChevronRight className={`w-4 h-4 transition-transform ${showBrowse ? 'rotate-90' : ''}`} />
+          </button>
+
+          {/* Browse Products Grid */}
+          {showBrowse && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              {/* Browse Header with Pagination */}
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <span className="text-sm text-gray-600">
+                  {browsePagination.totalCount} products available
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setBrowsePage(p => Math.max(1, p - 1))}
+                    disabled={!browsePagination.hasPrev || browseLoading}
+                    className="p-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm font-medium text-gray-700 min-w-[80px] text-center">
+                    Page {browsePagination.page} of {browsePagination.totalPages}
+                  </span>
+                  <button
+                    onClick={() => setBrowsePage(p => p + 1)}
+                    disabled={!browsePagination.hasNext || browseLoading}
+                    className="p-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Products List */}
+              <div className="max-h-80 overflow-y-auto">
+                {browseLoading ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-emerald-600 mb-2"></div>
+                    <p>Loading products...</p>
+                  </div>
+                ) : browseProducts.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">No products found</div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {browseProducts.map(product => {
+                      const isSelected = selectedIds.has(product._id);
+                      return (
+                        <div
+                          key={product._id}
+                          className={`flex items-center gap-3 p-3 hover:bg-gray-50 ${
+                            isSelected ? 'bg-emerald-50/50' : ''
+                          }`}
+                        >
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            {product.images?.[0] ? (
+                              <Image
+                                src={product.images[0]}
+                                alt={product.title}
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <Package className="w-6 h-6" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{product.title}</p>
+                            <p className="text-sm text-gray-500">₹{product.price}</p>
+                          </div>
+                          {isSelected ? (
+                            <span className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded-full">
+                              Added
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => onAdd(product)}
+                              className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-full transition-colors"
+                            >
+                              Add
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Selected Products Grid */}
       <div className="p-6">
