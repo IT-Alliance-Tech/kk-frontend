@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const hideFooter = pathname.startsWith('/admin') || pathname.startsWith('/account');
-  const hideNavbar = pathname.startsWith('/account');
+  const hideNavbar = pathname.startsWith('/admin') || pathname.startsWith('/account');
 
   useEffect(() => {
     if (typeof window !== "undefined") {

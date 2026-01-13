@@ -1,9 +1,22 @@
+/**
+ * Admin Contact Submissions Page - Redesigned
+ * Modern contact form submission management
+ */
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { getAdminContactSubmissions } from "@/lib/admin";
 import { useRouter } from "next/navigation";
-import GlobalLoader from "@/components/common/GlobalLoader";
+import { Mail, Phone, MessageSquare, Calendar, User, Tag, X, ExternalLink } from "lucide-react";
+
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminTable, TableActionMenu, TableActionButton } from "@/components/admin/ui/AdminTable";
+import { AdminBadge } from "@/components/admin/ui/AdminBadge";
+import { AdminEmptyState } from "@/components/admin/ui/AdminEmptyState";
+import { AdminPagination } from "@/components/admin/ui/AdminPagination";
+import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
+import { AdminModal } from "@/components/admin/ui/AdminModal";
 
 interface ContactSubmission {
   _id: string;
@@ -37,6 +50,7 @@ export default function AdminContactSubmissionsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
   const router = useRouter();
 
   const loadSubmissions = useCallback(async (page: number = 1) => {
@@ -45,7 +59,6 @@ export default function AdminContactSubmissionsPage() {
       setError(null);
       const response = await getAdminContactSubmissions({ page, limit: 10 });
       
-      // Handle the paginated response structure
       if (response && response.submissions) {
         setSubmissions(response.submissions || []);
         setPagination(response.pagination || {
@@ -63,7 +76,6 @@ export default function AdminContactSubmissionsPage() {
       console.error("Failed to load contact submissions:", err);
       setError(err.message || "Failed to load contact submissions");
       
-      // Handle 401 Unauthorized - redirect to login
       if (err.status === 401 || err.message?.includes("Invalid user") || err.message?.includes("Not authenticated")) {
         router.push("/admin/login");
       }
@@ -76,20 +88,9 @@ export default function AdminContactSubmissionsPage() {
     loadSubmissions(1);
   }, [loadSubmissions]);
 
-  const handleNextPage = () => {
-    if (pagination.hasNextPage) {
-      loadSubmissions(pagination.page + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (pagination.hasPrevPage) {
-      loadSubmissions(pagination.page - 1);
-    }
-  };
-
-  const handlePageClick = (pageNumber: number) => {
-    loadSubmissions(pageNumber);
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages || loading) return;
+    loadSubmissions(newPage);
   };
 
   const formatDate = (dateString: string) => {
@@ -107,208 +108,253 @@ export default function AdminContactSubmissionsPage() {
     }
   };
 
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const { page, totalPages } = pagination;
+  // Table columns
+  const columns = [
+    {
+      key: "date",
+      header: "Date",
+      render: (submission: ContactSubmission) => (
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Calendar className="w-4 h-4 text-slate-400" />
+          <span className="whitespace-nowrap">{formatDate(submission.createdAt)}</span>
+        </div>
+      ),
+    },
+    {
+      key: "name",
+      header: "Name",
+      render: (submission: ContactSubmission) => (
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+            <User className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="font-medium text-slate-900">{submission.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      header: "Contact",
+      render: (submission: ContactSubmission) => (
+        <div className="space-y-1">
+          <a 
+            href={`mailto:${submission.email}`}
+            className="flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            {submission.email}
+          </a>
+          <a 
+            href={`tel:${submission.mobile}`}
+            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900"
+          >
+            <Phone className="w-3.5 h-3.5" />
+            {submission.mobile}
+          </a>
+        </div>
+      ),
+    },
+    {
+      key: "subject",
+      header: "Subject",
+      className: "hidden lg:table-cell",
+      render: (submission: ContactSubmission) => (
+        <span className="text-sm text-slate-700">
+          {submission.subject || <span className="text-slate-400">-</span>}
+        </span>
+      ),
+    },
+    {
+      key: "source",
+      header: "Source",
+      render: (submission: ContactSubmission) => (
+        <AdminBadge variant="emerald" className="flex items-center gap-1">
+          <Tag className="w-3 h-3" />
+          {submission.source}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[80px]",
+      render: (submission: ContactSubmission) => (
+        <TableActionMenu>
+          <TableActionButton
+            onClick={() => setSelectedSubmission(submission)}
+            icon={<MessageSquare className="w-4 h-4" />}
+            label="View Message"
+          />
+          <TableActionButton
+            onClick={() => window.location.href = `mailto:${submission.email}`}
+            icon={<Mail className="w-4 h-4" />}
+            label="Send Email"
+          />
+        </TableActionMenu>
+      ),
+    },
+  ];
 
-    if (totalPages <= 7) {
-      // Show all pages if total is 7 or less
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Always show first page
-      pages.push(1);
-
-      if (page > 3) {
-        pages.push("...");
-      }
-
-      // Show pages around current page
-      const start = Math.max(2, page - 1);
-      const end = Math.min(totalPages - 1, page + 1);
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (page < totalPages - 2) {
-        pages.push("...");
-      }
-
-      // Always show last page
-      pages.push(totalPages);
-    }
-
-    return pages;
-  };
+  if (loading && submissions.length === 0) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <AdminLoadingState fullPage message="Loading submissions..." />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
-        <h1 className="text-xl sm:text-2xl font-bold">Contact Form Submissions</h1>
-        <div className="text-sm text-gray-600">
-          Total: {pagination.total} {pagination.total === 1 ? "submission" : "submissions"}
-          {pagination.total > 0 && (
-            <span className="ml-2">
-              (Page {pagination.page} of {pagination.totalPages})
-            </span>
-          )}
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <AdminPageHeader
+        title="Contact Submissions"
+        description="View messages from the contact form"
+        badge={
+          <AdminBadge variant="secondary" size="lg">
+            {pagination.total} messages
+          </AdminBadge>
+        }
+      />
 
-      {loading && (
-        <div className="flex justify-center py-12">
-          <GlobalLoader size="large" />
-        </div>
-      )}
-
+      {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+        <div className="flex items-center justify-between p-4 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-800 text-sm">{error}</p>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      {!loading && !error && submissions.length === 0 && (
-        <div className="text-center py-8 text-gray-600">
-          No contact submissions yet.
-        </div>
-      )}
-
-      {!loading && !error && submissions.length > 0 && (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full border min-w-[800px]">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-left">Date</th>
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-left">Name</th>
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-left">Email</th>
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-left">Mobile</th>
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-left">Subject</th>
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-left">Message</th>
-                  <th className="border p-1.5 sm:p-2 text-xs sm:text-sm text-center">Source</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {submissions.map((submission) => (
-                  <tr key={submission._id} className="hover:bg-gray-50">
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">
-                      {formatDate(submission.createdAt)}
-                    </td>
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">
-                      {submission.name}
-                    </td>
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">
-                      <a 
-                        href={`mailto:${submission.email}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {submission.email}
-                      </a>
-                    </td>
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">
-                      <a 
-                        href={`tel:${submission.mobile}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {submission.mobile}
-                      </a>
-                    </td>
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">
-                      {submission.subject || "-"}
-                    </td>
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">
-                      <div className="max-w-xs overflow-hidden">
-                        <div className="line-clamp-2" title={submission.message || ""}>
-                          {submission.message || "-"}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="border p-1.5 sm:p-2 text-xs sm:text-sm text-center">
-                      <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs">
-                        {submission.source}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {pagination.totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
-              {/* Page info */}
-              <div className="text-sm text-gray-600">
-                Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-                {pagination.total} submissions
+      {/* Submissions Table */}
+      <AdminCard padding="none">
+        {submissions.length === 0 && !loading ? (
+          <AdminEmptyState
+            type="no-data"
+            title="No submissions yet"
+            description="Contact form submissions will appear here."
+          />
+        ) : (
+          <>
+            <div className="relative">
+              {loading && (
+                <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                  <AdminLoadingState />
+                </div>
+              )}
+              <AdminTable
+                columns={columns}
+                data={submissions}
+                keyExtractor={(submission) => submission._id}
+                onRowClick={(submission) => setSelectedSubmission(submission)}
+              />
+            </div>
+            
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="border-t border-slate-200 px-4 py-3">
+                <AdminPagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.total}
+                  itemsPerPage={pagination.limit}
+                  onPageChange={handlePageChange}
+                />
               </div>
+            )}
+          </>
+        )}
+      </AdminCard>
 
-              {/* Pagination buttons */}
-              <div className="flex items-center gap-2">
-                {/* Previous button */}
-                <button
-                  onClick={handlePrevPage}
-                  disabled={!pagination.hasPrevPage || loading}
-                  className={`px-3 py-1.5 text-sm font-medium rounded border ${
-                    pagination.hasPrevPage && !loading
-                      ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                  }`}
-                >
-                  Previous
-                </button>
-
-                {/* Page numbers */}
-                <div className="hidden sm:flex items-center gap-1">
-                  {getPageNumbers().map((pageNum, idx) => (
-                    pageNum === "..." ? (
-                      <span key={`ellipsis-${idx}`} className="px-3 py-1.5 text-gray-500">
-                        ...
-                      </span>
-                    ) : (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageClick(pageNum as number)}
-                        disabled={loading}
-                        className={`px-3 py-1.5 text-sm font-medium rounded border ${
-                          pagination.page === pageNum
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        } ${loading ? "cursor-not-allowed opacity-50" : ""}`}
-                      >
-                        {pageNum}
-                      </button>
-                    )
-                  ))}
+      {/* Message Detail Modal */}
+      <AdminModal
+        isOpen={!!selectedSubmission}
+        onClose={() => setSelectedSubmission(null)}
+        title="Contact Message"
+        description={selectedSubmission ? formatDate(selectedSubmission.createdAt) : ""}
+        size="md"
+      >
+        {selectedSubmission && (
+          <div className="space-y-6">
+            {/* Contact Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm text-slate-500">Name</span>
                 </div>
-
-                {/* Mobile: show current page */}
-                <div className="sm:hidden px-3 py-1.5 text-sm font-medium">
-                  {pagination.page} / {pagination.totalPages}
+                <p className="font-medium text-slate-900">{selectedSubmission.name}</p>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm text-slate-500">Source</span>
                 </div>
-
-                {/* Next button */}
-                <button
-                  onClick={handleNextPage}
-                  disabled={!pagination.hasNextPage || loading}
-                  className={`px-3 py-1.5 text-sm font-medium rounded border ${
-                    pagination.hasNextPage && !loading
-                      ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                  }`}
-                >
-                  Next
-                </button>
+                <AdminBadge variant="emerald">{selectedSubmission.source}</AdminBadge>
               </div>
             </div>
-          )}
-        </>
-      )}
+
+            {/* Contact Details */}
+            <div className="space-y-3">
+              <a 
+                href={`mailto:${selectedSubmission.email}`}
+                className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-emerald-600" />
+                  <span className="text-emerald-700">{selectedSubmission.email}</span>
+                </div>
+                <ExternalLink className="w-4 h-4 text-emerald-500" />
+              </a>
+              <a 
+                href={`tel:${selectedSubmission.mobile}`}
+                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-slate-600" />
+                  <span className="text-slate-700">{selectedSubmission.mobile}</span>
+                </div>
+                <ExternalLink className="w-4 h-4 text-slate-400" />
+              </a>
+            </div>
+
+            {/* Subject */}
+            {selectedSubmission.subject && (
+              <div>
+                <h4 className="text-sm font-medium text-slate-500 mb-2">Subject</h4>
+                <p className="text-slate-900">{selectedSubmission.subject}</p>
+              </div>
+            )}
+
+            {/* Message */}
+            <div>
+              <h4 className="text-sm font-medium text-slate-500 mb-2">Message</h4>
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <p className="text-slate-700 whitespace-pre-wrap">
+                  {selectedSubmission.message || <span className="text-slate-400 italic">No message provided</span>}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <button
+                onClick={() => setSelectedSubmission(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+              <a
+                href={`mailto:${selectedSubmission.email}`}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                Reply via Email
+              </a>
+            </div>
+          </div>
+        )}
+      </AdminModal>
     </div>
   );
 }

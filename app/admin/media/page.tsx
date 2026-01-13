@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Image as ImageIcon, Trash2 } from "lucide-react";
+import { Upload, Image as ImageIcon, Trash2, Copy, ExternalLink, RefreshCw, FolderOpen, CheckCircle, AlertCircle } from "lucide-react";
 import Image from "next/image";
-import GlobalLoader from "@/components/common/GlobalLoader";
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminEmptyState } from "@/components/admin/ui/AdminEmptyState";
+import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 
 interface ImageFile {
   url: string;
@@ -127,21 +130,28 @@ export default function MediaManagerPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Media Manager</h1>
-        <p className="text-gray-600">
-          Upload and manage product images for your store
-        </p>
-      </div>
+    <div className="p-6 space-y-6">
+      <AdminPageHeader
+        title="Media Manager"
+        description="Upload and manage product images for your store"
+        actions={
+          <button
+            onClick={fetchImages}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+        }
+      />
 
       {/* Upload Area */}
-      <div className="mb-8">
+      <AdminCard>
         <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
             dragActive
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-300 hover:border-gray-400"
+              ? "border-emerald-500 bg-emerald-50"
+              : "border-slate-200 hover:border-emerald-400 hover:bg-slate-50"
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -161,68 +171,70 @@ export default function MediaManagerPage() {
             className="cursor-pointer flex flex-col items-center"
           >
             {uploading ? (
-              <>
-                <GlobalLoader size="large" className="mb-4" />
-                <span className="text-gray-600">Uploading...</span>
-              </>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-4"></div>
+                <span className="text-slate-600 font-medium">Uploading...</span>
+              </div>
             ) : (
               <>
-                <Upload className="w-12 h-12 text-gray-400 mb-4" />
-                <span className="text-lg font-medium text-blue-600">
+                <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
+                  <Upload className="w-8 h-8 text-emerald-600" />
+                </div>
+                <span className="text-lg font-semibold text-emerald-600">
                   Click to upload
                 </span>
-                <span className="text-sm text-gray-600 mt-2">
+                <span className="text-sm text-slate-500 mt-2">
                   or drag and drop files here
                 </span>
-                <span className="text-xs text-gray-500 mt-1">
+                <span className="text-xs text-slate-400 mt-2 px-3 py-1 bg-slate-100 rounded-full">
                   PNG, JPG, GIF up to 10MB
                 </span>
               </>
             )}
           </label>
         </div>
-      </div>
+      </AdminCard>
 
       {/* Status Messages */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded">
-          {error}
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
       {success && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded">
-          {success}
+        <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl">
+          <CheckCircle className="w-5 h-5 flex-shrink-0" />
+          <span>{success}</span>
         </div>
       )}
 
       {/* Image Gallery */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <ImageIcon className="w-5 h-5" />
-          Uploaded Images ({images.length})
-        </h2>
+      <AdminCard>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-emerald-600" />
+            Uploaded Images
+            <span className="text-sm font-normal text-slate-500">({images.length})</span>
+          </h2>
+        </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <GlobalLoader size="large" />
-            <p className="text-gray-500 mt-4">Loading images...</p>
-          </div>
+          <AdminLoadingState message="Loading images..." />
         ) : images.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No images uploaded yet</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Upload some images to get started
-            </p>
-          </div>
+          <AdminEmptyState
+            icon={<FolderOpen className="w-12 h-12" />}
+            title="No Images Uploaded"
+            description="Upload some images to get started"
+          />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {images.map((img) => (
               <div
                 key={img.path}
-                className="group relative rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all"
+                className="group relative rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-200"
               >
-                <div className="aspect-square">
+                <div className="aspect-square bg-slate-100">
                   <Image
                     src={img.url}
                     alt={img.name}
@@ -233,26 +245,28 @@ export default function MediaManagerPage() {
                 </div>
 
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                   <button
                     onClick={() => copyUrl(img.url)}
-                    className="px-3 py-1 bg-white text-black text-sm rounded hover:bg-gray-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-emerald-50 transition-colors"
                   >
+                    <Copy className="w-3.5 h-3.5" />
                     Copy URL
                   </button>
                   <a
                     href={img.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1 bg-white text-black text-sm rounded hover:bg-gray-100 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-900 text-sm font-medium rounded-lg hover:bg-emerald-50 transition-colors"
                   >
+                    <ExternalLink className="w-3.5 h-3.5" />
                     View Full
                   </a>
                 </div>
 
                 {/* File info */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                  <p className="text-white text-xs truncate" title={img.name}>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent p-2">
+                  <p className="text-white text-xs font-medium truncate" title={img.name}>
                     {img.name}
                   </p>
                   <p className="text-white/70 text-xs">
@@ -263,7 +277,7 @@ export default function MediaManagerPage() {
             ))}
           </div>
         )}
-      </div>
+      </AdminCard>
     </div>
   );
 }
