@@ -424,3 +424,11 @@ export async function searchProductsForTopPicks(search: string = '', limit: numb
   const data = await apiGetAuth(`/admin/homepage/products-search?search=${encodeURIComponent(search)}&limit=${limit}`);
   return ensureArray(data, ['items', 'products', 'data']);
 }
+
+export async function browseProductsForTopPicks(page: number = 1, limit: number = 10) {
+  const data = await apiGetAuth(`/admin/homepage/products-search?browse=true&page=${page}&limit=${limit}`);
+  return {
+    products: ensureArray(data, ['items', 'products', 'data']),
+    pagination: data?.pagination || { page: 1, totalPages: 1, hasNext: false, hasPrev: false, totalCount: 0 }
+  };
+}
