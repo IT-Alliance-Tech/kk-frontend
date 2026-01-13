@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus, Star } from 'lucide-react';
+import { X, Plus, Star, Edit3, Trash2, Package, DollarSign, Archive, Hash, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface Size {
   _id?: string;
@@ -128,193 +128,273 @@ export default function InlineSizeManager({ sizes, onChange, errors = [] }: Inli
   return (
     <div className="space-y-4">
       {/* Size List */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 gap-3">
         {sizes.map((size, index) => (
           <div
             key={index}
-            className={`border rounded-lg p-4 ${
-              size.isDefault ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white'
+            className={`relative rounded-xl border-2 transition-all ${
+              size.isDefault 
+                ? 'border-emerald-500 bg-gradient-to-r from-emerald-50 to-white shadow-sm' 
+                : 'border-slate-200 bg-white hover:border-slate-300'
             }`}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-900">{size.name}</span>
-                  {size.isDefault && (
-                    <span className="inline-flex items-center gap-1 bg-emerald-600 text-white text-xs px-2 py-0.5 rounded-full">
-                      <Star size={12} fill="currentColor" />
-                      Default
-                    </span>
-                  )}
-                  {!size.isActive && (
-                    <span className="bg-gray-400 text-white text-xs px-2 py-0.5 rounded-full">
-                      Inactive
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-gray-600 space-y-0.5">
-                  <div>
-                    <span className="font-medium">Selling Price:</span> ₹{size.price.toFixed(2)} | 
-                    <span className="font-medium ml-2">MRP:</span> ₹{size.mrp.toFixed(2)} | 
-                    <span className="font-medium ml-2">Stock:</span> {size.stock}
-                  </div>
-                  {size.sku && (
-                    <div className="text-xs text-gray-500">SKU: {size.sku}</div>
-                  )}
+            {/* Default badge ribbon */}
+            {size.isDefault && (
+              <div className="absolute -top-px -right-px">
+                <div className="bg-emerald-600 text-white text-xs font-medium px-3 py-1 rounded-bl-lg rounded-tr-xl flex items-center gap-1">
+                  <Star size={12} fill="currentColor" />
+                  Default
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {!size.isDefault && (
-                  <button
-                    type="button"
-                    onClick={() => handleSetDefault(index)}
-                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium px-2 py-1 border border-emerald-300 rounded hover:bg-emerald-50"
-                  >
-                    Set Default
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => handleEdit(index)}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(index)}
-                  className="text-red-600 hover:text-red-700 p-1"
-                >
-                  <X size={20} />
-                </button>
+            )}
+            
+            <div className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Size Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <h4 className="font-semibold text-slate-900 truncate">{size.name}</h4>
+                    {!size.isActive && (
+                      <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full">
+                        <XCircle size={10} />
+                        Inactive
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Price/Stock Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                    <div className="bg-slate-50 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-1 text-xs text-slate-500 mb-0.5">
+                        <DollarSign size={10} />
+                        Selling Price
+                      </div>
+                      <div className="font-semibold text-slate-900">₹{size.price.toFixed(2)}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-1 text-xs text-slate-500 mb-0.5">
+                        <DollarSign size={10} />
+                        MRP
+                      </div>
+                      <div className="font-semibold text-slate-900">₹{size.mrp.toFixed(2)}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-1 text-xs text-slate-500 mb-0.5">
+                        <Archive size={10} />
+                        Stock
+                      </div>
+                      <div className={`font-semibold ${size.stock > 0 ? 'text-slate-900' : 'text-red-600'}`}>
+                        {size.stock}
+                      </div>
+                    </div>
+                    {size.sku && (
+                      <div className="bg-slate-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-0.5">
+                          <Hash size={10} />
+                          SKU
+                        </div>
+                        <div className="font-mono text-sm text-slate-700 truncate">{size.sku}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                  {!size.isDefault && (
+                    <button
+                      type="button"
+                      onClick={() => handleSetDefault(index)}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 px-3 py-1.5 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors"
+                    >
+                      <Star size={12} />
+                      Set Default
+                    </button>
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(index)}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      <Edit3 size={12} />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(index)}
+                      className="inline-flex items-center justify-center p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete size"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         ))}
 
+        {/* Empty State */}
         {sizes.length === 0 && (
-          <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-            <p className="mb-2">No sizes added yet</p>
-            <p className="text-sm">Click &quot;Add Size&quot; below to create your first size option</p>
+          <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+            <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-7 h-7 text-slate-400" />
+            </div>
+            <h4 className="font-medium text-slate-900 mb-1">No sizes added yet</h4>
+            <p className="text-sm text-slate-500">Click &quot;Add Size&quot; below to create your first size option</p>
           </div>
         )}
       </div>
 
       {/* Add/Edit Form */}
       {editingIndex !== null && (
-        <div className="border-2 border-emerald-500 rounded-lg p-4 bg-emerald-50">
-          <h4 className="font-semibold text-gray-900 mb-3">
-            {editingIndex < sizes.length ? 'Edit Size' : 'Add New Size'}
-          </h4>
+        <div className="border-2 border-emerald-500 rounded-xl overflow-hidden bg-white shadow-lg">
+          <div className="px-5 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500">
+            <h4 className="font-semibold text-white flex items-center gap-2">
+              {editingIndex < sizes.length ? (
+                <>
+                  <Edit3 size={18} />
+                  Edit Size
+                </>
+              ) : (
+                <>
+                  <Plus size={18} />
+                  Add New Size
+                </>
+              )}
+            </h4>
+          </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium mb-1">
+          <div className="p-5 space-y-5">
+            {/* Size Name */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Size / Capacity <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 placeholder:text-slate-400"
                 placeholder="e.g., 26 cm – 3.5 Litres, Small, Medium"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Selling Price (₹) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                min="0"
-                step="0.01"
-              />
+            {/* Price Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Selling Price (₹) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  MRP (₹) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    value={formData.mrp}
+                    onChange={(e) => setFormData({ ...formData, mrp: Number(e.target.value) })}
+                    className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                MRP (₹) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.mrp}
-                onChange={(e) => setFormData({ ...formData, mrp: Number(e.target.value) })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                min="0"
-                step="0.01"
-              />
+            {/* Stock & SKU Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Stock Quantity <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  SKU <span className="text-slate-400 text-xs font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.sku || ''}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors text-slate-900 placeholder:text-slate-400"
+                  placeholder="Optional product code"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Stock Quantity <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                min="0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                SKU <span className="text-gray-400 text-xs">(Optional)</span>
-              </label>
-              <input
-                type="text"
-                value={formData.sku || ''}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="Optional product code"
-              />
-            </div>
-
-            <div className="col-span-2 space-y-2">
-              <label className="flex items-center cursor-pointer">
+            {/* Toggles */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors flex-1">
                 <input
                   type="checkbox"
                   checked={formData.isDefault}
                   onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                  className="mr-2 w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
                 />
-                <span className="text-sm font-medium flex items-center gap-1">
-                  <Star size={14} className="text-emerald-600" />
-                  Set as Default Size
-                </span>
+                <div className="flex items-center gap-2">
+                  <Star size={16} className="text-emerald-600" />
+                  <span className="text-sm font-medium text-slate-700">Set as Default Size</span>
+                </div>
               </label>
-              <label className="flex items-center cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors flex-1">
                 <input
                   type="checkbox"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="mr-2 w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded"
                 />
-                <span className="text-sm font-medium">Available for Sale</span>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-emerald-600" />
+                  <span className="text-sm font-medium text-slate-700">Available for Sale</span>
+                </div>
               </label>
             </div>
-          </div>
 
-          <div className="flex gap-2 mt-4">
-            <button
-              type="button"
-              onClick={handleSave}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 font-medium"
-            >
-              {editingIndex < sizes.length ? 'Update Size' : 'Add Size'}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 font-medium"
-            >
-              Cancel
-            </button>
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleSave}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors"
+              >
+                <CheckCircle size={16} />
+                {editingIndex < sizes.length ? 'Update Size' : 'Add Size'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium transition-colors"
+              >
+                <X size={16} />
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -324,21 +404,28 @@ export default function InlineSizeManager({ sizes, onChange, errors = [] }: Inli
         <button
           type="button"
           onClick={handleAdd}
-          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-lg py-3 text-gray-600 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition"
+          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-xl py-4 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all group"
         >
-          <Plus size={20} />
+          <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center transition-colors">
+            <Plus size={18} className="text-slate-500 group-hover:text-emerald-600" />
+          </div>
           <span className="font-medium">Add Size</span>
         </button>
       )}
 
       {/* Validation Errors */}
       {errors.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          {errors.map((error, index) => (
-            <p key={index} className="text-sm text-red-600">
-              • {error}
-            </p>
-          ))}
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              {errors.map((error, index) => (
+                <p key={index} className="text-sm text-red-700">
+                  {error}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

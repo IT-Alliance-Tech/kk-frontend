@@ -1,10 +1,23 @@
+/**
+ * Admin Categories Page - Redesigned
+ * Modern category management with product/brand counts and status controls
+ */
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getAdminCategories, disableCategory, enableCategory, getAdminProducts, getAdminBrands } from "@/lib/admin";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import GlobalLoader from "@/components/common/GlobalLoader";
+import { Plus, X, Eye, Pencil, Power, CheckCircle, XCircle, FolderTree, Package, Tag } from "lucide-react";
+
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminTable, TableActionMenu, TableActionButton } from "@/components/admin/ui/AdminTable";
+import { AdminBadge } from "@/components/admin/ui/AdminBadge";
+import { AdminEmptyState } from "@/components/admin/ui/AdminEmptyState";
+import { AdminFilterBar, AdminFilterSelect } from "@/components/admin/ui/AdminFilterBar";
+import { AdminPagination } from "@/components/admin/ui/AdminPagination";
+import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -21,7 +34,7 @@ export default function AdminCategoriesPage() {
   const [filterStatus, setFilterStatus] = useState("");
   
   const router = useRouter();
-  const limit = 5; // STRICT: 5 categories per page
+  const limit = 10;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debounce global search
@@ -32,7 +45,7 @@ export default function AdminCategoriesPage() {
     
     searchTimeoutRef.current = setTimeout(() => {
       setDebouncedSearch(globalSearch);
-    }, 500); // 500ms delay
+    }, 500);
     
     return () => {
       if (searchTimeoutRef.current) {
@@ -41,7 +54,7 @@ export default function AdminCategoriesPage() {
     };
   }, [globalSearch]);
 
-  // Load products and brands once for counting (use cached/unpaginated call)
+  // Load products and brands once for counting
   useEffect(() => {
     const loadStaticData = async () => {
       try {
@@ -65,19 +78,16 @@ export default function AdminCategoriesPage() {
     try {
       const params: any = { page, limit };
       
-      // Add search filter
       if (debouncedSearch.trim()) {
         params.search = debouncedSearch.trim();
       }
       
-      // Add status filter
       if (filterStatus) {
         params.status = filterStatus;
       }
       
       const response = await getAdminCategories(params);
       
-      // Extract categories and pagination info
       const categoriesData = response?.categories || response?.data?.categories || [];
       const totalCount = response?.total || response?.data?.total || 0;
       const totalPagesCount = response?.totalPages || response?.data?.totalPages || 1;
@@ -96,7 +106,6 @@ export default function AdminCategoriesPage() {
     }
   }, [debouncedSearch, filterStatus, limit]);
 
-  // Load categories when filters change, reset to page 1
   useEffect(() => {
     loadCategories(1);
   }, [loadCategories]);
@@ -115,7 +124,6 @@ export default function AdminCategoriesPage() {
   const hasActiveFilters = debouncedSearch || filterStatus;
 
   const handleDisable = async (id: string) => {
-    if (!confirm("Are you sure you want to disable this category?")) return;
     try {
       await disableCategory(id);
       loadCategories(currentPage);
@@ -143,213 +151,224 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  return (
-    <div className="p-3 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
-        <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
-        <Link
-          href="/admin/categories/new"
-          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base text-center"
-        >
-          + Add Category
-        </Link>
-      </div>
+  // Helper to get counts
+  const getCategoryCounts = (categoryId: string) => {
+    const productCount = products?.filter(p => String(p.category) === String(categoryId)).length ?? 0;
+    const brandCount = Array.from(
+      new Set(
+        products?.filter(p => String(p.category) === String(categoryId))
+          .map(p => String(p.brand))
+          .filter(Boolean) || []
+      )
+    ).length ?? 0;
+    return { productCount, brandCount };
+  };
 
-      {/* Search Bar and Status Filter */}
-      <div className="mb-4">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            placeholder="Search categories by name..."
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-            className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+  // Table columns
+  const columns = [
+    {
+      key: "name",
+      header: "Category",
+      render: (category: any) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+            <FolderTree className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="font-medium text-slate-900">
+              {category.productCategory?.name || category.name}
+            </p>
+            {category.slug && (
+              <p className="text-xs text-slate-500 font-mono">/{category.slug}</p>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "products",
+      header: "Products",
+      className: "hidden sm:table-cell",
+      render: (category: any) => {
+        const { productCount } = getCategoryCounts(category._id);
+        return (
+          <div className="flex items-center gap-1.5">
+            <Package className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-600">{productCount}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "brands",
+      header: "Brands",
+      className: "hidden md:table-cell",
+      render: (category: any) => {
+        const { brandCount } = getCategoryCounts(category._id);
+        return (
+          <div className="flex items-center gap-1.5">
+            <Tag className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-600">{brandCount}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (category: any) => (
+        category.isActive !== false ? (
+          <AdminBadge variant="success" className="flex items-center gap-1 w-fit">
+            <CheckCircle className="w-3 h-3" />
+            Active
+          </AdminBadge>
+        ) : (
+          <AdminBadge variant="danger" className="flex items-center gap-1 w-fit">
+            <XCircle className="w-3 h-3" />
+            Disabled
+          </AdminBadge>
+        )
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[80px]",
+      render: (category: any) => (
+        <TableActionMenu>
+          <TableActionButton
+            onClick={() => router.push(`/admin/categories/view/${category._id}`)}
+            icon={<Eye className="w-4 h-4" />}
+            label="View"
           />
-          <select
+          <TableActionButton
+            onClick={() => router.push(`/admin/categories/${category._id}`)}
+            icon={<Pencil className="w-4 h-4" />}
+            label="Edit"
+          />
+          {category.isActive !== false ? (
+            <TableActionButton
+              onClick={() => handleDisable(category._id)}
+              icon={<Power className="w-4 h-4" />}
+              label="Disable"
+            />
+          ) : (
+            <TableActionButton
+              onClick={() => handleEnable(category._id)}
+              icon={<Power className="w-4 h-4" />}
+              label="Enable"
+            />
+          )}
+        </TableActionMenu>
+      ),
+    },
+  ];
+
+  if (loading && categories.length === 0) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <AdminLoadingState fullPage message="Loading categories..." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <AdminPageHeader
+        title="Categories"
+        description="Organize products into categories"
+        badge={
+          <AdminBadge variant="secondary" size="lg">
+            {total} categories
+          </AdminBadge>
+        }
+        actions={
+          <Link href="/admin/categories/new">
+            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm">
+              <Plus className="w-4 h-4" />
+              Add Category
+            </button>
+          </Link>
+        }
+      />
+
+      {/* Filters */}
+      <AdminCard>
+        <AdminFilterBar
+          searchValue={globalSearch}
+          searchPlaceholder="Search categories by name..."
+          onSearchChange={setGlobalSearch}
+        >
+          <AdminFilterSelect
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black bg-white"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Disabled</option>
-          </select>
+            onChange={setFilterStatus}
+            placeholder="All Status"
+            options={[
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Disabled" },
+            ]}
+            className="w-full sm:w-36"
+          />
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              Reset Filters
+              <X className="w-4 h-4" />
+              Clear
             </button>
           )}
-        </div>
-      </div>
+        </AdminFilterBar>
+      </AdminCard>
 
-      {/* Results Count */}
-      {!loading && (
-        <div className="mb-3 text-sm text-gray-600">
-          {total > 0 ? (
-            <>
-              Showing {categories.length > 0 ? ((currentPage - 1) * limit + 1) : 0} to {Math.min(currentPage * limit, total)} of {total} categor{total !== 1 ? 'ies' : 'y'}
-              {hasActiveFilters && " (filtered)"}
-            </>
-          ) : (
-            "No categories found"
-          )}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="text-center py-8 flex justify-center">
-          <GlobalLoader size="large" />
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full border min-w-[520px]">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Name</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">#Products</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">#Brands</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Status</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {categories.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="border p-4 text-center text-gray-500">
-                    No categories found
-                  </td>
-                </tr>
-              ) : (
-                categories.map((c: any) => {
-                  // Calculate product count for this category
-                  const productCount = products?.filter(p => String(p.category) === String(c._id)).length ?? 0;
-                  
-                  // Calculate brand count for this category
-                  const brandCount = Array.from(
-                    new Set(
-                      products?.filter(p => String(p.category) === String(c._id))
-                        .map(p => String(p.brand))
-                        .filter(Boolean) || []
-                    )
-                  ).length ?? 0;
-
-                  return (
-                    <tr key={c._id} className={!c.isActive ? "bg-gray-50 opacity-60" : ""}>
-                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{c.productCategory?.name || c.name}</td>
-                      <td className="border p-1.5 sm:p-2 text-center text-xs sm:text-sm whitespace-nowrap">{productCount}</td>
-                      <td className="border p-1.5 sm:p-2 text-center text-xs sm:text-sm whitespace-nowrap">{brandCount}</td>
-                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm text-center">
-                        {c.isActive !== false ? (
-                          <span className="text-green-600 font-medium">Active</span>
-                        ) : (
-                          <span className="text-red-600 font-medium">Disabled</span>
-                        )}
-                      </td>
-                      <td className="border p-1.5 sm:p-2 space-x-2 sm:space-x-3 whitespace-nowrap">
-                        <Link
-                          href={`/admin/categories/view/${c._id}`}
-                          className="text-green-600 text-xs sm:text-sm"
-                        >
-                          View
-                        </Link>
-
-                        <Link
-                          href={`/admin/categories/${c._id}`}
-                          className="text-blue-600 text-xs sm:text-sm"
-                        >
-                          Edit
-                        </Link>
-
-                        {c.isActive !== false ? (
-                          <button
-                            className="text-orange-600 text-xs sm:text-sm"
-                            onClick={() => handleDisable(c._id)}
-                          >
-                            Disable
-                          </button>
-                        ) : (
-                          <button
-                            className="text-green-600 text-xs sm:text-sm"
-                            onClick={() => handleEnable(c._id)}
-                          >
-                            Enable
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-              {/* Showing info */}
-              <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </div>
-
-              {/* Page buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1 || loading}
-                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                >
-                  Previous
-                </button>
-
-                {/* Page numbers */}
-                <div className="flex gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        disabled={loading}
-                        className={`px-3 py-1.5 border rounded text-sm ${
-                          currentPage === pageNum
-                            ? "bg-black text-white"
-                            : "hover:bg-gray-100"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+      {/* Categories Table */}
+      <AdminCard padding="none">
+        {categories.length === 0 && !loading ? (
+          <AdminEmptyState
+            type={hasActiveFilters ? "no-results" : "no-data"}
+            title={hasActiveFilters ? "No categories found" : "No categories yet"}
+            description={
+              hasActiveFilters
+                ? "Try adjusting your search or filters."
+                : "Add your first category to organize products."
+            }
+            action={
+              hasActiveFilters
+                ? { label: "Clear Filters", onClick: handleResetFilters }
+                : { label: "Add Category", onClick: () => router.push("/admin/categories/new") }
+            }
+          />
+        ) : (
+          <>
+            <div className="relative">
+              {loading && (
+                <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                  <AdminLoadingState />
                 </div>
-
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages || loading}
-                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                >
-                  Next
-                </button>
-              </div>
+              )}
+              <AdminTable
+                columns={columns}
+                data={categories}
+                keyExtractor={(category) => category._id}
+              />
             </div>
-          )}
-        </>
-      )}
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="border-t border-slate-200 px-4 py-3">
+                <AdminPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={total}
+                  itemsPerPage={limit}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </AdminCard>
     </div>
   );
 }

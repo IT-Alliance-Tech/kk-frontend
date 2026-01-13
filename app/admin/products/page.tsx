@@ -1,9 +1,29 @@
+/**
+ * Admin Products Page - Redesigned
+ * Modern product listing with filters, search, and pagination
+ */
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getAdminProducts, deleteProduct, getBrands, getCategories } from "@/lib/admin";
 import Link from "next/link";
-import GlobalLoader from "@/components/common/GlobalLoader";
+import { Eye, Pencil, Trash2, Package, Plus, Filter, X } from "lucide-react";
+
+import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
+import { AdminTable, TableActionMenu, TableActionButton } from "@/components/admin/ui/AdminTable";
+import { AdminBadge, StatusBadge } from "@/components/admin/ui/AdminBadge";
+import { AdminEmptyState } from "@/components/admin/ui/AdminEmptyState";
+import { 
+  AdminFilterBar, 
+  AdminFilterPanel, 
+  AdminFilterField, 
+  AdminFilterSelect,
+  AdminFilterInput 
+} from "@/components/admin/ui/AdminFilterBar";
+import { AdminPagination } from "@/components/admin/ui/AdminPagination";
+import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
+import { AdminConfirmModal } from "@/components/admin/ui/AdminModal";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -23,6 +43,11 @@ export default function AdminProductsPage() {
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
   
   const limit = 10;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,7 +60,7 @@ export default function AdminProductsPage() {
     
     searchTimeoutRef.current = setTimeout(() => {
       setDebouncedSearch(globalSearch);
-    }, 500); // 500ms delay
+    }, 500);
     
     return () => {
       if (searchTimeoutRef.current) {
@@ -49,30 +74,19 @@ export default function AdminProductsPage() {
     try {
       const params: any = { page, limit };
       
-      // Add filters to params
-      // Priority: debouncedSearch (global) > filterName (advanced filter)
       if (debouncedSearch.trim()) {
         params.search = debouncedSearch.trim();
       } else if (filterName.trim()) {
         params.search = filterName.trim();
       }
       
-      if (filterCategory) {
-        params.category = filterCategory;
-      }
-      if (filterBrand) {
-        params.brand = filterBrand;
-      }
-      if (filterPriceMin) {
-        params.priceMin = filterPriceMin;
-      }
-      if (filterPriceMax) {
-        params.priceMax = filterPriceMax;
-      }
+      if (filterCategory) params.category = filterCategory;
+      if (filterBrand) params.brand = filterBrand;
+      if (filterPriceMin) params.priceMin = filterPriceMin;
+      if (filterPriceMax) params.priceMax = filterPriceMax;
       
       const response = await getAdminProducts(params);
       
-      // Extract products and pagination info
       const productsData = response?.products || response?.data?.products || [];
       const totalCount = response?.total || response?.data?.total || 0;
       const totalPagesCount = response?.totalPages || response?.data?.totalPages || 1;
@@ -108,7 +122,6 @@ export default function AdminProductsPage() {
     loadCategoriesAndBrands();
   }, []);
 
-  // Load products when filters change, reset to page 1
   useEffect(() => {
     loadProducts(1);
   }, [loadProducts]);
@@ -126,287 +139,289 @@ export default function AdminProductsPage() {
     setFilterBrand("");
     setFilterPriceMin("");
     setFilterPriceMax("");
+    setShowFilters(false);
   };
 
-  const hasActiveFilters = debouncedSearch || filterName || filterCategory || filterBrand || filterPriceMin || filterPriceMax;
+  const handleDeleteClick = (product: any) => {
+    setProductToDelete(product);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+    
+    setDeleting(true);
+    try {
+      await deleteProduct(productToDelete._id);
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+      loadProducts(currentPage);
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const activeFiltersCount = [
+    debouncedSearch,
+    filterName,
+    filterCategory,
+    filterBrand,
+    filterPriceMin,
+    filterPriceMax,
+  ].filter(Boolean).length;
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', { 
+      style: 'currency', 
+      currency: 'INR',
+      maximumFractionDigits: 0 
+    }).format(price);
+  };
+
+  // Table columns configuration
+  const columns = [
+    {
+      key: "title",
+      header: "Product",
+      render: (product: any) => (
+        <div className="flex items-center gap-3">
+          {product.images?.[0] ? (
+            <img 
+              src={product.images[0]} 
+              alt={product.title}
+              className="w-10 h-10 rounded-lg object-cover bg-slate-100"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Package className="w-5 h-5 text-slate-400" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="font-medium text-slate-900 truncate max-w-[200px]">
+              {product.title}
+            </p>
+            <p className="text-xs text-slate-500">SKU: {product.sku || "N/A"}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (product: any) => {
+        const categoryName = product?.category?.name 
+          ?? categories?.find(c => String(c._id) === String(product.category))?.name 
+          ?? product.category 
+          ?? '-';
+        return <span className="text-slate-600">{categoryName}</span>;
+      },
+    },
+    {
+      key: "brand",
+      header: "Brand",
+      render: (product: any) => {
+        const brandName = product?.brand?.name 
+          ?? brands?.find(b => String(b._id) === String(product.brand))?.name 
+          ?? product.brand 
+          ?? '-';
+        return <span className="text-slate-600">{brandName}</span>;
+      },
+    },
+    {
+      key: "price",
+      header: "Price",
+      render: (product: any) => (
+        <div>
+          <p className="font-semibold text-slate-900">{formatPrice(product.price)}</p>
+          {product.mrp && product.mrp > product.price && (
+            <p className="text-xs text-slate-500 line-through">{formatPrice(product.mrp)}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "stock",
+      header: "Stock",
+      render: (product: any) => (
+        <AdminBadge 
+          variant={product.stock > 10 ? "success" : product.stock > 0 ? "warning" : "danger"}
+          size="sm"
+        >
+          {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+        </AdminBadge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[120px]",
+      render: (product: any) => {
+        const pid = product?.id || product?._id;
+        return (
+          <TableActionMenu>
+            <Link href={`/admin/products/view/${pid}`}>
+              <TableActionButton 
+                onClick={() => {}} 
+                icon={<Eye className="w-4 h-4" />} 
+                label="View" 
+              />
+            </Link>
+            <Link href={`/admin/products/${pid}`}>
+              <TableActionButton 
+                onClick={() => {}} 
+                icon={<Pencil className="w-4 h-4" />} 
+                label="Edit" 
+              />
+            </Link>
+            <TableActionButton 
+              onClick={() => handleDeleteClick(product)} 
+              icon={<Trash2 className="w-4 h-4" />} 
+              label="Delete"
+              variant="danger"
+            />
+          </TableActionMenu>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="p-3 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
-        <h1 className="text-xl sm:text-2xl font-bold">Products</h1>
-        <Link
-          href="/admin/products/new"
-          className="bg-black text-white px-4 py-2 rounded text-sm sm:text-base text-center"
+    <div className="space-y-6">
+      {/* Page Header */}
+      <AdminPageHeader
+        title="Products"
+        description="Manage your product catalog"
+        primaryAction={{
+          label: "Add Product",
+          href: "/admin/products/new",
+          icon: <Plus className="w-4 h-4 mr-2" />,
+        }}
+        badge={
+          <AdminBadge variant="secondary" size="lg">
+            {total} products
+          </AdminBadge>
+        }
+      />
+
+      {/* Filters */}
+      <AdminCard>
+        <AdminFilterBar
+          searchValue={globalSearch}
+          searchPlaceholder="Search products by name..."
+          onSearchChange={setGlobalSearch}
+          showFiltersButton={true}
+          filtersOpen={showFilters}
+          onToggleFilters={() => setShowFilters(!showFilters)}
+          activeFiltersCount={activeFiltersCount}
+          onClearFilters={handleResetFilters}
         >
-          + Add Product
-        </Link>
-      </div>
-
-      {/* Global Search Bar */}
-      <div className="mb-4">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            placeholder="Search products by name..."
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-            className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+          {/* Quick filter: Category */}
+          <AdminFilterSelect
+            value={filterCategory}
+            onChange={setFilterCategory}
+            placeholder="All Categories"
+            options={categories.map(cat => ({ value: cat._id, label: cat.name }))}
+            className="w-full sm:w-48"
           />
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border rounded-md hover:bg-gray-50 transition"
-          >
-            {showFilters ? "Hide Filters" : "Advanced Filters"}
-          </button>
-          {hasActiveFilters && (
-            <button
-              onClick={handleResetFilters}
-              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition"
-            >
-              Reset Filters
-            </button>
-          )}
-        </div>
-      </div>
+        </AdminFilterBar>
 
-      {/* Advanced Filters Section */}
-      {showFilters && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-          <h3 className="font-semibold mb-3 text-sm sm:text-base">Advanced Filters</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* Product Name Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Name
-              </label>
-              <input
-                type="text"
-                placeholder="Filter by name..."
-                value={filterName}
-                onChange={(e) => setFilterName(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
+        {/* Advanced Filters Panel */}
+        <AdminFilterPanel isOpen={showFilters} className="mt-4">
+          <AdminFilterField label="Product Name">
+            <AdminFilterInput
+              value={filterName}
+              onChange={setFilterName}
+              placeholder="Filter by name..."
+            />
+          </AdminFilterField>
 
-            {/* Category Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <AdminFilterField label="Brand">
+            <AdminFilterSelect
+              value={filterBrand}
+              onChange={setFilterBrand}
+              placeholder="All Brands"
+              options={brands.map(brand => ({ value: brand._id, label: brand.name }))}
+            />
+          </AdminFilterField>
 
-            {/* Brand Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Brand
-              </label>
-              <select
-                value={filterBrand}
-                onChange={(e) => setFilterBrand(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">All Brands</option>
-                {brands.map((brand) => (
-                  <option key={brand._id} value={brand._id}>
-                    {brand.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <AdminFilterField label="Min Price (₹)">
+            <AdminFilterInput
+              type="number"
+              value={filterPriceMin}
+              onChange={setFilterPriceMin}
+              placeholder="0"
+            />
+          </AdminFilterField>
 
-            {/* Price Min */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Min Price (₹)
-              </label>
-              <input
-                type="number"
-                placeholder="0"
-                value={filterPriceMin}
-                onChange={(e) => setFilterPriceMin(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
+          <AdminFilterField label="Max Price (₹)">
+            <AdminFilterInput
+              type="number"
+              value={filterPriceMax}
+              onChange={setFilterPriceMax}
+              placeholder="99999"
+            />
+          </AdminFilterField>
+        </AdminFilterPanel>
+      </AdminCard>
 
-            {/* Price Max */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Price (₹)
-              </label>
-              <input
-                type="number"
-                placeholder="99999"
-                value={filterPriceMax}
-                onChange={(e) => setFilterPriceMax(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
+      {/* Products Table */}
+      <AdminCard padding="none">
+        {loading ? (
+          <div className="py-12">
+            <AdminLoadingState message="Loading products..." />
           </div>
-        </div>
-      )}
-
-      {/* Results Count */}
-      {!loading && (
-        <div className="mb-3 text-sm text-gray-600">
-          {total > 0 ? (
-            <>
-              Showing {products.length > 0 ? ((currentPage - 1) * limit + 1) : 0} to {Math.min(currentPage * limit, total)} of {total} product{total !== 1 ? 's' : ''}
-              {hasActiveFilters && " (filtered)"}
-            </>
-          ) : (
-            "No products found"
-          )}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="text-center py-8 flex justify-center">
-          <GlobalLoader size="large" />
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full border min-w-[640px]">
-            <thead>
-              {/* Reordered columns to: Title, Category, Brand, Price, Action (per product owner request) */}
-              <tr className="bg-gray-100">
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Title</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Category</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Brand</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Price</th>
-                <th className="border p-1.5 sm:p-2 text-xs sm:text-sm">Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {products.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="border p-4 text-center text-gray-500">
-                    No products found
-                  </td>
-                </tr>
-              ) : (
-                products.map((p: any) => {
-                  // Show category/brand name instead of ID: prefer product.category.name/product.brand.name, then lookup from categories/brands arrays
-                  const categoryName = p?.category?.name 
-                    ?? categories?.find(c => String(c._id) === String(p.category))?.name 
-                    ?? p.category 
-                    ?? '-';
-                  
-                  const brandName = p?.brand?.name 
-                    ?? brands?.find(b => String(b._id) === String(p.brand))?.name 
-                    ?? p.brand 
-                    ?? '-';
-
-                  // Defensive access for product id and title
-                  const pid = p?.id || p?._id;
-                  const label = p?.title ?? 'product';
-
-                  return (
-                    <tr key={p._id}>
-                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{p.title}</td>
-                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{categoryName}</td>
-                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm">{brandName}</td>
-                      <td className="border p-1.5 sm:p-2 text-xs sm:text-sm whitespace-nowrap">₹{p.price}</td>
-                      <td className="border p-1.5 sm:p-2 space-x-1 sm:space-x-3 whitespace-nowrap">
-                        {/* Open read-only product view page */}
-                        <Link
-                          href={`/admin/products/view/${pid}`}
-                          className="text-green-600 text-xs sm:text-sm"
-                          aria-label={`View ${label}`}
-                        >
-                          View
-                        </Link>
-
-                        <Link
-                          href={`/admin/products/${pid}`}
-                          className="text-blue-600 text-xs sm:text-sm"
-                          aria-label={`Edit ${label}`}
-                        >
-                          Edit
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-              {/* Showing info */}
-              <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
-              </div>
-
-              {/* Page buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                >
-                  Previous
-                </button>
-
-                {/* Page numbers */}
-                <div className="flex gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-1.5 border rounded text-sm ${
-                          currentPage === pageNum
-                            ? 'bg-black text-white'
-                            : 'hover:bg-gray-100'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                >
-                  Next
-                </button>
-              </div>
+        ) : products.length === 0 ? (
+          <AdminEmptyState
+            type={activeFiltersCount > 0 ? "no-results" : "no-data"}
+            title={activeFiltersCount > 0 ? "No products found" : "No products yet"}
+            description={
+              activeFiltersCount > 0
+                ? "Try adjusting your filters to find what you're looking for."
+                : "Get started by adding your first product."
+            }
+            action={
+              activeFiltersCount > 0
+                ? { label: "Clear Filters", onClick: handleResetFilters }
+                : { label: "Add Product", href: "/admin/products/new" }
+            }
+          />
+        ) : (
+          <>
+            <AdminTable
+              columns={columns}
+              data={products}
+              keyExtractor={(product) => product._id}
+            />
+            
+            <div className="px-4 pb-4">
+              <AdminPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={total}
+                itemsPerPage={limit}
+                onPageChange={handlePageChange}
+              />
             </div>
-          )}
-        </>
-      )}
+          </>
+        )}
+      </AdminCard>
+
+      {/* Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Product"
+        description={`Are you sure you want to delete "${productToDelete?.title}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isLoading={deleting}
+      />
     </div>
   );
 }
-
