@@ -9,11 +9,14 @@ import {
   apiGetAuth,
   apiPostAuth,
   apiPutAuth,
-  apiDeleteAuth
+  apiDeleteAuth,
+  getAdminTopPicksConfig,
+  updateAdminTopPicks,
+  searchProductsForTopPicks
 } from "@/lib/admin";
 import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 import { AdminPageHeader } from "@/components/admin/ui/AdminPageHeader";
-import { CheckCircle, AlertCircle, Home } from "lucide-react";
+import { CheckCircle, AlertCircle, Home, Search, X, GripVertical, Star, Package } from "lucide-react";
 import Image from "next/image";
 
 type HomepageItem = {
@@ -40,6 +43,16 @@ type SlotState = {
   assignedItemId: string | null;
 };
 
+type TopPickProduct = {
+  _id: string;
+  title: string;
+  slug: string;
+  images: string[];
+  price: number;
+  mrp: number;
+  stock: number;
+};
+
 export default function AdminHomepagePage() {
   const [allBrands, setAllBrands] = useState<HomepageItem[]>([]);
   const [allCategories, setAllCategories] = useState<HomepageItem[]>([]);
@@ -56,6 +69,10 @@ export default function AdminHomepagePage() {
     { slotNumber: 3, assignedItemId: null },
     { slotNumber: 4, assignedItemId: null },
   ]);
+  // Top Picks state
+  const [topPickProducts, setTopPickProducts] = useState<TopPickProduct[]>([]);
+  const [savingTopPicks, setSavingTopPicks] = useState(false);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -171,15 +188,17 @@ export default function AdminHomepagePage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [brandsData, categoriesData, heroData] = await Promise.all([
+      const [brandsData, categoriesData, heroData, topPicksData] = await Promise.all([
         getAdminHomepageBrands(),
         getAdminHomepageCategories(),
-        loadHeroImages()
+        loadHeroImages(),
+        getAdminTopPicksConfig()
       ]);
       
       setAllBrands(brandsData || []);
       setAllCategories(categoriesData || []);
       setHeroImages(heroData || []);
+      setTopPickProducts(topPicksData?.pinnedProducts || []);
       
       // Initialize brand slots from backend data
       const newBrandSlots = [1, 2, 3, 4].map(slotNum => {
@@ -322,6 +341,46 @@ export default function AdminHomepagePage() {
     }
   }
 
+  // ==================== TOP PICKS HANDLERS ====================
+
+  async function saveTopPicks() {
+    setSavingTopPicks(true);
+    try {
+      const pinnedIds = topPickProducts.map(p => p._id);
+      await updateAdminTopPicks(pinnedIds);
+      showMessage('success', 'Top picks saved successfully');
+    } catch (error: any) {
+      showMessage('error', error.message || 'Failed to save top picks');
+    } finally {
+      setSavingTopPicks(false);
+    }
+  }
+
+  function handleAddTopPick(product: TopPickProduct) {
+    if (topPickProducts.length >= 8) {
+      showMessage('error', 'Maximum 8 products allowed');
+      return;
+    }
+    if (topPickProducts.find(p => p._id === product._id)) {
+      showMessage('error', 'Product already added');
+      return;
+    }
+    setTopPickProducts(prev => [...prev, product]);
+  }
+
+  function handleRemoveTopPick(productId: string) {
+    setTopPickProducts(prev => prev.filter(p => p._id !== productId));
+  }
+
+  function handleReorderTopPicks(fromIndex: number, toIndex: number) {
+    setTopPickProducts(prev => {
+      const newList = [...prev];
+      const [removed] = newList.splice(fromIndex, 1);
+      newList.splice(toIndex, 0, removed);
+      return newList;
+    });
+  }
+
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -391,6 +450,18 @@ export default function AdminHomepagePage() {
         onSlotChange={assignCategoryToSlot}
         onSave={saveCategoryLayout}
         saving={saving}
+      />
+
+      <div className="h-12" />
+
+      {/* Top Picks Section */}
+      <TopPicksSection
+        products={topPickProducts}
+        onAdd={handleAddTopPick}
+        onRemove={handleRemoveTopPick}
+        onReorder={handleReorderTopPicks}
+        onSave={saveTopPicks}
+        saving={savingTopPicks}
       />
     </div>
   );
@@ -1026,6 +1097,258 @@ function HeroImageCard({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ==================== TOP PICKS SECTION COMPONENT ====================
+
+function TopPicksSection({
+  products,
+  onAdd,
+  onRemove,
+  onReorder,
+  onSave,
+  saving
+}: {
+  products: TopPickProduct[];
+  onAdd: (product: TopPickProduct) => void;
+  onRemove: (productId: string) => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<TopPickProduct[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
+  // Search products
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchResults([]);
+        return;
+      }
+      setSearching(true);
+      try {
+        const results = await searchProductsForTopPicks(searchQuery, 10);
+        setSearchResults(results || []);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const selectedIds = new Set(products.map(p => p._id));
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {/* Section Header */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <Star className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Top Picks for Homepage</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                {products.length} of 8 products selected • Drag to reorder
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            {saving ? 'Saving...' : 'Save Top Picks'}
+          </button>
+        </div>
+      </div>
+
+      {/* Add Product Search */}
+      <div className="p-6 border-b border-gray-200 bg-gray-50">
+        {products.length < 8 ? (
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <Search className="w-4 h-4 text-gray-400" />
+              <span className="text-sm font-medium text-gray-700">Add Products</span>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearch(true);
+              }}
+              onFocus={() => setShowSearch(true)}
+              placeholder="Search products by name..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+            
+            {/* Search Results Dropdown */}
+            {showSearch && searchQuery.trim().length >= 2 && (
+              <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                {searching ? (
+                  <div className="p-4 text-center text-gray-500">Searching...</div>
+                ) : searchResults.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">No products found</div>
+                ) : (
+                  searchResults.map(product => {
+                    const isSelected = selectedIds.has(product._id);
+                    return (
+                      <button
+                        key={product._id}
+                        onClick={() => {
+                          if (!isSelected) {
+                            onAdd(product);
+                            setSearchQuery('');
+                            setShowSearch(false);
+                          }
+                        }}
+                        disabled={isSelected}
+                        className={`w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-0 ${
+                          isSelected ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+                        }`}
+                      >
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                          {product.images?.[0] ? (
+                            <Image
+                              src={product.images[0]}
+                              alt={product.title}
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <Package className="w-6 h-6" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{product.title}</p>
+                          <p className="text-sm text-gray-500">₹{product.price}</p>
+                        </div>
+                        {isSelected && (
+                          <span className="text-xs text-emerald-600 font-medium">Added</span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-amber-700 bg-amber-50 p-3 rounded-lg">
+            <AlertCircle className="w-5 h-5" />
+            <span className="text-sm font-medium">Maximum 8 products reached. Remove a product to add more.</span>
+          </div>
+        )}
+      </div>
+
+      {/* Selected Products Grid */}
+      <div className="p-6">
+        {products.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="inline-flex p-4 bg-gray-100 rounded-2xl mb-4">
+              <Star className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products selected</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+              Search and add products above to feature them in the &ldquo;Top Picks for You&rdquo; section on your homepage.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {products.map((product, index) => (
+              <div
+                key={product._id}
+                className="relative group bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-emerald-300 transition-colors"
+              >
+                {/* Position Badge */}
+                <div className="absolute -top-2 -left-2 w-6 h-6 bg-emerald-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {index + 1}
+                </div>
+                
+                {/* Remove Button */}
+                <button
+                  onClick={() => onRemove(product._id)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  title="Remove product"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Drag Handle */}
+                <div className="absolute top-2 right-2 text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
+                  <GripVertical className="w-4 h-4" />
+                </div>
+
+                {/* Product Image */}
+                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
+                  {product.images?.[0] ? (
+                    <Image
+                      src={product.images[0]}
+                      alt={product.title}
+                      width={200}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <Package className="w-12 h-12" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <h4 className="font-medium text-gray-900 text-sm line-clamp-2 mb-1">
+                  {product.title}
+                </h4>
+                <p className="text-emerald-600 font-semibold">₹{product.price}</p>
+
+                {/* Reorder Buttons */}
+                <div className="flex gap-1 mt-2 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => index > 0 && onReorder(index, index - 1)}
+                    disabled={index === 0}
+                    className="flex-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ← Move Left
+                  </button>
+                  <button
+                    onClick={() => index < products.length - 1 && onReorder(index, index + 1)}
+                    disabled={index === products.length - 1}
+                    className="flex-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Move Right →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Info Note */}
+      <div className="px-6 pb-6">
+        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">How it works</p>
+            <p>Selected products appear first in &ldquo;Top Picks for You&rdquo; section. Remaining slots (up to 8) are filled with random products automatically.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
