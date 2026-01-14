@@ -8,6 +8,8 @@ interface FilterPanelProps {
   brands: any[];
   categories: any[];
   onFilterChange: (filteredProducts: any[]) => void;
+  mobileOnly?: boolean; // When true, only render mobile button/overlay
+  renderContentOnly?: boolean; // When true, render just the filter content without wrapper
 }
 
 interface FilterState {
@@ -22,6 +24,8 @@ export default function FilterPanel({
   brands,
   categories,
   onFilterChange,
+  mobileOnly = false,
+  renderContentOnly = false,
 }: FilterPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
@@ -371,6 +375,11 @@ export default function FilterPanel({
     </div>
   );
 
+  // If renderContentOnly, just return the filter content without any wrappers
+  if (renderContentOnly) {
+    return <FilterContent />;
+  }
+
   return (
     <>
       {/* Mobile Filter Button */}
@@ -402,12 +411,14 @@ export default function FilterPanel({
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 shrink-0">
-        <div className="sticky top-4 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-          <FilterContent />
+      {/* Desktop Sidebar - Only render if not mobileOnly */}
+      {!mobileOnly && (
+        <div className="hidden lg:block w-64 shrink-0">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <FilterContent />
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
