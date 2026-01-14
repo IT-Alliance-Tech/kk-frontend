@@ -15,6 +15,15 @@ import {
   normalizeBrandResponse,
 } from "@/lib/adapters/brand.adapter";
 
+export interface BrandsPaginatedResponse {
+  data: Brand[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 /**
  * Fetch all brands from the API
  * @returns Array of Brand objects
@@ -28,6 +37,33 @@ export async function getBrands(): Promise<Brand[]> {
     return normalizeBrandsResponse(response);
   } catch (error) {
     console.error("Failed to fetch brands:", error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch brands with pagination
+ * @param page - Page number (1-indexed)
+ * @param limit - Items per page
+ * @returns Paginated brands response
+ */
+export async function getBrandsPaginated(page: number = 1, limit: number = 12): Promise<BrandsPaginatedResponse> {
+  try {
+    const response = await apiFetch<any>(`/brands?page=${page}&limit=${limit}`);
+
+    // Handle paginated response from backend
+    const data = normalizeBrandsResponse(response);
+    
+    return {
+      data,
+      totalCount: response.totalCount || data.length,
+      currentPage: response.currentPage || page,
+      totalPages: response.totalPages || 1,
+      hasNext: response.hasNext ?? false,
+      hasPrev: response.hasPrev ?? false,
+    };
+  } catch (error) {
+    console.error("Failed to fetch paginated brands:", error);
     throw error;
   }
 }
