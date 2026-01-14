@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiGetAuth } from "@/lib/api";
 import Link from "next/link";
 import { Eye, Package, Calendar, User, CreditCard, Truck, X } from "lucide-react";
@@ -18,6 +19,9 @@ import { AdminFilterBar, AdminFilterSelect } from "@/components/admin/ui/AdminFi
 import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 import { AdminModal } from "@/components/admin/ui/AdminModal";
 import ReturnStatusBadge from "@/components/ReturnStatusBadge";
+import Pagination from "@/components/common/Pagination";
+
+const ITEMS_PER_PAGE = 10;
 
 interface ReturnRequest {
   _id: string;
@@ -28,24 +32,66 @@ interface ReturnRequest {
 }
 
 export default function AdminOrdersPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [orders, setOrders] = useState<any[]>([]);
   const [returnRequests, setReturnRequests] = useState<Record<string, ReturnRequest[]>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [paginationInfo, setPaginationInfo] = useState<{
+    total: number;
+    page: number;
+    totalPages: number;
+  }>({
+    total: 0,
+    page: 1,
+    totalPages: 1,
+  });
+
+  // Get current page from URL
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
   useEffect(() => {
     async function loadOrders() {
       try {
-        const res = await apiGetAuth("/admin/orders");
+        setLoading(true);
+        // Build query with pagination and filters
+        const params = new URLSearchParams();
+        params.set("page", currentPage.toString());
+        params.set("limit", ITEMS_PER_PAGE.toString());
+        if (searchTerm) params.set("search", searchTerm);
+        if (statusFilter) params.set("status", statusFilter);
+
+        const res = await apiGetAuth(`/admin/orders?${params.toString()}`);
+        
+        // Handle response format from backend
         const ordersList =
           Array.isArray(res) ? res :
           Array.isArray(res?.orders) ? res.orders :
           Array.isArray(res?.items) ? res.items :
           Array.isArray(res?.data) ? res.data :
           [];
+        
         setOrders(ordersList);
+        
+        // Set pagination info from meta
+        if (res?.meta) {
+          setPaginationInfo({
+            total: res.meta.total || ordersList.length,
+            page: res.meta.page || currentPage,
+            totalPages: res.meta.totalPages || 1,
+          });
+        } else {
+          setPaginationInfo({
+            total: ordersList.length,
+            page: currentPage,
+            totalPages: 1,
+          });
+        }
+
         await loadReturnRequests();
       } catch (err) {
         console.error("Failed to load admin orders", err);
@@ -53,7 +99,7 @@ export default function AdminOrdersPage() {
       setLoading(false);
     }
     loadOrders();
-  }, []);
+  }, [currentPage, searchTerm, statusFilter]);
 
   async function loadReturnRequests() {
     try {
@@ -75,20 +121,43 @@ export default function AdminOrdersPage() {
     }
   }
 
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > paginationInfo.totalPages) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+
+    router.push(`/admin/orders?${params.toString()}`, { scroll: true });
+  };
+
+  // Handle filter changes - reset to page 1
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    if (value) {
+      params.set("search", value);
+    } else {
+      params.delete("search");
+    }
+    router.push(`/admin/orders?${params.toString()}`, { scroll: false });
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    if (value) {
+      params.set("status", value);
+    } else {
+      params.delete("status");
+    }
+    router.push(`/admin/orders?${params.toString()}`, { scroll: false });
+  };
+
+  // Use orders directly (filtering is done server-side now)
   const filteredOrders = orders
-    .filter((order: any) => {
-      const customerName = order?.shippingAddress?.name || "";
-      const customerEmail = order?.shippingAddress?.email || "";
-
-      const matchesSearch =
-        order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = !statusFilter || order.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    })
     .sort(
       (a: any, b: any) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -232,7 +301,7 @@ export default function AdminOrdersPage() {
         description="View and manage customer orders"
         badge={
           <AdminBadge variant="secondary" size="lg">
-            {orders.length} orders
+            {paginationInfo.total} orders
           </AdminBadge>
         }
       />
@@ -261,11 +330,11 @@ export default function AdminOrdersPage() {
         <AdminFilterBar
           searchValue={searchTerm}
           searchPlaceholder="Search by order ID, customer name, or email..."
-          onSearchChange={setSearchTerm}
+          onSearchChange={handleSearchChange}
         >
           <AdminFilterSelect
             value={statusFilter}
-            onChange={setStatusFilter}
+            onChange={handleStatusChange}
             placeholder="All Statuses"
             options={statusOptions.slice(1)}
             className="w-full sm:w-44"
@@ -286,17 +355,31 @@ export default function AdminOrdersPage() {
             }
             action={
               searchTerm || statusFilter
-                ? { label: "Clear Filters", onClick: () => { setSearchTerm(""); setStatusFilter(""); } }
+                ? { label: "Clear Filters", onClick: () => { handleSearchChange(""); handleStatusChange(""); } }
                 : undefined
             }
           />
         ) : (
-          <AdminTable
-            columns={columns}
-            data={filteredOrders}
-            keyExtractor={(order) => order._id}
-            onRowClick={(order) => setSelectedOrder(order)}
-          />
+          <>
+            <AdminTable
+              columns={columns}
+              data={filteredOrders}
+              keyExtractor={(order) => order._id}
+              onRowClick={(order) => setSelectedOrder(order)}
+            />
+            {/* Pagination Controls */}
+            <div className="p-4 border-t border-slate-200">
+              <Pagination
+                currentPage={paginationInfo.page}
+                totalPages={paginationInfo.totalPages}
+                totalItems={paginationInfo.total}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={handlePageChange}
+                hasNext={paginationInfo.page < paginationInfo.totalPages}
+                hasPrev={paginationInfo.page > 1}
+              />
+            </div>
+          </>
         )}
       </AdminCard>
 

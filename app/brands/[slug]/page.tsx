@@ -1,101 +1,180 @@
 /**
- * Brand detail page - Server Component
- * Displays a single brand with its information and products
- * Updated: 2025-11-29 - Enhanced null handling and defensive error handling
+ * Brand detail page - Client Component with pagination
+ * Displays a single brand with its information and paginated products
  */
+"use client";
 
+import { Suspense, useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { notFound } from "next/navigation";
-import { getBrand } from "@/lib/api/brands.api";
-import { getProductsByBrand } from "@/lib/api/products.api";
-import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png"; // optional fallback asset (not required)
 import { Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import ProductCard from "@/components/ProductCard";
-import { slugify } from "@/lib/api/brands.api";
-import { getBrands } from "@/lib/api/brands.api";
+import { getBrand, getBrands, slugify } from "@/lib/api/brands.api";
+import { apiFetch } from "@/lib/api";
+import GlobalLoader from "@/components/common/GlobalLoader";
+import Pagination from "@/components/common/Pagination";
+import type { Brand } from "@/lib/types";
 
-type Props = {
-  params: Promise<{ slug?: string; id?: string }>;
-};
+const ITEMS_PER_PAGE = 12;
 
 /**
  * Validate and normalise an image URL string for next/image.
- * Returns a safe absolute URL string or null.
  */
 function safeRemoteUrl(raw?: string | null): string | null {
   if (!raw || typeof raw !== "string") return null;
-  // If already a full http(s) URL, try to normalise using URL constructor.
   try {
     const u = new URL(raw);
     if (u.protocol === "http:" || u.protocol === "https:") {
-      // encode path segments to avoid spaces/unescaped chars problems
-      // preserve query and hostname
-      // Using toString() since URL automatically encodes components.
       return u.toString();
     }
     return null;
   } catch (e) {
-    // raw is possibly a relative path or contains spaces: try to guess
-    // If it looks like a supabase storage path (no host) we cannot safely use it here
     return null;
   }
 }
 
-export default async function BrandPage({ params }: Props) {
-  // params may be a promise in this Next.js setup — await it to safely access values
-  const resolvedParams = await params;
-  const identifier = resolvedParams?.slug ?? resolvedParams?.id ?? "";
-  
-  if (!identifier) {
-    console.error("❌ No slug parameter provided");
-    notFound();
-  }
+function BrandPageContent() {
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  let brand: any = null;
-  let productsData: any[] = [];
+  const identifier = (params?.slug as string) ?? (params?.id as string) ?? "";
 
-  try {
+  const [brand, setBrand] = useState<Brand | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [paginationInfo, setPaginationInfo] = useState<{
+    total: number;
+    page: number;
+    pages: number;
+  }>({
+    total: 0,
+    page: 1,
+    pages: 1,
+  });
 
-    // Resolve brand by _id or slug
-    if (/^[a-fA-F0-9]{24}$/.test(identifier)) {
-      brand = await getBrand(identifier); // Assume getBrand handles both _id and slug
+  // Get current page from URL
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
+  // First effect: resolve brand
+  useEffect(() => {
+    if (!identifier) return;
+
+    async function resolveBrand() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        let foundBrand: Brand | null = null;
+
+        // Try fetching by slug/id
+        foundBrand = await getBrand(identifier);
+
+        if (!foundBrand) {
+          // Fallback: search all brands
+          const allBrands = await getBrands();
+          foundBrand = allBrands.find((b) => slugify(b.name) === identifier) || null;
+        }
+
+        if (!foundBrand) {
+          setError("Brand not found");
+          setLoading(false);
+          return;
+        }
+
+        setBrand(foundBrand);
+      } catch (err: any) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setLoading(false);
+      }
     }
 
-    if (!brand) {
-      const allBrands = await getBrands();
-      brand = allBrands.find((b) => slugify(b.name) === identifier);
-    }
+    resolveBrand();
+  }, [identifier]);
 
-    if (!brand) {
-      console.log(`❌ Brand not found after all attempts: ${identifier}`);
-      notFound();
-    }
+  // Second effect: fetch products when brand or page changes
+  useEffect(() => {
+    if (!brand) return;
 
-    console.log(`✅ Brand loaded successfully: ${brand.name}`);
-  } catch (error) {
-    console.error("❌ Unexpected error fetching brand:", error);
-    notFound();
-  }
-
-  // Fetch products for this brand using the brand's id
-  // use env var for backend base URL; default to https://kk-backend-5c11.onrender.com/api for dev
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://kk-backend-5c11.onrender.com/api";
-  try {
     const brandId = brand.id || brand._id;
-    if (brandId) {
-      productsData = await getProductsByBrand(brandId);
-      console.log(`✅ Loaded ${productsData.length} products for brand: ${brand.name}`);
-    } else {
-      console.warn("⚠️ Brand has no id; skipping products fetch");
-      productsData = [];
+
+    async function loadBrandProducts() {
+      try {
+        setProductsLoading(true);
+
+        if (!brandId) {
+          setProducts([]);
+          return;
+        }
+
+        // Fetch products with pagination
+        const response = await apiFetch<any>(
+          `/products?brand=${encodeURIComponent(brandId)}&page=${currentPage}&limit=${ITEMS_PER_PAGE}`
+        );
+
+        // Handle response
+        const items = response.items || (Array.isArray(response) ? response : []);
+        const total = response.total || items.length;
+        const page = response.page || currentPage;
+        const pages = response.pages || 1;
+
+        setProducts(items);
+        setPaginationInfo({ total, page, pages });
+      } catch (err: any) {
+        setProducts([]);
+      } finally {
+        setProductsLoading(false);
+      }
     }
-  } catch (error) {
-    console.error("⚠️ Error fetching products for brand:", error);
-    productsData = [];
+
+    loadBrandProducts();
+  }, [brand, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > paginationInfo.pages) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+
+    router.push(`/brands/${identifier}?${params.toString()}`, { scroll: true });
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen">
+        <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-center py-20">
+              <GlobalLoader size="large" />
+            </div>
+          </div>
+        </section>
+      </div>
+    );
   }
 
-  // Determine safe image src for next/image; if invalid, fallback to local placeholder
+  if (error || !brand) {
+    return (
+      <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-red-600 text-lg mb-4">{error || "Brand not found"}</p>
+          <button
+            onClick={() => router.push("/brands")}
+            className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition"
+          >
+            Back to Brands
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const remoteLogo = safeRemoteUrl(brand.logoUrl);
   const logoSrc = remoteLogo || "/brand-placeholder.svg";
 
@@ -110,23 +189,19 @@ export default async function BrandPage({ params }: Props) {
                 <div className="flex flex-col md:flex-row items-center gap-8">
                   {/* Brand Logo */}
                   <div className="flex-shrink-0">
-                    {logoSrc ? (
-                      // next/image works with absolute urls (remote) and local strings (starting with '/')
-                      <div className="w-40 h-40 relative">
-                        <Image
-                          src={logoSrc}
-                          alt={brand.name || "Brand logo"}
-                          width={160}
-                          height={160}
-                          className="w-40 h-40 object-contain border border-slate-200 rounded-lg p-4 bg-white"
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-40 h-40 flex items-center justify-center border border-slate-200 rounded-lg bg-slate-50">
-                        <Package className="h-20 w-20 text-slate-300" />
-                      </div>
-                    )}
+                    <div className="w-40 h-40 relative">
+                      <Image
+                        src={logoSrc}
+                        alt={brand.name || "Brand logo"}
+                        width={160}
+                        height={160}
+                        className="w-40 h-40 object-contain border border-slate-200 rounded-lg p-4 bg-white"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/brand-placeholder.svg";
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Brand Info */}
@@ -154,12 +229,29 @@ export default async function BrandPage({ params }: Props) {
             Products by {brand.name}
           </h2>
 
-          {Array.isArray(productsData) && productsData.length > 0 ? (
-            <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:gap-4">
-              {productsData.map((product: any) => (
-                <ProductCard key={product._id || product.id} product={product} />
-              ))}
+          {productsLoading ? (
+            <div className="flex justify-center py-12">
+              <GlobalLoader size="medium" />
             </div>
+          ) : products.length > 0 ? (
+            <>
+              <div className="flex flex-col divide-y divide-gray-200 md:divide-y-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6">
+                {products.map((product: any) => (
+                  <ProductCard key={product._id || product.id} product={product} />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              <Pagination
+                currentPage={paginationInfo.page}
+                totalPages={paginationInfo.pages}
+                totalItems={paginationInfo.total}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={handlePageChange}
+                hasNext={paginationInfo.page < paginationInfo.pages}
+                hasPrev={paginationInfo.page > 1}
+              />
+            </>
           ) : (
             <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg p-12 text-center">
               <Package className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -172,9 +264,22 @@ export default async function BrandPage({ params }: Props) {
   );
 }
 
-/**
- * Test checklist:
- * 1. Open /brands/bake-master (existing slug) — should show products.
- * 2. Open using _id if available (e.g., /brands/507f1f77bcf86cd799439011) — should work.
- * 3. Verify network request origin is https://kk-backend-5c11.onrender.com/api (or the env var value).
- */
+export default function BrandPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-white min-h-screen">
+          <section className="bg-gradient-to-br from-emerald-50 to-teal-50 py-12">
+            <div className="container mx-auto px-4">
+              <div className="flex justify-center py-20">
+                <GlobalLoader size="large" />
+              </div>
+            </div>
+          </section>
+        </div>
+      }
+    >
+      <BrandPageContent />
+    </Suspense>
+  );
+}
