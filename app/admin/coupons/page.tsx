@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { listCoupons, deleteCoupon, type Coupon } from '@/lib/api/coupons.api';
 import { Plus, Pencil, Trash2, Search, Calendar, Tag, TrendingUp, X, Percent, DollarSign } from 'lucide-react';
@@ -17,30 +18,82 @@ import { AdminEmptyState } from "@/components/admin/ui/AdminEmptyState";
 import { AdminFilterBar } from "@/components/admin/ui/AdminFilterBar";
 import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 import { AdminModal } from "@/components/admin/ui/AdminModal";
+import Pagination from "@/components/common/Pagination";
 
 const CouponModal = dynamic(() => import('@/components/admin/CouponModal'), { ssr: false });
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminCouponsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [filteredCoupons, setFilteredCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'expired'>('all');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'expired'>(
+    (searchParams.get('status') as 'all' | 'active' | 'expired') || 'all'
+  );
+  const [paginationInfo, setPaginationInfo] = useState<{
+    total: number;
+    page: number;
+    pages: number;
+  }>({
+    total: 0,
+    page: 1,
+    pages: 1,
+  });
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; coupon: Coupon | null }>({ open: false, coupon: null });
 
+  // Get current page from URL
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
   const fetchCoupons = async () => {
     try {
       setLoading(true);
       setError('');
-      const result = await listCoupons({ limit: 100 });
+      
+      // Build params for API
+      const params: any = {
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+      };
+      
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+      
+      if (filterStatus === 'active') {
+        params.active = true;
+        params.expired = false;
+      } else if (filterStatus === 'expired') {
+        params.expired = true;
+      }
+
+      const result = await listCoupons(params);
       const couponsList = result.coupons || result;
+      const pagination = result.pagination;
+      
       setCoupons(couponsList);
-      setFilteredCoupons(couponsList);
+      
+      if (pagination) {
+        setPaginationInfo({
+          total: pagination.total || couponsList.length,
+          page: pagination.page || currentPage,
+          pages: pagination.pages || 1,
+        });
+      } else {
+        setPaginationInfo({
+          total: couponsList.length,
+          page: currentPage,
+          pages: 1,
+        });
+      }
     } catch (err: any) {
       console.error('Error fetching coupons:', err);
       setError(err.message || 'Failed to load coupons');
@@ -51,36 +104,43 @@ export default function AdminCouponsPage() {
 
   useEffect(() => {
     fetchCoupons();
-  }, []);
+  }, [currentPage, searchTerm, filterStatus]);
 
-  // Filter coupons based on search and status
-  useEffect(() => {
-    let filtered = [...coupons];
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > paginationInfo.pages) return;
 
-    // Search filter
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter((coupon) =>
-        coupon.code.toLowerCase().includes(search)
-      );
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+
+    router.push(`/admin/coupons?${params.toString()}`, { scroll: true });
+  };
+
+  // Handle search change
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    if (value) {
+      params.set("search", value);
+    } else {
+      params.delete("search");
     }
+    router.push(`/admin/coupons?${params.toString()}`, { scroll: false });
+  };
 
-    // Status filter
-    const now = new Date();
-    if (filterStatus === 'active') {
-      filtered = filtered.filter((coupon) => {
-        const isExpired = new Date(coupon.expiryDate) < now;
-        return coupon.active && !isExpired;
-      });
-    } else if (filterStatus === 'expired') {
-      filtered = filtered.filter((coupon) => {
-        const isExpired = new Date(coupon.expiryDate) < now;
-        return isExpired;
-      });
+  // Handle status filter change
+  const handleStatusChange = (status: 'all' | 'active' | 'expired') => {
+    setFilterStatus(status);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", "1");
+    if (status !== 'all') {
+      params.set("status", status);
+    } else {
+      params.delete("status");
     }
-
-    setFilteredCoupons(filtered);
-  }, [searchTerm, filterStatus, coupons]);
+    router.push(`/admin/coupons?${params.toString()}`, { scroll: false });
+  };
 
   const handleCreate = () => {
     setEditingCoupon(null);
@@ -324,7 +384,7 @@ export default function AdminCouponsPage() {
               type="text"
               placeholder="Search by coupon code..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-sm"
             />
           </div>
@@ -333,7 +393,7 @@ export default function AdminCouponsPage() {
             {(['all', 'active', 'expired'] as const).map((status) => (
               <button
                 key={status}
-                onClick={() => setFilterStatus(status)}
+                onClick={() => handleStatusChange(status)}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                   filterStatus === status
                     ? 'bg-emerald-600 text-white'
@@ -349,7 +409,7 @@ export default function AdminCouponsPage() {
 
       {/* Coupons Table */}
       <AdminCard padding="none">
-        {filteredCoupons.length === 0 ? (
+        {coupons.length === 0 ? (
           <AdminEmptyState
             type={hasActiveFilters ? "no-results" : "no-data"}
             title={hasActiveFilters ? "No coupons found" : "No coupons yet"}
@@ -360,16 +420,30 @@ export default function AdminCouponsPage() {
             }
             action={
               hasActiveFilters
-                ? { label: "Clear Filters", onClick: () => { setSearchTerm(''); setFilterStatus('all'); } }
+                ? { label: "Clear Filters", onClick: () => { handleSearchChange(''); handleStatusChange('all'); } }
                 : { label: "Create Coupon", onClick: handleCreate }
             }
           />
         ) : (
-          <AdminTable
-            columns={columns}
-            data={filteredCoupons}
-            keyExtractor={(coupon) => coupon._id}
-          />
+          <>
+            <AdminTable
+              columns={columns}
+              data={coupons}
+              keyExtractor={(coupon) => coupon._id}
+            />
+            {/* Pagination Controls */}
+            <div className="p-4 border-t border-slate-200">
+              <Pagination
+                currentPage={paginationInfo.page}
+                totalPages={paginationInfo.pages}
+                totalItems={paginationInfo.total}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={handlePageChange}
+                hasNext={paginationInfo.page < paginationInfo.pages}
+                hasPrev={paginationInfo.page > 1}
+              />
+            </div>
+          </>
         )}
       </AdminCard>
 
