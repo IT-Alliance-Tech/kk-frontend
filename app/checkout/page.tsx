@@ -8,6 +8,7 @@ import { createOrder } from "@/lib/api/orders.api";
 import { getAddresses } from "@/lib/api/user.api";
 import { getAccessToken } from "@/lib/utils/auth";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
+import { initiatePayment } from "@/lib/api/payment.api";
 import GlobalLoader from "@/components/common/GlobalLoader"; // use default placeholder when product has no image or to replace dummy imports
 import { useToast } from "@/components/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errorHandler";
@@ -22,7 +23,7 @@ function CheckoutPageContent() {
   const [addressesLoading, setAddressesLoading] = useState(true);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState<number>(-1);
-  
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -57,7 +58,7 @@ function CheckoutPageContent() {
       setAddressesLoading(true);
       const userAddresses = await getAddresses();
       setAddresses(userAddresses || []);
-      
+
       // Auto-select default address if available
       if (userAddresses && userAddresses.length > 0) {
         const defaultIndex = userAddresses.findIndex((addr: any) => addr.isDefault);
@@ -143,8 +144,24 @@ function CheckoutPageContent() {
       // Clear cart on success
       clearCart();
 
-      // Redirect to payment/confirmation page
-      router.push(`/payment?orderId=${order._id || order.id}`);
+      // Initiate PhonePe Payment
+      const orderId = order._id || order.id;
+      if (!orderId) {
+        throw new Error("Order ID not found");
+      }
+
+      const paymentResponse = await initiatePayment(orderId);
+
+      // apiPost returns the `data` object from the backend envelope.
+      // My backend returns data: { redirectUrl, merchantTransactionId }
+      // So paymentResponse should be that object.
+      if (paymentResponse && paymentResponse.redirectUrl) {
+        // Redirect to PhonePe
+        window.location.href = paymentResponse.redirectUrl;
+      } else {
+        // Fallback to normal flow if payment initiation fails (or handle error appropriately)
+        router.push(`/payment?orderId=${order._id || order.id}`);
+      }
     } catch (err: any) {
       console.error("Order placement error:", err);
       const message = getErrorMessage(err, "Failed to place order. Please try again.");
