@@ -27,7 +27,7 @@ export function normalizeOrdersResponse(response: any): Order[] {
 
 /**
  * Normalize single order response
- * Backend returns: Order or { data: Order }
+ * Backend returns: Order or { data: Order } or { order: Order }
  * Frontend expects: Order
  */
 export function normalizeOrderResponse(response: any): Order {
@@ -39,6 +39,11 @@ export function normalizeOrderResponse(response: any): Order {
   // Wrapped in data
   if (response && "data" in response) {
     return response.data as Order;
+  }
+
+  // Wrapped in order (from createOrder endpoint)
+  if (response && "order" in response) {
+    return response.order as Order;
   }
 
   throw new Error("Invalid order response format");
