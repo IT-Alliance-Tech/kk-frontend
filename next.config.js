@@ -18,26 +18,20 @@ const nextConfig = {
     // safe placeholder for experimental flags if needed
   },
 
-  images: {
-    remotePatterns: [
-      // Only add a concrete hostname if we successfully parsed it from env
-      ...(supabaseHostname ? [{
-        protocol: 'https',
-        hostname: supabaseHostname,
-        port: '',
-        pathname: '/storage/v1/object/public/**'
-      }] : []),
-      // Allow placeholder images
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-        port: '',
-        pathname: '/**'
-      }
-    ],
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; img-src * data: blob;"
-  },
+images: {
+  remotePatterns: [
+    {
+      protocol: 'https',
+      hostname: 'sbotgymquktdnblvmgon.supabase.co',
+      pathname: '/storage/v1/object/public/**',
+    },
+    {
+      protocol: 'https',
+      hostname: 'via.placeholder.com',
+      pathname: '/**',
+    },
+  ],
+},
 
   webpack: (config) => {
     config.ignoreWarnings = config.ignoreWarnings || [];

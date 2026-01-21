@@ -142,7 +142,7 @@ function CheckoutPageContent() {
       const order = await createOrder(orderPayload as any);
 
       // Clear cart on success
-      clearCart();
+      // clearCart();
 
       // Initiate PhonePe Payment
       const orderId = order._id || order.id;
