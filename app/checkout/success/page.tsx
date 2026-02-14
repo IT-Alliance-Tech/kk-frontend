@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/components/CartContext";
@@ -13,16 +13,7 @@ function SuccessPageContent() {
   const [status, setStatus] = useState<"loading" | "success" | "failed" | "pending">("loading");
   const orderId = searchParams.get("orderId");
 
-useEffect(() => {
-  if (!orderId) {
-    router.push("/");
-    return;
-  }
-
-  checkStatus();
-}, [orderId]);
-
-  async function checkStatus() {
+  const checkStatus = useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/status/${orderId}`, {
         headers: {
@@ -46,7 +37,16 @@ useEffect(() => {
       console.error("Failed to check payment status:", error);
       setStatus("failed");
     }
+  }, [orderId, clearCart]);
+
+useEffect(() => {
+  if (!orderId) {
+    router.push("/");
+    return;
   }
+
+  checkStatus();
+}, [orderId, router, checkStatus]);
 
   if (status === "loading") {
     return (
@@ -82,7 +82,7 @@ useEffect(() => {
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Pending</h1>
               <p className="text-gray-600 mb-6">
-                Your payment is being processed. We will update your order status once it's confirmed.
+                Your payment is being processed. We will update your order status once it&apos;s confirmed.
               </p>
             </>
           ) : (
