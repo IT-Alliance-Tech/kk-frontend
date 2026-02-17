@@ -117,10 +117,13 @@ export default function PaymentResult({
         {/* Order ID */}
         <div className="mt-2 space-y-1">
           <p className={`text-sm font-medium ${config.textColor}`}>
-            Order ID:{" "}
+            Order Number:{" "}
             <span className="font-mono font-bold">
               #{orderId.slice(-8).toUpperCase()}
             </span>
+          </p>
+          <p className={`text-xs ${config.textColor} opacity-50 font-mono`}>
+            Order ID (Reference): {orderId}
           </p>
 
           {/* Transaction ID if available */}

@@ -33,7 +33,7 @@ import GlobalLoader from "@/components/common/GlobalLoader";
 
 // DEMO PREVIEW MODE — REMOVE AFTER CLIENT DEMO
 // Set to false to use real backend API.
-const USE_MOCK_ORDER_DETAIL_PREVIEW = true;
+const USE_MOCK_ORDER_DETAIL_PREVIEW = false;
 
 // Mock order data for client demo preview
 // This allows the client to see a fully populated order detail page without backend connectivity
@@ -69,8 +69,8 @@ const MOCK_ORDER = {
   shippingCost: 0,
   total: 9947,
   payment: {
-    gateway: "Razorpay",
-    method: "Razorpay",
+    gateway: "PhonePe",
+    method: "ONLINE",
     status: "paid",
     transactionId: "txn_demo_002_preview",
     paidAt: new Date().toISOString(),
@@ -157,11 +157,34 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     }
   };
 
-  // Get status badge configuration
-  const getStatusBadge = (status?: string) => {
-    const normalizedStatus = status?.toLowerCase() || "pending";
+  // Get status badge configuration — payment-aware
+  const getStatusBadge = (order: Order) => {
+    const status = order.status?.toLowerCase() || "pending";
+    const paymentStatus = order.payment?.status?.toLowerCase();
+    const paymentMethod = order.payment?.method?.toUpperCase();
 
-    switch (normalizedStatus) {
+    // If online payment failed → always show Payment Failed
+    if (paymentMethod === "ONLINE" && paymentStatus === "failed") {
+      return {
+        color: "bg-red-100 text-red-800 border-red-200",
+        icon: <XCircle className="w-5 h-5" />,
+        label: "Payment Failed",
+      };
+    }
+
+    // If online payment is still pending/init → show Awaiting Payment
+    if (
+      paymentMethod === "ONLINE" &&
+      (paymentStatus === "pending" || paymentStatus === "init")
+    ) {
+      return {
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        icon: <Clock className="w-5 h-5" />,
+        label: "Awaiting Payment",
+      };
+    }
+
+    switch (status) {
       case "delivered":
         return {
           color: "bg-green-100 text-green-800 border-green-200",
@@ -175,16 +198,24 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           label: "Shipped",
         };
       case "processing":
+      case "packed":
         return {
           color: "bg-yellow-100 text-yellow-800 border-yellow-200",
           icon: <Clock className="w-5 h-5" />,
-          label: "Processing",
+          label: status === "packed" ? "Packed" : "Processing",
+        };
+      case "accepted":
+        return {
+          color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+          icon: <CheckCircle className="w-5 h-5" />,
+          label: "Confirmed",
         };
       case "cancelled":
+      case "rejected":
         return {
           color: "bg-red-100 text-red-800 border-red-200",
           icon: <XCircle className="w-5 h-5" />,
-          label: "Cancelled",
+          label: status === "rejected" ? "Rejected" : "Cancelled",
         };
       case "pending":
       default:
@@ -239,7 +270,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     );
   }
 
-  const statusBadge = getStatusBadge(order.status);
+  const statusBadge = getStatusBadge(order);
   const subtotal = order.subtotal || 0;
   const tax = order.tax || 0;
   const shippingCost = order.shippingCost || 0;
@@ -260,11 +291,18 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">
               Order #{(order._id || order.id || "").slice(-8).toUpperCase()}
             </h2>
+            <p className="text-xs text-gray-400 font-mono mb-2">
+              Order ID (Reference): {order._id || order.id}
+            </p>
             <p className="text-gray-600">
-              Placed on {formatDate(order.createdAt)}
+              {order.payment?.method?.toUpperCase() === "ONLINE" &&
+              order.payment?.status === "failed"
+                ? "Payment failed on"
+                : "Placed on"}{" "}
+              {formatDate(order.createdAt)}
             </p>
           </div>
           <div
@@ -303,10 +341,10 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">
-                        ${((item.price || 0) * item.qty).toFixed(2)}
+                        ₹{((item.price || 0) * item.qty).toFixed(2)}
                       </p>
                       <p className="text-sm text-gray-600">
-                        ${(item.price || 0).toFixed(2)} each
+                        ₹{(item.price || 0).toFixed(2)} each
                       </p>
                     </div>
                   </div>
@@ -371,8 +409,22 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                 {order.payment.status && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Payment Status:</span>
-                    <span className="font-medium text-gray-900 capitalize">
-                      {order.payment.status}
+                    <span
+                      className={`font-medium capitalize px-2 py-0.5 rounded-full text-sm ${
+                        order.payment.status === "success"
+                          ? "bg-green-100 text-green-800"
+                          : order.payment.status === "failed"
+                            ? "bg-red-100 text-red-800"
+                            : order.payment.status === "pending" || order.payment.status === "init"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {order.payment.status === "init"
+                        ? "Awaiting Payment"
+                        : order.payment.status === "success"
+                          ? "Paid"
+                          : order.payment.status.charAt(0).toUpperCase() + order.payment.status.slice(1)}
                     </span>
                   </div>
                 )}
@@ -398,19 +450,21 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
             <div className="space-y-3">
               <div className="flex justify-between text-gray-700">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-gray-700">
-                <span>Tax</span>
-                <span>${tax.toFixed(2)}</span>
-              </div>
+              {tax > 0 && (
+                <div className="flex justify-between text-gray-700">
+                  <span>Tax</span>
+                  <span>₹{tax.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-700">
                 <span>Shipping</span>
-                <span>${shippingCost.toFixed(2)}</span>
+                <span>{shippingCost > 0 ? `₹${shippingCost.toFixed(2)}` : "Free"}</span>
               </div>
               <div className="border-t border-gray-200 pt-3 flex justify-between text-lg font-bold text-gray-900">
                 <span>Total</span>
-                <span className="text-red-600">${total.toFixed(2)}</span>
+                <span className="text-red-600">₹{total.toFixed(2)}</span>
               </div>
             </div>
           </div>

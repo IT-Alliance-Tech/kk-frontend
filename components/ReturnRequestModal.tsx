@@ -168,9 +168,10 @@ export default function ReturnRequestModal({
                 <div className="flex-1">
                   <p className="font-medium text-slate-900">{productName}</p>
                   <div className="text-sm text-slate-600 mt-1 space-y-1">
-                    <p>Order ID: {orderId.slice(0, 8).toUpperCase()}</p>
+                    <p>Order Number: #{orderId.slice(-8).toUpperCase()}</p>
+                    <p className="text-xs text-slate-400 font-mono">Ref: {orderId}</p>
                     {productPrice && (
-                      <p>Price: ${productPrice.toFixed(2)}</p>
+                      <p>Price: ₹{productPrice.toFixed(2)}</p>
                     )}
                     <p>Quantity: {quantity}</p>
                   </div>

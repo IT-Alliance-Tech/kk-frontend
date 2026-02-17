@@ -8,7 +8,6 @@ import { createOrder } from "@/lib/api/orders.api";
 import { getAddresses } from "@/lib/api/user.api";
 import { getAccessToken } from "@/lib/utils/auth";
 import DefaultProductImage from "@/assets/images/ChatGPT Image Nov 28, 2025, 10_33_10 PM.png";
-import { initiatePayment } from "@/lib/api/payment.api";
 import GlobalLoader from "@/components/common/GlobalLoader"; // use default placeholder when product has no image or to replace dummy imports
 import { useToast } from "@/components/ToastContext";
 import { getErrorMessage } from "@/lib/utils/errorHandler";
@@ -32,6 +31,14 @@ function CheckoutPageContent() {
   const [state, setState] = useState("");
   const [pin, setPin] = useState("");
   const [line2, setLine2] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("ONLINE");
+  const [mounted, setMounted] = useState(false);
+  
+
+
+  useEffect(() => {
+  setMounted(true);
+}, []);
 
   // Get coupon data from URL params
   const couponCode = searchParams.get("couponCode") || "";
@@ -130,7 +137,7 @@ function CheckoutPageContent() {
           country: "India",
           pincode: pin,
         },
-        paymentMethod: "COD",
+        paymentMethod: paymentMethod,
       };
 
       // Add coupon if applied
@@ -141,26 +148,31 @@ function CheckoutPageContent() {
       // Call backend API to create order
       const order = await createOrder(orderPayload as any);
 
-      // Clear cart on success
-      clearCart();
+      if (paymentMethod === "ONLINE") {
+        // Initiate PhonePe payment
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/initiate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getAccessToken()}`
+          },
+           body: JSON.stringify({ 
+    orderId: (order as any)._id || (order as any).id,
+    amount: total // Use the calculated total
+  })
+        });
 
-      // Initiate PhonePe Payment
-      const orderId = order._id || order.id;
-      if (!orderId) {
-        throw new Error("Order ID not found");
-      }
-
-      const paymentResponse = await initiatePayment(orderId);
-
-      // apiPost returns the `data` object from the backend envelope.
-      // My backend returns data: { redirectUrl, merchantTransactionId }
-      // So paymentResponse should be that object.
-      if (paymentResponse && paymentResponse.redirectUrl) {
-        // Redirect to PhonePe
-        window.location.href = paymentResponse.redirectUrl;
+        const data = await response.json();
+        if (data.success && data.data.redirectUrl) {
+          window.location.href = data.data.redirectUrl;
+          return;
+        } else {
+          showToast(data.message || "Failed to initiate payment", "error");
+        }
       } else {
-        // Fallback to normal flow if payment initiation fails (or handle error appropriately)
-        router.push(`/payment?orderId=${order._id || order.id}`);
+        // COD - Clear cart and redirect to success
+        clearCart();
+        router.push(`/checkout/success?orderId=${order._id || order.id}`);
       }
     } catch (err: any) {
       console.error("Order placement error:", err);
@@ -170,6 +182,8 @@ function CheckoutPageContent() {
       setLoading(false);
     }
   }
+
+    if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
@@ -278,6 +292,50 @@ function CheckoutPageContent() {
                 onChange={(e) => setPin(e.target.value)}
                 required
               />
+            </div>
+          </div>
+
+          {/* Payment Method Section */}
+          <div className="bg-white p-4 sm:p-6 rounded shadow">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+              Payment Method
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <label 
+                className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${
+                   paymentMethod === "ONLINE" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  checked={paymentMethod === "ONLINE"}
+                  onChange={() => setPaymentMethod("ONLINE")}
+                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
+                />
+                <div className="ml-3">
+                  <div className="font-medium text-sm sm:text-base">Online Payment</div>
+                  <div className="text-xs text-gray-500">Fast & Secure (Cards, UPI, Netbanking)</div>
+                </div>
+              </label>
+              
+              <label 
+                className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${
+                   paymentMethod === "COD" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  checked={paymentMethod === "COD"}
+                  onChange={() => setPaymentMethod("COD")}
+                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
+                />
+                <div className="ml-3">
+                  <div className="font-medium text-sm sm:text-base">Cash on Delivery</div>
+                  <div className="text-xs text-gray-500">Pay when you receive your order</div>
+                </div>
+              </label>
             </div>
           </div>
 

@@ -29,7 +29,11 @@ export default function HeroCarousel() {
         cache: "no-store" 
       });
       
-      if (!res.ok) throw new Error("Failed to fetch hero images");
+      if (!res.ok) {
+        console.warn(`Hero images API returned ${res.status} — skipping carousel`);
+        setSlides([]);
+        return;
+      }
       
       const json = await res.json();
       const images = json?.data || [];

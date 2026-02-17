@@ -67,11 +67,34 @@ export default function OrdersList() {
     }
   };
 
-  // Get status badge configuration - Modern gradients
-  const getStatusBadge = (status?: string) => {
-    const normalizedStatus = status?.toLowerCase() || "pending";
+  // Get status badge configuration - Modern gradients, payment-aware
+  const getStatusBadge = (order: Order) => {
+    const status = order.status?.toLowerCase() || "pending";
+    const paymentStatus = order.payment?.status?.toLowerCase();
+    const paymentMethod = order.payment?.method?.toUpperCase();
 
-    switch (normalizedStatus) {
+    // If online payment failed → always show Payment Failed
+    if (paymentMethod === "ONLINE" && paymentStatus === "failed") {
+      return {
+        color: "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30",
+        icon: <XCircle className="w-4 h-4" />,
+        label: "Payment Failed",
+      };
+    }
+
+    // If online payment still pending/init → show Awaiting Payment
+    if (
+      paymentMethod === "ONLINE" &&
+      (paymentStatus === "pending" || paymentStatus === "init")
+    ) {
+      return {
+        color: "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30",
+        icon: <Clock className="w-4 h-4" />,
+        label: "Awaiting Payment",
+      };
+    }
+
+    switch (status) {
       case "delivered":
         return {
           color: "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30",
@@ -85,16 +108,24 @@ export default function OrdersList() {
           label: "Shipped",
         };
       case "processing":
+      case "packed":
         return {
           color: "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30",
           icon: <Clock className="w-4 h-4" />,
-          label: "Processing",
+          label: status === "packed" ? "Packed" : "Processing",
+        };
+      case "accepted":
+        return {
+          color: "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30",
+          icon: <CheckCircle className="w-4 h-4" />,
+          label: "Confirmed",
         };
       case "cancelled":
+      case "rejected":
         return {
           color: "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30",
           icon: <XCircle className="w-4 h-4" />,
-          label: "Cancelled",
+          label: status === "rejected" ? "Rejected" : "Cancelled",
         };
       case "pending":
       default:
@@ -209,7 +240,7 @@ export default function OrdersList() {
     <div className="space-y-4">
       {orders.map((order) => {
         const orderId = order._id || order.id || "unknown";
-        const statusBadge = getStatusBadge(order.status);
+        const statusBadge = getStatusBadge(order);
         const totalItems = getTotalItems(order);
         const total = order.total || order.subtotal || 0;
 
@@ -261,11 +292,11 @@ export default function OrdersList() {
                   <div className="w-px h-8 bg-slate-200"></div>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                      <span className="text-lg font-bold text-emerald-600">$</span>
+                      <span className="text-lg font-bold text-emerald-600">₹</span>
                     </div>
                     <div>
                       <span className="text-xs text-slate-500 block">Total</span>
-                      <span className="font-bold text-emerald-600">${total.toFixed(2)}</span>
+                      <span className="font-bold text-emerald-600">₹{total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

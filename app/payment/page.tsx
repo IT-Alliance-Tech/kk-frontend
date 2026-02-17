@@ -22,7 +22,7 @@
 
 // DEMO PREVIEW MODE — REMOVE AFTER CLIENT DEMO
 // Set to false to use real backend API.
-const USE_MOCK_ORDER_FOR_PREVIEW = true;
+const USE_MOCK_ORDER_FOR_PREVIEW = false;
 
 // DEMO: Use this to switch payment states quickly for presentation
 // Options: 'success' | 'pending' | 'failed'
@@ -360,10 +360,10 @@ function PaymentPageContent() {
           <div className="flex flex-col items-center text-center">
             <AlertCircle className="w-12 h-12 text-red-600 mb-4" />
             <h1 className="text-xl font-semibold text-gray-900 mb-2">
-              No Order ID Found
+              No Order Number Found
             </h1>
             <p className="text-gray-600 mb-6">
-              Please provide a valid order ID to view payment details.
+              Please provide a valid order number to view payment details.
             </p>
             <Link
               href="/account/orders"

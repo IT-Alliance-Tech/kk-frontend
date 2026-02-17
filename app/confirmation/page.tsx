@@ -45,8 +45,11 @@ function ConfirmationPageContent() {
         <h2 className="text-2xl font-bold mb-4 text-emerald-600">
           Thank you — your order is confirmed!
         </h2>
-        <p className="mb-4">
-          Order ID: <strong>{order.id}</strong>
+        <p className="mb-1">
+          Order Number: <strong>#{(order.id || "").slice(-8).toUpperCase()}</strong>
+        </p>
+        <p className="text-xs text-gray-400 font-mono mb-4">
+          Order ID (Reference): {order.id}
         </p>
 
         <div className="mb-4">
