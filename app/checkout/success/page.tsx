@@ -4,49 +4,113 @@ import { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/components/CartContext";
+import { getOrder } from "@/lib/api/orders.api";
 import GlobalLoader from "@/components/common/GlobalLoader";
+
+/** Format raw MongoDB _id to short display: e.g. #B4A49C30 */
+function formatOrderNumber(id: string): string {
+  return `#${id.slice(-8).toUpperCase()}`;
+}
 
 function SuccessPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
   const [status, setStatus] = useState<"loading" | "success" | "failed" | "pending">("loading");
+  const [dbPaymentStatus, setDbPaymentStatus] = useState<string | null>(null);
   const orderId = searchParams.get("orderId");
 
   const checkStatus = useCallback(async () => {
     try {
+      // First, fetch the order from DB to determine payment method
+      let order: any = null;
+      try {
+        order = await getOrder(orderId!);
+      } catch {
+        // Will handle below
+      }
+
+      // COD orders: no PhonePe check needed — order is already confirmed
+      if (order?.payment?.method === "COD") {
+        setDbPaymentStatus("COD");
+        clearCart();
+        setStatus("success");
+        return;
+      }
+
+      // ONLINE orders: Check payment status with PhonePe via backend
+      // (this call also persists the status in DB)
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/status/${orderId}`, {
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("accessToken")}` // Simple way for now
+          "Authorization": `Bearer ${localStorage.getItem("accessToken") || localStorage.getItem("token") || ""}`
         }
       });
       const data = await response.json();
 
-       if (data.success && data.data.paymentStatus === "success") {
-      clearCart();
-      setStatus("success");
-    } else if (data.data.paymentStatus === "failed") {
-          setStatus("failed");
-        } else if (data.data.paymentStatus === "pending") {
-          setStatus("pending");
-        }
-       else {
+      if (data.success && data.data.paymentStatus === "success") {
+        clearCart();
+        setStatus("success");
+      } else if (data.data?.paymentStatus === "failed") {
         setStatus("failed");
+      } else if (data.data?.paymentStatus === "pending") {
+        setStatus("pending");
+      } else {
+        setStatus("failed");
+      }
+
+      // Also update DB payment status display from order
+      if (order?.payment?.status) {
+        setDbPaymentStatus(order.payment.status);
+        // If the DB says success (from webhook) but PhonePe API check failed, trust DB
+        if (order.payment.status === "success") {
+          clearCart();
+          setStatus("success");
+        }
       }
     } catch (error) {
       console.error("Failed to check payment status:", error);
+
+      // Fallback: try fetching order directly from DB
+      try {
+        const order = await getOrder(orderId!);
+        if (order?.payment?.status) {
+          setDbPaymentStatus(order.payment.status);
+
+          // COD fallback
+          if (order.payment.method === "COD") {
+            clearCart();
+            setStatus("success");
+            return;
+          }
+
+          if (order.payment.status === "success") {
+            clearCart();
+            setStatus("success");
+          } else if (order.payment.status === "failed") {
+            setStatus("failed");
+          } else if (order.payment.status === "pending" || order.payment.status === "init") {
+            setStatus("pending");
+          } else {
+            setStatus("failed");
+          }
+          return;
+        }
+      } catch {
+        // Both methods failed
+      }
+
       setStatus("failed");
     }
   }, [orderId, clearCart]);
 
-useEffect(() => {
-  if (!orderId) {
-    router.push("/");
-    return;
-  }
+  useEffect(() => {
+    if (!orderId) {
+      router.push("/");
+      return;
+    }
 
-  checkStatus();
-}, [orderId, router, checkStatus]);
+    checkStatus();
+  }, [orderId, router, checkStatus]);
 
   if (status === "loading") {
     return (
@@ -56,6 +120,8 @@ useEffect(() => {
       </div>
     );
   }
+
+  const displayOrderNumber = orderId ? formatOrderNumber(orderId) : orderId;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -102,21 +168,31 @@ useEffect(() => {
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg text-left">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500">Order ID:</span>
-                <span className="font-mono font-medium text-gray-900">{orderId}</span>
+                <span className="text-gray-500">Order Number:</span>
+                <span className="font-mono font-medium text-gray-900">{displayOrderNumber}</span>
               </div>
+              <div className="flex justify-between text-xs mb-2">
+                <span className="text-gray-400">Order ID (Reference):</span>
+                <span className="font-mono text-gray-400 break-all">{orderId}</span>
+              </div>
+              {dbPaymentStatus && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Payment Status:</span>
+                  <span className="font-medium text-gray-900 capitalize">{dbPaymentStatus}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                href="/account/orders"
-                className="flex-1 bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition"
+                href={`/account/orders/${orderId}`}
+                className="flex-1 bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition text-center"
               >
-                View My Orders
+                View Order Details
               </Link>
               <Link
                 href="/"
-                className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition"
+                className="flex-1 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition text-center"
               >
                 Continue Shopping
               </Link>

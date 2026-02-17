@@ -60,10 +60,10 @@ export default function PaymentOrderSummary({
               {/* Price */}
               <div className="text-right flex-shrink-0">
                 <p className="font-semibold text-gray-900 text-sm sm:text-base">
-                  ${((item.price || 0) * item.qty).toFixed(2)}
+                  ₹{((item.price || 0) * item.qty).toFixed(2)}
                 </p>
                 <p className="text-xs sm:text-sm text-gray-600">
-                  ${(item.price || 0).toFixed(2)} each
+                  ₹{(item.price || 0).toFixed(2)} each
                 </p>
               </div>
             </div>
@@ -79,19 +79,23 @@ export default function PaymentOrderSummary({
       <div className="space-y-2 border-t border-gray-200 pt-4">
         <div className="flex justify-between text-sm text-gray-700">
           <span>Subtotal</span>
-          <span className="font-medium">${subtotal.toFixed(2)}</span>
+          <span className="font-medium">₹{subtotal.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between text-sm text-gray-700">
-          <span>Tax</span>
-          <span className="font-medium">${tax.toFixed(2)}</span>
-        </div>
+        {tax > 0 && (
+          <div className="flex justify-between text-sm text-gray-700">
+            <span>Tax</span>
+            <span className="font-medium">₹{tax.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm text-gray-700">
           <span>Shipping</span>
-          <span className="font-medium">${shippingCost.toFixed(2)}</span>
+          <span className="font-medium">
+            {shippingCost > 0 ? `₹${shippingCost.toFixed(2)}` : "Free"}
+          </span>
         </div>
         <div className="border-t border-gray-200 pt-3 flex justify-between text-base sm:text-lg font-bold">
           <span className="text-gray-900">Total</span>
-          <span className="text-red-600">${total.toFixed(2)}</span>
+          <span className="text-red-600">₹{total.toFixed(2)}</span>
         </div>
       </div>
     </div>

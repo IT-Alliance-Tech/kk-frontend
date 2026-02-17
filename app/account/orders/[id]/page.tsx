@@ -27,7 +27,12 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Order Details
             </h2>
-            <p className="text-gray-600 mt-2">Order ID: {id}</p>
+            <p className="text-gray-600 mt-2">
+              Order Number: #{id.slice(-8).toUpperCase()}
+            </p>
+            <p className="text-xs text-gray-400 font-mono mt-1">
+              Order ID (Reference): {id}
+            </p>
           </div>
 
           {/* Order Detail Component */}

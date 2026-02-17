@@ -63,7 +63,11 @@ export default function PaymentDetails({ order }: PaymentDetailsProps) {
         {/* Payment Gateway */}
         <div className="flex justify-between items-center py-2 border-b border-gray-100">
           <span className="text-sm text-gray-600">Payment Gateway</span>
-          <span className="font-medium text-gray-900">Razorpay</span>
+          <span className="font-medium text-gray-900">
+            {payment.method?.toUpperCase() === "COD"
+              ? "Cash on Delivery"
+              : "PhonePe"}
+          </span>
         </div>
 
         {/* Payment Method */}
@@ -106,10 +110,10 @@ export default function PaymentDetails({ order }: PaymentDetailsProps) {
           </div>
         )}
 
-        {/* Order ID with Copy */}
+        {/* Order Number with Copy */}
         <div className="py-2 border-b border-gray-100">
           <div className="flex justify-between items-center gap-2">
-            <span className="text-sm text-gray-600">Order ID</span>
+            <span className="text-sm text-gray-600">Order Number</span>
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm text-gray-900">
                 #{orderId.slice(-8).toUpperCase()}
@@ -117,8 +121,8 @@ export default function PaymentDetails({ order }: PaymentDetailsProps) {
               <button
                 onClick={() => copyToClipboard(orderId, "orderId")}
                 className="flex-shrink-0 p-1 hover:bg-gray-100 rounded transition-colors"
-                aria-label="Copy order ID"
-                title="Copy full order ID"
+                aria-label="Copy order number"
+                title="Copy full order number"
               >
                 {copiedField === "orderId" ? (
                   <Check className="w-4 h-4 text-green-600" />
@@ -128,6 +132,9 @@ export default function PaymentDetails({ order }: PaymentDetailsProps) {
               </button>
             </div>
           </div>
+          <p className="text-xs text-gray-400 font-mono mt-1 text-right">
+            Ref: {orderId}
+          </p>
         </div>
 
         {/* Payment Date */}

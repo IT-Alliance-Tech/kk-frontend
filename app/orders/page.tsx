@@ -342,7 +342,7 @@ export default function OrdersPage() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {orders.map((order: any) => {
                   const orderId = order._id || order.id || "unknown";
-                  const shortId = orderId.toString().slice(0, 8).toUpperCase();
+                  const shortId = orderId.toString().slice(-8).toUpperCase();
                   const createdDate = formatDate(order.createdAt || order.created_at);
                   const status = order.status || "pending";
                   const total =
@@ -478,7 +478,7 @@ export default function OrdersPage() {
                   const orderId = request.orderId || "";
                   const shortOrderId =
                     typeof orderId === "string"
-                      ? orderId.slice(0, 8).toUpperCase()
+                      ? orderId.slice(-8).toUpperCase()
                       : "N/A";
 
                   // Map action types for display (backward compatible)
