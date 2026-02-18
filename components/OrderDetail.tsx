@@ -299,7 +299,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
             </p>
             <p className="text-gray-600">
               {order.payment?.method?.toUpperCase() === "ONLINE" &&
-              order.payment?.status === "failed"
+                order.payment?.status === "failed"
                 ? "Payment failed on"
                 : "Placed on"}{" "}
               {formatDate(order.createdAt)}
@@ -410,15 +410,14 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Payment Status:</span>
                     <span
-                      className={`font-medium capitalize px-2 py-0.5 rounded-full text-sm ${
-                        order.payment.status === "success"
-                          ? "bg-green-100 text-green-800"
-                          : order.payment.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : order.payment.status === "pending" || order.payment.status === "init"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                      }`}
+                      className={`font-medium capitalize px-2 py-0.5 rounded-full text-sm ${order.payment.status === "success"
+                        ? "bg-green-100 text-green-800"
+                        : order.payment.status === "failed"
+                          ? "bg-red-100 text-red-800"
+                          : order.payment.status === "pending" || order.payment.status === "init"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {order.payment.status === "init"
                         ? "Awaiting Payment"
@@ -433,6 +432,44 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                     <span className="text-gray-600">Transaction ID:</span>
                     <span className="font-mono text-sm text-gray-900">
                       {order.payment.transactionId}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Delivery Status */}
+          {order.payment?.status === "success" && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Truck className="w-5 h-5" />
+                Delivery Status
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Status:</span>
+                  <span
+                    className={`font-medium capitalize px-3 py-1 rounded-full text-sm ${(order as any).deliveryStatus === "delivered"
+                      ? "bg-green-100 text-green-800"
+                      : (order as any).deliveryStatus === "out_for_delivery"
+                        ? "bg-orange-100 text-orange-800"
+                        : (order as any).deliveryStatus === "shipped"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                  >
+                    {(order as any).deliveryStatus === "out_for_delivery"
+                      ? "Out for Delivery"
+                      : ((order as any).deliveryStatus || "Pending").charAt(0).toUpperCase() +
+                      ((order as any).deliveryStatus || "pending").slice(1)}
+                  </span>
+                </div>
+                {(order as any).deliveredAt && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Delivered On:</span>
+                    <span className="font-medium text-gray-900">
+                      {formatDate((order as any).deliveredAt)}
                     </span>
                   </div>
                 )}

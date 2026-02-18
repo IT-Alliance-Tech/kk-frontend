@@ -24,6 +24,7 @@ import {
   LogOut,
   X,
   ChefHat,
+  Truck,
   Image as ImageIcon,
 } from "lucide-react";
 
@@ -47,75 +48,80 @@ interface AdminSidebarProps {
 const navGroups: NavGroup[] = [
   {
     items: [
-      { 
-        label: "Dashboard", 
-        href: "/admin", 
-        icon: <LayoutDashboard className="w-5 h-5" /> 
+      {
+        label: "Dashboard",
+        href: "/admin",
+        icon: <LayoutDashboard className="w-5 h-5" />
       },
     ],
   },
   {
     title: "Catalog",
     items: [
-      { 
-        label: "Products", 
-        href: "/admin/products", 
-        icon: <Package className="w-5 h-5" /> 
+      {
+        label: "Products",
+        href: "/admin/products",
+        icon: <Package className="w-5 h-5" />
       },
-      { 
-        label: "Brands", 
-        href: "/admin/brands", 
-        icon: <Tags className="w-5 h-5" /> 
+      {
+        label: "Brands",
+        href: "/admin/brands",
+        icon: <Tags className="w-5 h-5" />
       },
-      { 
-        label: "Categories", 
-        href: "/admin/categories", 
-        icon: <FolderTree className="w-5 h-5" /> 
+      {
+        label: "Categories",
+        href: "/admin/categories",
+        icon: <FolderTree className="w-5 h-5" />
       },
     ],
   },
   {
     title: "Sales",
     items: [
-      { 
-        label: "Orders", 
-        href: "/admin/orders", 
-        icon: <ShoppingCart className="w-5 h-5" /> 
+      {
+        label: "Orders",
+        href: "/admin/orders",
+        icon: <ShoppingCart className="w-5 h-5" />
       },
-      { 
-        label: "Returns", 
-        href: "/admin/returns", 
-        icon: <RotateCcw className="w-5 h-5" /> 
+      {
+        label: "Returns",
+        href: "/admin/returns",
+        icon: <RotateCcw className="w-5 h-5" />
       },
-      { 
-        label: "Coupons", 
-        href: "/admin/coupons", 
-        icon: <Ticket className="w-5 h-5" /> 
+      {
+        label: "Delivery",
+        href: "/admin/delivery",
+        icon: <Truck className="w-5 h-5" />
+      },
+      {
+        label: "Coupons",
+        href: "/admin/coupons",
+        icon: <Ticket className="w-5 h-5" />
       },
     ],
   },
   {
     title: "Content",
     items: [
-      { 
-        label: "Homepage", 
-        href: "/admin/homepage", 
-        icon: <Home className="w-5 h-5" /> 
+      {
+        label: "Homepage",
+        href: "/admin/homepage",
+        icon: <Home className="w-5 h-5" />
       },
-      { 
-        label: "Media", 
-        href: "/admin/media", 
-        icon: <ImageIcon className="w-5 h-5" /> 
+      {
+        label: "Media",
+        href: "/admin/media",
+        icon: <ImageIcon className="w-5 h-5" />
       },
     ],
   },
   {
     title: "Support",
     items: [
-      { 
-        label: "Contact Forms", 
-        href: "/admin/contact-submissions", 
-        icon: <Mail className="w-5 h-5" /> 
+      {
+        label: "Contact Forms",
+        href: "/admin/contact-submissions",
+        icon: <Mail className="w-5 h-5" />
       },
     ],
   },
@@ -158,8 +164,8 @@ export default function AdminSidebar({ isOpen = false, onClose }: AdminSidebarPr
       >
         {/* Logo Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800/80">
-          <Link 
-            href="/admin" 
+          <Link
+            href="/admin"
             className={cn(
               "flex items-center gap-3 transition-all",
               collapsed && "justify-center"
