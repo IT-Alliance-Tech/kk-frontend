@@ -269,11 +269,32 @@ export default function OrdersList() {
                     </p>
                   </div>
                 </div>
-                <div
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${statusBadge.color}`}
-                >
-                  {statusBadge.icon}
-                  <span>{statusBadge.label}</span>
+                <div className="flex flex-col items-end gap-1.5">
+                  <div
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${statusBadge.color}`}
+                  >
+                    {statusBadge.icon}
+                    <span>{statusBadge.label}</span>
+                  </div>
+                  {/* Delivery Status Badge */}
+                  {order.payment?.status === "success" && (order as any).deliveryStatus && (
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium ${(order as any).deliveryStatus === "delivered"
+                        ? "bg-green-100 text-green-700"
+                        : (order as any).deliveryStatus === "out_for_delivery"
+                          ? "bg-orange-100 text-orange-700"
+                          : (order as any).deliveryStatus === "shipped"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                    >
+                      <Truck className="w-3 h-3" />
+                      {(order as any).deliveryStatus === "out_for_delivery"
+                        ? "Out for Delivery"
+                        : ((order as any).deliveryStatus || "").charAt(0).toUpperCase() +
+                        ((order as any).deliveryStatus || "").slice(1)}
+                    </span>
+                  )}
                 </div>
               </div>
 
