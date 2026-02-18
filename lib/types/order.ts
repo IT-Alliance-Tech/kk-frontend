@@ -59,12 +59,19 @@ export type Order = {
   tax?: number;
   shippingCost?: number;
   status?:
-    | "pending"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-    | string;
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | string;
+  deliveryStatus?:
+  | "pending"
+  | "shipped"
+  | "out_for_delivery"
+  | "delivered"
+  | string;
+  deliveredAt?: string;
   createdAt?: string;
   updatedAt?: string;
 };
