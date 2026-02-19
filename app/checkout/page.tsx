@@ -33,19 +33,27 @@ function CheckoutPageContent() {
   const [line2, setLine2] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("ONLINE");
   const [mounted, setMounted] = useState(false);
-  
+  const [orderTaxInfo, setOrderTaxInfo] = useState<{
+    subtotal: number;
+    taxAmount: number;
+    totalAmount: number;
+    discountAmount: number;
+  } | null>(null);
+
 
 
   useEffect(() => {
-  setMounted(true);
-}, []);
+    setMounted(true);
+  }, []);
 
   // Get coupon data from URL params
   const couponCode = searchParams.get("couponCode") || "";
   const discountAmount = Number(searchParams.get("discountAmount") || 0);
 
-  const subtotal = items.reduce((s, it) => s + it.price * (it.qty || 0), 0);
-  const total = subtotal - discountAmount;
+  // Pre-order estimate (client-side, for display before order creation)
+  const estimatedSubtotal = items.reduce((s, it) => s + it.price * (it.qty || 0), 0);
+  const estimatedTax = Math.round(estimatedSubtotal * 0.18);
+  const estimatedTotal = estimatedSubtotal + estimatedTax - discountAmount;
 
   // Check authentication and load addresses on mount
   useEffect(() => {
@@ -148,18 +156,25 @@ function CheckoutPageContent() {
       // Call backend API to create order
       const order = await createOrder(orderPayload as any);
 
+      // Extract tax info from the created order for display
+      setOrderTaxInfo({
+        subtotal: (order as any).subtotal || estimatedSubtotal,
+        taxAmount: (order as any).taxAmount || (order as any).tax || estimatedTax,
+        totalAmount: (order as any).totalAmount || (order as any).finalTotal || (order as any).total || estimatedTotal,
+        discountAmount: (order as any).discountAmount || 0,
+      });
+
       if (paymentMethod === "ONLINE") {
-        // Initiate PhonePe payment
+        // Initiate PhonePe payment — SECURITY: do NOT send amount, backend fetches from DB
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payment/initiate`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${getAccessToken()}`
           },
-           body: JSON.stringify({ 
-    orderId: (order as any)._id || (order as any).id,
-    amount: total // Use the calculated total
-  })
+          body: JSON.stringify({
+            orderId: (order as any)._id || (order as any).id
+          })
         });
 
         const data = await response.json();
@@ -183,7 +198,7 @@ function CheckoutPageContent() {
     }
   }
 
-    if (!mounted) return null;
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
@@ -301,14 +316,13 @@ function CheckoutPageContent() {
               Payment Method
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <label 
-                className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${
-                   paymentMethod === "ONLINE" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
-                }`}
+              <label
+                className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === "ONLINE" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
+                  }`}
               >
-                <input 
-                  type="radio" 
-                  name="paymentMethod" 
+                <input
+                  type="radio"
+                  name="paymentMethod"
                   checked={paymentMethod === "ONLINE"}
                   onChange={() => setPaymentMethod("ONLINE")}
                   className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
@@ -318,15 +332,14 @@ function CheckoutPageContent() {
                   <div className="text-xs text-gray-500">Fast & Secure (Cards, UPI, Netbanking)</div>
                 </div>
               </label>
-              
-              <label 
-                className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${
-                   paymentMethod === "COD" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
-                }`}
+
+              <label
+                className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === "COD" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:bg-gray-50"
+                  }`}
               >
-                <input 
-                  type="radio" 
-                  name="paymentMethod" 
+                <input
+                  type="radio"
+                  name="paymentMethod"
                   checked={paymentMethod === "COD"}
                   onChange={() => setPaymentMethod("COD")}
                   className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
@@ -388,7 +401,11 @@ function CheckoutPageContent() {
             </h3>
             <div className="flex justify-between text-xs sm:text-sm">
               <div>Subtotal</div>
-              <div>₹{subtotal.toFixed(2)}</div>
+              <div>₹{(orderTaxInfo?.subtotal ?? estimatedSubtotal).toFixed(2)}</div>
+            </div>
+            <div className="flex justify-between text-xs sm:text-sm">
+              <div>Tax (18% GST)</div>
+              <div>₹{(orderTaxInfo?.taxAmount ?? estimatedTax).toFixed(2)}</div>
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between text-xs sm:text-sm text-green-600">
@@ -398,7 +415,7 @@ function CheckoutPageContent() {
             )}
             <div className="border-t mt-2 pt-2 flex justify-between font-semibold text-sm sm:text-base">
               <div>Total</div>
-              <div>₹{total.toFixed(2)}</div>
+              <div>₹{(orderTaxInfo?.totalAmount ?? estimatedTotal).toFixed(2)}</div>
             </div>
 
             <button
