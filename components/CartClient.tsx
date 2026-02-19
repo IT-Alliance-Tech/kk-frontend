@@ -29,11 +29,11 @@ export default function CartClient() {
   const [appliedCouponData, setAppliedCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-  
+
   const { showToast } = useToast();
   const [couponLoading, setCouponLoading] = useState(false);
   const router = useRouter();
-  
+
   // Use unified CartContext for guest cart
   const { items: guestCartItems, updateQty: contextUpdateQty, removeItem: contextRemoveItem, clearCart: contextClearCart } = useCart();
 
@@ -231,8 +231,8 @@ export default function CartClient() {
   }
 
   // Check if cart is empty (works for both authenticated and guest users)
-  const hasItems = isGuestMode 
-    ? guestCartItems.length > 0 
+  const hasItems = isGuestMode
+    ? guestCartItems.length > 0
     : cart && cart.items.length > 0;
 
   if (!hasItems) {
@@ -251,23 +251,30 @@ export default function CartClient() {
     );
   }
 
-  // Prepare data for rendering (works for both authenticated and guest users)
-  const items = isGuestMode 
+  const items = isGuestMode
     ? guestCartItems.map(item => ({
-        productId: item.id,
-        title: item.name,
-        price: item.price,
-        qty: item.qty || 1,
-        image: item.image_url || '',
-        variantId: item.variantId,
-        variantName: item.variantName
-      }))
+      productId: item.id,
+      title: item.name,
+      price: item.price,
+      qty: item.qty || 1,
+      image: item.image_url || '',
+      variantId: item.variantId,
+      variantName: item.variantName
+    }))
     : (cart?.items || []);
-  const subtotal = isGuestMode 
+
+  // Use backend-computed tax summary (guest mode: compute client-side as fallback)
+  const cartSubtotal = isGuestMode
     ? guestCartItems.reduce((sum: number, item) => sum + (item.price * (item.qty || 1)), 0)
-    : (cart?.total || 0);
+    : (cart?.taxSummary?.subtotal ?? cart?.total ?? 0);
+  const cartTaxAmount = isGuestMode
+    ? Math.round(cartSubtotal * 0.18)
+    : (cart?.taxSummary?.taxAmount ?? 0);
+  const cartTotalAmount = isGuestMode
+    ? (cartSubtotal + cartTaxAmount)
+    : (cart?.taxSummary?.totalAmount ?? 0);
   const finalDiscountAmount = appliedCouponData ? discountAmount : 0;
-  const total = subtotal - finalDiscountAmount;
+  const total = cartTotalAmount - finalDiscountAmount;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12">
@@ -276,8 +283,8 @@ export default function CartClient() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
             <span className="font-semibold text-blue-900">Guest Cart:</span>
             <span className="text-blue-700 ml-2">
-              You{"'"}re browsing as a guest. 
-              <button 
+              You{"'"}re browsing as a guest.
+              <button
                 onClick={() => router.push("/login?next=/cart")}
                 className="ml-1 underline hover:text-blue-900"
               >
@@ -302,62 +309,62 @@ export default function CartClient() {
                 const itemPrice = item.price || 0;
                 const itemImage = item.image;
                 const variantName = item.variantName;
-                
+
                 return (
-                <div
-                  key={`${itemId}-${item.variantId || 'base'}`}
-                  className="flex items-start sm:items-center justify-between gap-3 sm:gap-4 flex-col sm:flex-row border-b pb-3 last:border-0"
-                >
-                  <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                    {itemImage ? (
-                      <Image
-                        src={normalizeSrc(itemImage)}
-                        alt={itemTitle}
-                        width={80}
-                        height={80}
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded flex-shrink-0"
-                        unoptimized={itemImage?.startsWith("http")}
+                  <div
+                    key={`${itemId}-${item.variantId || 'base'}`}
+                    className="flex items-start sm:items-center justify-between gap-3 sm:gap-4 flex-col sm:flex-row border-b pb-3 last:border-0"
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                      {itemImage ? (
+                        <Image
+                          src={normalizeSrc(itemImage)}
+                          alt={itemTitle}
+                          width={80}
+                          height={80}
+                          className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded flex-shrink-0"
+                          unoptimized={itemImage?.startsWith("http")}
+                        />
+                      ) : (
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400 flex-shrink-0">
+                          No Image
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm sm:text-base truncate">
+                          {itemTitle}
+                          {variantName && (
+                            <span className="text-gray-600 font-normal ml-2">
+                              – {variantName}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-500">
+                          ₹{itemPrice.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
+                      <QuantitySelector
+                        value={itemQty}
+                        onChange={(newQty) =>
+                          handleQuantityChange(itemId, newQty, item.variantId)
+                        }
+                        size="sm"
                       />
-                    ) : (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400 flex-shrink-0">
-                        No Image
+                      <div className="text-base sm:text-lg font-semibold min-w-[80px] text-right">
+                        ₹{(itemPrice * itemQty).toFixed(2)}
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm sm:text-base truncate">
-                        {itemTitle}
-                        {variantName && (
-                          <span className="text-gray-600 font-normal ml-2">
-                            – {variantName}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500">
-                        ₹{itemPrice.toFixed(2)}
-                      </div>
+                      <button
+                        onClick={() => handleRemoveItem(itemId, item.variantId)}
+                        disabled={actionLoading}
+                        className="text-red-600 hover:underline text-xs sm:text-sm disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
-                    <QuantitySelector
-                      value={itemQty}
-                      onChange={(newQty) =>
-                        handleQuantityChange(itemId, newQty, item.variantId)
-                      }
-                      size="sm"
-                    />
-                    <div className="text-base sm:text-lg font-semibold min-w-[80px] text-right">
-                      ₹{(itemPrice * itemQty).toFixed(2)}
-                    </div>
-                    <button
-                      onClick={() => handleRemoveItem(itemId, item.variantId)}
-                      disabled={actionLoading}
-                      className="text-red-600 hover:underline text-xs sm:text-sm disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              );
+                );
               })}
             </div>
           </div>
@@ -410,7 +417,12 @@ export default function CartClient() {
 
             <div className="flex justify-between text-xs sm:text-sm">
               <div>Subtotal</div>
-              <div>₹{subtotal.toFixed(2)}</div>
+              <div>₹{cartSubtotal.toFixed(2)}</div>
+            </div>
+
+            <div className="flex justify-between text-xs sm:text-sm">
+              <div>Tax (18% GST)</div>
+              <div>₹{cartTaxAmount.toFixed(2)}</div>
             </div>
 
             {appliedCouponData && discountAmount > 0 && (

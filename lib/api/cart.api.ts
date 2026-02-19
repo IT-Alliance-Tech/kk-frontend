@@ -23,11 +23,21 @@ export interface BackendCartItem {
 }
 
 /**
+ * Tax summary computed by backend
+ */
+export interface TaxSummary {
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
+}
+
+/**
  * Cart response from backend
  */
 export interface BackendCart {
   items: BackendCartItem[];
   total: number;
+  taxSummary?: TaxSummary;
 }
 
 /**
@@ -98,12 +108,36 @@ async function fetchWithAuth(
 }
 
 /**
- * Get user's cart
- * @returns Cart with items and total
+ * Get user's cart (with tax summary)
+ * @returns Cart with items, total, and taxSummary
  */
 export async function getCart(): Promise<BackendCart> {
-  const data = await fetchWithAuth("/cart");
-  return data || { items: [], total: 0 };
+  const token = getAccessToken();
+  if (!token) {
+    throw new ApiError("No authentication token found", 401);
+  }
+
+  const url = `${API_BASE_URL}/cart`;
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const body = await response.json().catch(() => null);
+
+  if (!body || !body.success) {
+    const errMsg = body?.error?.message || body?.message || "Failed to fetch cart";
+    throw new ApiError(errMsg, body?.statusCode || response.status);
+  }
+
+  const cart: BackendCart = body.data || { items: [], total: 0 };
+  // Attach taxSummary from envelope (sibling of data)
+  if (body.taxSummary) {
+    cart.taxSummary = body.taxSummary;
+  }
+  return cart;
 }
 
 /**

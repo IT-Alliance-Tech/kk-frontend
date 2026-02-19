@@ -59,7 +59,14 @@ export type Order = {
   total?: number;
   subtotal?: number;
   tax?: number;
+  taxAmount?: number;
+  totalAmount?: number;
+  shipping?: number;
   shippingCost?: number;
+  originalTotal?: number;
+  finalTotal?: number;
+  discountAmount?: number;
+  couponCode?: string;
   status?:
   | "pending"
   | "processing"
