@@ -9,7 +9,9 @@ export type OrderItem = {
   product: string; // Product ID or populated product object
   qty: number;
   price?: number;
-  name?: string; // Product name if populated
+  title?: string; // Product name snapshot (stored by backend)
+  name?: string; // Alias — some responses use this
+  image?: string; // Product image snapshot
 };
 
 /**

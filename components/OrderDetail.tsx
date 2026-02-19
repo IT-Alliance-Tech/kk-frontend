@@ -16,6 +16,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getOrder } from "@/lib/api/orders.api";
+import { getOrderReviewStatus } from "@/lib/api/reviews.api";
 import type { Order, OrderItem } from "@/lib/types/order";
 import {
   Loader2,
@@ -28,8 +29,11 @@ import {
   Clock,
   Truck,
   XCircle,
+  Star,
+  ShieldCheck,
 } from "lucide-react";
 import GlobalLoader from "@/components/common/GlobalLoader";
+import VerifiedReviewModal from "@/components/VerifiedReviewModal";
 
 // DEMO PREVIEW MODE — REMOVE AFTER CLIENT DEMO
 // Set to false to use real backend API.
@@ -100,6 +104,11 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Review state
+  const [reviewStatus, setReviewStatus] = useState<Record<string, string | null>>({});
+  const [canReview, setCanReview] = useState(false);
+  const [reviewModalItem, setReviewModalItem] = useState<{ productId: string; productName: string } | null>(null);
+
   // Fetch order details on mount
   useEffect(() => {
     if (orderId) {
@@ -126,6 +135,19 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
       const data = await getOrder(orderId);
       if (data) {
         setOrder(data);
+        // Fetch review status if order is delivered and paid
+        if (
+          data.payment?.status === "success" &&
+          (data as any).deliveryStatus === "delivered"
+        ) {
+          try {
+            const statusData = await getOrderReviewStatus(orderId);
+            setReviewStatus(statusData.reviewStatus || {});
+            setCanReview(statusData.canReview || false);
+          } catch {
+            // Silently fail — review buttons just won't show
+          }
+        }
       } else {
         setError("Order not found");
       }
@@ -139,6 +161,12 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle successful review submission
+  const handleReviewSuccess = (productId: string) => {
+    setReviewStatus((prev) => ({ ...prev, [productId]: "submitted" }));
+    setReviewModalItem(null);
   };
 
   // Format date
@@ -325,30 +353,60 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
             </h3>
             <div className="space-y-4">
               {order.items && order.items.length > 0 ? (
-                order.items.map((item: OrderItem, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-4 pb-4 border-b border-gray-200 last:border-b-0 last:pb-0"
-                  >
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Package className="w-8 h-8 text-gray-400" />
+                order.items.map((item: OrderItem, index: number) => {
+                  const pid = typeof item.product === "string" ? item.product : (item.product as any)?._id || "";
+                  const isReviewed = pid && reviewStatus[pid];
+                  return (
+                    <div
+                      key={index}
+                      className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <Package className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {item.title || item.name || `Product ${index + 1}`}
+                          </h4>
+                          <p className="text-sm text-gray-600">Qty: {item.qty}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900">
+                            ₹{((item.price || 0) * item.qty).toFixed(2)}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            ₹{(item.price || 0).toFixed(2)} each
+                          </p>
+                        </div>
+                      </div>
+                      {/* Review button per item */}
+                      {canReview && pid && (
+                        <div className="mt-3 pl-20">
+                          {isReviewed ? (
+                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                              <CheckCircle className="w-4 h-4" />
+                              Review Submitted ✓
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                setReviewModalItem({
+                                  productId: pid,
+                                  productName: item.title || item.name || `Product ${index + 1}`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-200 hover:border-emerald-300 transition-all"
+                            >
+                              <Star className="w-4 h-4" />
+                              Write a Review
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate">
-                        {item.name || `Product ${index + 1}`}
-                      </h4>
-                      <p className="text-sm text-gray-600">Qty: {item.qty}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        ₹{((item.price || 0) * item.qty).toFixed(2)}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        ₹{(item.price || 0).toFixed(2)} each
-                      </p>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-gray-500 text-center py-4">No items found</p>
               )}
@@ -507,6 +565,16 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           </div>
         </div>
       </div>
+      {/* Verified Review Modal */}
+      {reviewModalItem && order && (
+        <VerifiedReviewModal
+          productId={reviewModalItem.productId}
+          orderId={order._id || order.id || ""}
+          productName={reviewModalItem.productName}
+          onClose={() => setReviewModalItem(null)}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
     </div>
   );
 }
