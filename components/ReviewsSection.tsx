@@ -31,7 +31,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
   // Load initial reviews (page 1) when component mounts
   useEffect(() => {
     if (!productId) return;
-    
+
     const fetchInitialReviews = async () => {
       setLoading(true);
       try {
@@ -84,15 +84,15 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
   const ratingDistribution = [5, 4, 3, 2, 1].map(star => ({
     star,
     count: Array.isArray(reviews) ? reviews.filter(r => r.rating === star).length : 0,
-    percentage: Array.isArray(reviews) && reviews.length > 0 
-      ? (reviews.filter(r => r.rating === star).length / reviews.length) * 100 
+    percentage: Array.isArray(reviews) && reviews.length > 0
+      ? (reviews.filter(r => r.rating === star).length / reviews.length) * 100
       : 0
   }));
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim() || !comment.trim()) {
       setError("Please fill in all fields");
       return;
@@ -118,7 +118,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
       setName("");
       setRating(5);
       setComment("");
-      
+
       // Show success message briefly
       setError("Review submitted successfully!");
       setTimeout(() => setError(null), 3000);
@@ -215,7 +215,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                 <h3 className="text-lg font-bold">Write a Review</h3>
               </div>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Name Input */}
               <div>
@@ -292,11 +292,10 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
               {/* Error/Success Message */}
               {error && (
                 <div
-                  className={`text-sm px-4 py-3 rounded-xl font-medium ${
-                    error.includes("success")
+                  className={`text-sm px-4 py-3 rounded-xl font-medium ${error.includes("success")
                       ? "bg-emerald-50 text-emerald-700 border-2 border-emerald-200"
                       : "bg-red-50 text-red-700 border-2 border-red-200"
-                  }`}
+                    }`}
                 >
                   {error}
                 </div>
@@ -341,7 +340,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                   Showing {reviews.length} of {totalReviews}
                 </span>
               </div>
-              
+
               <div className="space-y-4">
                 {reviews.map((review, index) => (
                   <div
@@ -391,20 +390,20 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                         </p>
                       </div>
                     </div>
-                    
-                    {/* Verified Badge (Optional Enhancement) */}
-                    {index === 0 && (
+
+                    {/* Verified Purchase Badge */}
+                    {review.verifiedPurchase && (
                       <div className="bg-gradient-to-r from-emerald-50 to-emerald-100/50 px-6 py-2 border-t border-emerald-200">
                         <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                          Most Recent Review
+                          ✓ Verified Purchase
                         </p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-              
+
               {/* Load More Button */}
               {hasNextPage && (
                 <div className="flex justify-center pt-4">
