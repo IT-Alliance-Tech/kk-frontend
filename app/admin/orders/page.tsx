@@ -23,20 +23,13 @@ import Pagination from "@/components/common/Pagination";
 
 const ITEMS_PER_PAGE = 10;
 
-interface ReturnRequest {
-  _id: string;
-  productId: string | { _id: string; name: string };
-  status: string;
-  actionType: "return" | "return_refund";
-  createdAt: string;
-}
+
 
 export default function AdminOrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [orders, setOrders] = useState<any[]>([]);
-  const [returnRequests, setReturnRequests] = useState<Record<string, ReturnRequest[]>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -66,17 +59,17 @@ export default function AdminOrdersPage() {
         if (statusFilter) params.set("status", statusFilter);
 
         const res = await apiGetAuth(`/admin/orders?${params.toString()}`);
-        
+
         // Handle response format from backend
         const ordersList =
           Array.isArray(res) ? res :
-          Array.isArray(res?.orders) ? res.orders :
-          Array.isArray(res?.items) ? res.items :
-          Array.isArray(res?.data) ? res.data :
-          [];
-        
+            Array.isArray(res?.orders) ? res.orders :
+              Array.isArray(res?.items) ? res.items :
+                Array.isArray(res?.data) ? res.data :
+                  [];
+
         setOrders(ordersList);
-        
+
         // Set pagination info from meta
         if (res?.meta) {
           setPaginationInfo({
@@ -92,7 +85,6 @@ export default function AdminOrdersPage() {
           });
         }
 
-        await loadReturnRequests();
       } catch (err) {
         console.error("Failed to load admin orders", err);
       }
@@ -100,26 +92,6 @@ export default function AdminOrdersPage() {
     }
     loadOrders();
   }, [currentPage, searchTerm, statusFilter]);
-
-  async function loadReturnRequests() {
-    try {
-      const res = await apiGetAuth("/admin/returns");
-      const returns = res?.returnRequests || [];
-      
-      const grouped: Record<string, ReturnRequest[]> = {};
-      returns.forEach((ret: ReturnRequest) => {
-        const orderId = typeof ret.productId === 'object' ? ret.productId._id : ret.productId;
-        if (!grouped[orderId]) {
-          grouped[orderId] = [];
-        }
-        grouped[orderId].push(ret);
-      });
-      
-      setReturnRequests(grouped);
-    } catch (err) {
-      console.error("Failed to load return requests", err);
-    }
-  }
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
@@ -175,10 +147,10 @@ export default function AdminOrdersPage() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-IN', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 0 
+      maximumFractionDigits: 0
     }).format(price || 0);
   };
 
@@ -235,17 +207,17 @@ export default function AdminOrdersPage() {
       key: "status",
       header: "Status",
       render: (order: any) => {
-        const orderReturns = returnRequests[order._id] || [];
+        const orderReturns = (order.items || []).filter((i: any) => i.returnStatus && i.returnStatus !== 'none');
         const hasReturns = orderReturns.length > 0;
         return (
           <div className="flex flex-col gap-1.5">
             <StatusBadge status={order.status} />
             {hasReturns && (
               <div className="flex flex-wrap gap-1">
-                {orderReturns.slice(0, 2).map((ret: ReturnRequest) => (
-                  <ReturnStatusBadge 
-                    key={ret._id} 
-                    status={ret.status}
+                {orderReturns.slice(0, 2).map((ret: any) => (
+                  <ReturnStatusBadge
+                    key={ret._id}
+                    status={ret.returnStatus}
                     size="sm"
                   />
                 ))}
@@ -275,10 +247,10 @@ export default function AdminOrdersPage() {
       className: "w-[80px]",
       render: (order: any) => (
         <TableActionMenu>
-          <TableActionButton 
-            onClick={() => setSelectedOrder(order)} 
-            icon={<Eye className="w-4 h-4" />} 
-            label="View Details" 
+          <TableActionButton
+            onClick={() => setSelectedOrder(order)}
+            icon={<Eye className="w-4 h-4" />}
+            label="View Details"
           />
         </TableActionMenu>
       ),
@@ -315,7 +287,7 @@ export default function AdminOrdersPage() {
           { label: "Shipped", value: orderStats.shipped, color: "bg-purple-50 text-purple-700" },
           { label: "Delivered", value: orderStats.delivered, color: "bg-emerald-50 text-emerald-700" },
         ].map((stat) => (
-          <div 
+          <div
             key={stat.label}
             className={`${stat.color} rounded-xl p-3 sm:p-4 text-center`}
           >
@@ -442,7 +414,7 @@ export default function AdminOrdersPage() {
               <h4 className="font-medium text-slate-900 mb-3">Order Items</h4>
               <div className="space-y-3">
                 {selectedOrder.items?.map((item: any, index: number) => (
-                  <div 
+                  <div
                     key={index}
                     className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg"
                   >

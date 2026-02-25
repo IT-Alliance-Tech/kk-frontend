@@ -6,12 +6,16 @@
  * Order item representing a product in an order
  */
 export type OrderItem = {
+  _id?: string;
   product: string; // Product ID or populated product object
   qty: number;
   price?: number;
   title?: string; // Product name snapshot (stored by backend)
   name?: string; // Alias — some responses use this
   image?: string; // Product image snapshot
+  returnRequestedQty?: number;
+  returnStatus?: 'none' | 'requested' | 'initiated' | 'in_process' | 'completed';
+  returnRequestedAt?: string;
 };
 
 /**

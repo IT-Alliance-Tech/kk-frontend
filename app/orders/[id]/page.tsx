@@ -9,7 +9,6 @@ import { use, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getOrder } from "@/lib/api/orders.api";
-import { getReturnRequestsByOrder, type ReturnRequest } from "@/lib/api/returns.api";
 import type { Order, OrderUser } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,17 +38,16 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    productId: string;
+    itemId: string;
     productName: string;
     productImage?: string;
     productPrice?: number;
-    quantity?: number;
+    maxQuantity?: number;
   }>({
     isOpen: false,
-    productId: "",
+    itemId: "",
     productName: "",
   });
 
@@ -74,14 +72,6 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         setError("Order not found");
       } else {
         setOrder(data);
-        // Fetch return requests for this order
-        try {
-          const returns = await getReturnRequestsByOrder(id);
-          setReturnRequests(returns);
-        } catch (err) {
-          // Silently fail - return requests are optional
-          console.error("Failed to fetch return requests:", err);
-        }
       }
     } catch (err) {
       const errorMessage =
@@ -135,10 +125,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
     return user.name || user.email || "N/A";
   };
 
-  // Check if a return request exists for a specific product
-  const getReturnRequestForProduct = (productId: string): ReturnRequest | undefined => {
-    return returnRequests.find((req) => req.productId === productId || req.productId._id === productId);
-  };
+
 
   // Check if order is eligible for returns (not cancelled, not too old, etc.)
   const isOrderEligibleForReturns = (): boolean => {
@@ -150,19 +137,19 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
   // Open return modal for a specific product
   const openReturnModal = (
-    productId: string,
+    itemId: string,
     productName: string,
     productImage?: string,
     productPrice?: number,
-    quantity?: number
+    maxQuantity?: number
   ) => {
     setModalState({
       isOpen: true,
-      productId,
+      itemId,
       productName,
       productImage,
       productPrice,
-      quantity,
+      maxQuantity,
     });
   };
 
@@ -170,7 +157,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const closeReturnModal = () => {
     setModalState({
       isOpen: false,
-      productId: "",
+      itemId: "",
       productName: "",
     });
   };
@@ -280,12 +267,14 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               <CardContent>
                 <div className="space-y-4">
                   {order.items?.map((item, index) => {
-                    const productId = typeof item.product === "string" ? item.product : "";
-                    const productName = item.name || "Product";
-                    const productImage = undefined; // Image not in OrderItem type
+                    const itemId = item._id || "";
+                    const productName = item.title || item.name || "Product";
+                    const productImage = item.image || undefined;
                     const productPrice = item.price;
                     const quantity = item.qty;
-                    const returnRequest = getReturnRequestForProduct(productId);
+                    const returnRequestedQty = item.returnRequestedQty || 0;
+                    const returnStatus = item.returnStatus || 'none';
+                    const maxQuantity = quantity - returnRequestedQty;
 
                     return (
                       <div key={index}>
@@ -307,28 +296,42 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                         </div>
 
                         {/* Return status or button */}
-                        {returnRequest ? (
+                        {returnStatus !== 'none' ? (
                           <div className="mt-2 flex items-center gap-2">
                             <Badge
                               variant="outline"
                               className={`
-                                ${
-                                  returnRequest.status === "pending"
-                                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                    : returnRequest.status === "approved"
-                                      ? "bg-green-50 text-green-700 border-green-200"
-                                      : returnRequest.status === "rejected"
-                                        ? "bg-red-50 text-red-700 border-red-200"
-                                        : "bg-blue-50 text-blue-700 border-blue-200"
+                                ${returnStatus === "requested" || returnStatus === "initiated"
+                                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                  : returnStatus === "completed"
+                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    : returnStatus === "in_process"
+                                      ? "bg-blue-50 text-blue-700 border-blue-200"
+                                      : "bg-slate-50 text-slate-700 border-slate-200"
                                 }
                               `}
                             >
-                              {returnRequest.actionType === "return_refund" 
-                                ? "Return + Refund" 
-                                : returnRequest.actionType === "return"
-                                ? "Return Only"
-                                : returnRequest.actionType}: {returnRequest.status}
+                              Return ({returnRequestedQty}): {returnStatus.replace('_', ' ')}
                             </Badge>
+                            {maxQuantity > 0 && isOrderEligibleForReturns() && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  openReturnModal(
+                                    itemId,
+                                    productName,
+                                    productImage,
+                                    productPrice,
+                                    maxQuantity
+                                  )
+                                }
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 ml-2"
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Return More
+                              </Button>
+                            )}
                           </div>
                         ) : (
                           isOrderEligibleForReturns() && (
@@ -338,11 +341,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                                 size="sm"
                                 onClick={() =>
                                   openReturnModal(
-                                    productId,
+                                    itemId,
                                     productName,
                                     productImage,
                                     productPrice,
-                                    quantity
+                                    maxQuantity
                                   )
                                 }
                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -520,11 +523,11 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           isOpen={modalState.isOpen}
           onClose={closeReturnModal}
           orderId={id}
-          productId={modalState.productId}
+          itemId={modalState.itemId}
           productName={modalState.productName}
           productImage={modalState.productImage}
           productPrice={modalState.productPrice}
-          quantity={modalState.quantity}
+          maxQuantity={modalState.maxQuantity}
           onSuccess={handleReturnSuccess}
         />
       )}
