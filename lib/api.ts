@@ -33,7 +33,7 @@ export function buildUrl(path = ""): string {
 export class ApiError extends Error {
   status: number;
   details?: any;
-  
+
   constructor(message: string, status = 500, details?: any) {
     super(message);
     this.name = "ApiError";
@@ -61,6 +61,8 @@ export function unwrapEnvelope(body: any): any {
   return body;
 }
 
+
+
 /**
  * For list endpoints, ensure returned value is always an array.
  * - If payload is array -> return it
@@ -71,25 +73,25 @@ export function unwrapEnvelope(body: any): any {
 export function normalizeListResponse(payload: any, knownKeys: string[] = []): any[] {
   if (!payload) return [];
   if (Array.isArray(payload)) return payload;
-  
+
   // If payload is envelope-like, unwrap automatically
   const maybe = typeof payload === "object" && (payload.statusCode !== undefined || payload.success !== undefined)
     ? unwrapEnvelope(payload)
     : payload;
-    
+
   if (Array.isArray(maybe)) return maybe;
 
   const keys = [...knownKeys, "items", "list", "rows", "products", "categories", "brands"];
   const obj = (typeof maybe === "object" && maybe) ? maybe : payload;
-  
+
   for (const k of keys) {
     if (Array.isArray(obj?.[k])) return obj[k];
   }
-  
+
   // pick any single array in object if exactly one exists
   const arrProps = Object.keys(obj || {}).filter(p => Array.isArray(obj[p]));
   if (arrProps.length === 1) return obj[arrProps[0]];
-  
+
   return [];
 }
 
@@ -114,7 +116,7 @@ export async function apiFetch<T = any>(
 ): Promise<T> {
   const url = buildUrl(path);
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  
+
   try {
     const res = await fetch(url, {
       ...options,
@@ -171,7 +173,7 @@ export async function apiFetch<T = any>(
     if (err instanceof ApiError) {
       throw err;
     }
-    
+
     // Wrap network errors
     console.error("❌ Network error in apiFetch:", err);
     throw new ApiError(
@@ -233,9 +235,37 @@ export function buildQueryString(params: Record<string, any>): string {
 /**
  * Get auth token from localStorage (admin or user token)
  */
-export function getAuthToken() {
+export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("adminToken") || localStorage.getItem("token");
+
+  const isAdminPath = window.location.pathname.startsWith('/admin');
+  let token = null;
+
+  if (isAdminPath) {
+    token = localStorage.getItem("adminToken");
+    if (!token) token = localStorage.getItem("accessToken");
+    if (!token) token = localStorage.getItem("token");
+  } else {
+    token = localStorage.getItem("accessToken");
+    if (!token) token = localStorage.getItem("token");
+    if (!token) token = localStorage.getItem("adminToken");
+  }
+
+  // Fallback to cookies
+  if (!token) {
+    try {
+      const cookies = document.cookie.split(";").reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split("=");
+        acc[key] = value;
+        return acc;
+      }, {} as Record<string, string>);
+      token = cookies.accessToken || cookies.adminToken || cookies.token || null;
+    } catch (e) {
+      // Ignore cookie parse failures
+    }
+  }
+
+  return token;
 }
 
 /**
@@ -244,7 +274,7 @@ export function getAuthToken() {
 export async function apiGetAuth<T = any>(path: string): Promise<T> {
   const url = buildUrl(path);
   const token = getAuthToken();
-  
+
   const res = await fetch(url, {
     method: "GET",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -294,7 +324,7 @@ export async function apiGetAuth<T = any>(path: string): Promise<T> {
 export async function apiPostAuth<T = any>(path: string, body: any): Promise<T> {
   const url = buildUrl(path);
   const token = getAuthToken();
-  
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -347,7 +377,7 @@ export async function apiPostAuth<T = any>(path: string, body: any): Promise<T> 
 export async function apiPutAuth<T = any>(path: string, body: any): Promise<T> {
   const url = buildUrl(path);
   const token = getAuthToken();
-  
+
   const res = await fetch(url, {
     method: "PUT",
     headers: {
@@ -400,7 +430,7 @@ export async function apiPutAuth<T = any>(path: string, body: any): Promise<T> {
 export async function apiDeleteAuth<T = any>(path: string): Promise<T> {
   const url = buildUrl(path);
   const token = getAuthToken();
-  
+
   const res = await fetch(url, {
     method: "DELETE",
     headers: token ? { Authorization: `Bearer ${token}` } : {},

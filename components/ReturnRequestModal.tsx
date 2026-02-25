@@ -1,8 +1,3 @@
-/**
- * Return Request Modal Component
- * Allows users to request return (with or without refund) for order items
- */
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,11 +8,11 @@ interface ReturnRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string;
-  productId: string;
+  itemId: string;
   productName: string;
   productImage?: string;
   productPrice?: number;
-  quantity?: number;
+  maxQuantity?: number; // total quantity ordered minus already returned qty
   onSuccess?: () => void;
   isDemo?: boolean;
 }
@@ -26,19 +21,15 @@ export default function ReturnRequestModal({
   isOpen,
   onClose,
   orderId,
-  productId,
+  itemId,
   productName,
   productImage,
   productPrice,
-  quantity = 1,
+  maxQuantity = 1,
   onSuccess,
   isDemo = false,
 }: ReturnRequestModalProps) {
-  const [actionType, setActionType] = useState<"return" | "return_refund">("return");
-  const [issueType, setIssueType] = useState<
-    "damaged" | "wrong-item" | "quality-issue" | "late-delivery" | "others"
-  >("damaged");
-  const [issueDescription, setIssueDescription] = useState("");
+  const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -46,28 +37,18 @@ export default function ReturnRequestModal({
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setActionType("return");
-      setIssueType("damaged");
-      setIssueDescription("");
+      setQty(1);
       setError(null);
       setSuccess(false);
     }
   }, [isOpen]);
 
-  // Validation: Issue description is required when issueType is 'others'
-  const isFormValid = () => {
-    if (issueType === "others") {
-      return issueDescription.trim().length > 0;
-    }
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!isFormValid()) {
-      setError("Please provide a description when selecting 'Others' as the issue type");
+    if (qty < 1 || qty > maxQuantity) {
+      setError(`Quantity must be between 1 and ${maxQuantity}`);
       return;
     }
 
@@ -76,20 +57,9 @@ export default function ReturnRequestModal({
 
       const payload: CreateReturnRequestPayload = {
         orderId,
-        productId,
-        actionType,
-        issueType,
+        itemId,
+        qty,
       };
-
-      // Only include description if issueType is 'others'
-      if (issueType === "others") {
-        payload.issueDescription = issueDescription.trim();
-      }
-
-      // Pass isDemo flag if this is a demo request
-      if (isDemo) {
-        payload.isDemo = true;
-      }
 
       await createReturnRequest(payload);
       setSuccess(true);
@@ -111,7 +81,7 @@ export default function ReturnRequestModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">
@@ -132,10 +102,10 @@ export default function ReturnRequestModal({
           <div className="px-6 py-8 text-center">
             <div className="text-6xl mb-4">✅</div>
             <h3 className="text-2xl font-bold text-green-700 mb-2">
-              Request Submitted Successfully!
+              Return Requested Successfully!
             </h3>
             <p className="text-slate-600">
-              We&apos;ll review your request and get back to you soon.
+              We&apos;ll review your request and process it shortly.
             </p>
           </div>
         )}
@@ -155,7 +125,7 @@ export default function ReturnRequestModal({
             {/* Product Details */}
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
               <h3 className="text-sm font-semibold text-slate-700 mb-3">
-                Product Details
+                Item Details
               </h3>
               <div className="flex items-center gap-4">
                 {productImage && (
@@ -169,11 +139,10 @@ export default function ReturnRequestModal({
                   <p className="font-medium text-slate-900">{productName}</p>
                   <div className="text-sm text-slate-600 mt-1 space-y-1">
                     <p>Order Number: #{orderId.slice(-8).toUpperCase()}</p>
-                    <p className="text-xs text-slate-400 font-mono">Ref: {orderId}</p>
-                    {productPrice && (
+                    {productPrice !== undefined && (
                       <p>Price: ₹{productPrice.toFixed(2)}</p>
                     )}
-                    <p>Quantity: {quantity}</p>
+                    <p>Eligible Quantity: {maxQuantity}</p>
                   </div>
                 </div>
               </div>
@@ -181,92 +150,28 @@ export default function ReturnRequestModal({
 
             {/* Form Fields */}
             <div className="px-6 py-6 space-y-6">
-              {/* Action Type Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-3">
-                  What would you like to do?
-                </label>
-                <div className="space-y-2">
-                  {[
-                    { value: "return", label: "Return Only" },
-                    { value: "return_refund", label: "Return + Refund" },
-                  ].map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-center p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition"
-                    >
-                      <input
-                        type="radio"
-                        name="actionType"
-                        value={option.value}
-                        checked={actionType === option.value}
-                        onChange={(e) =>
-                          setActionType(e.target.value as "return" | "return_refund")
-                        }
-                        disabled={loading}
-                        className="w-4 h-4 text-blue-600"
-                      />
-                      <span className="ml-3 text-slate-900">{option.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Issue Type Selection */}
+              {/* Quantiy Selection */}
               <div>
                 <label
-                  htmlFor="issueType"
+                  htmlFor="qty"
                   className="block text-sm font-semibold text-slate-700 mb-2"
                 >
-                  What&apos;s the issue?
+                  Quantity to return
                 </label>
                 <select
-                  id="issueType"
-                  value={issueType}
-                  onChange={(e) =>
-                    setIssueType(
-                      e.target.value as
-                        | "damaged"
-                        | "wrong-item"
-                        | "quality-issue"
-                        | "late-delivery"
-                        | "others"
-                    )
-                  }
+                  id="qty"
+                  value={qty}
+                  onChange={(e) => setQty(Number(e.target.value))}
                   disabled={loading}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100"
                 >
-                  <option value="damaged">Damaged product</option>
-                  <option value="wrong-item">Wrong item received</option>
-                  <option value="quality-issue">Quality not as expected</option>
-                  <option value="late-delivery">Late delivery</option>
-                  <option value="others">Others</option>
+                  {Array.from({ length: maxQuantity }).map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}
+                    </option>
+                  ))}
                 </select>
               </div>
-
-              {/* Issue Description (conditional) */}
-              {issueType === "others" && (
-                <div>
-                  <label
-                    htmlFor="issueDescription"
-                    className="block text-sm font-semibold text-slate-700 mb-2"
-                  >
-                    Please describe the issue *
-                  </label>
-                  <textarea
-                    id="issueDescription"
-                    value={issueDescription}
-                    onChange={(e) => setIssueDescription(e.target.value)}
-                    disabled={loading}
-                    placeholder="Provide details about the issue..."
-                    rows={4}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    * Required when issue type is &quot;Others&quot;
-                  </p>
-                </div>
-              )}
 
               {/* Error Message */}
               {error && (
@@ -288,7 +193,7 @@ export default function ReturnRequestModal({
               </button>
               <button
                 type="submit"
-                disabled={loading || !isFormValid()}
+                disabled={loading}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Submitting..." : "Submit Request"}

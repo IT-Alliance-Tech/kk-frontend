@@ -9,7 +9,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getMyOrders } from "@/lib/api/orders.api";
-import { getMyReturnRequests, type ReturnRequest } from "@/lib/api/returns.api";
 import { ApiError } from "@/lib/api";
 import GlobalLoader from "@/components/common/GlobalLoader";
 import ReturnRequestModal from "@/components/ReturnRequestModal";
@@ -17,7 +16,7 @@ import ReturnRequestModal from "@/components/ReturnRequestModal";
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
-  const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
+  const [returnRequests, setReturnRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
   const [activeTab, setActiveTab] = useState<"orders" | "returns">("orders");
@@ -31,14 +30,19 @@ export default function OrdersPage() {
       const data = await getMyOrders();
       setOrders(data);
 
-      // Also fetch return requests
-      try {
-        const returns = await getMyReturnRequests(1, 50);
-        setReturnRequests(returns.returnRequests || []);
-      } catch (err) {
-        // Silently fail for return requests
-        console.error("Failed to fetch return requests:", err);
-      }
+      const allReturns = data.flatMap((order: any) =>
+        (order.items || [])
+          .filter((item: any) => item.returnStatus && item.returnStatus !== 'none')
+          .map((item: any) => ({
+            _id: item._id,
+            orderId: order._id || order.id,
+            title: item.title || item.name || item.product?.name || 'Product',
+            qty: item.returnRequestedQty,
+            status: item.returnStatus,
+            createdAt: item.returnRequestedAt || order.createdAt
+          }))
+      );
+      setReturnRequests(allReturns);
     } catch (err) {
       setError(err as ApiError);
 
@@ -248,10 +252,10 @@ export default function OrdersPage() {
           isOpen={showDemoModal}
           onClose={() => setShowDemoModal(false)}
           orderId="DEMO-ORDER-001"
-          productId="DEMO-PRODUCT-001"
+          itemId="DEMO-ITEM-001"
           productName="Prestige Pressure Cooker (Demo)"
           productPrice={1999}
-          quantity={1}
+          maxQuantity={1}
           onSuccess={fetchOrders}
           isDemo={true}
         />
@@ -298,21 +302,19 @@ export default function OrdersPage() {
           <div className="flex gap-4">
             <button
               onClick={() => setActiveTab("orders")}
-              className={`px-4 py-2 font-medium border-b-2 transition ${
-                activeTab === "orders"
+              className={`px-4 py-2 font-medium border-b-2 transition ${activeTab === "orders"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-slate-600 hover:text-slate-900"
-              }`}
+                }`}
             >
               Orders ({orders.length})
             </button>
             <button
               onClick={() => setActiveTab("returns")}
-              className={`px-4 py-2 font-medium border-b-2 transition ${
-                activeTab === "returns"
+              className={`px-4 py-2 font-medium border-b-2 transition ${activeTab === "returns"
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-slate-600 hover:text-slate-900"
-              }`}
+                }`}
             >
               Return Requests ({returnRequests.length})
             </button>
@@ -364,8 +366,7 @@ export default function OrdersPage() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              status === "delivered"
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${status === "delivered"
                                 ? "bg-green-100 text-green-800"
                                 : status === "shipped"
                                   ? "bg-blue-100 text-blue-800"
@@ -374,7 +375,7 @@ export default function OrdersPage() {
                                     : status === "cancelled"
                                       ? "bg-red-100 text-red-800"
                                       : "bg-slate-100 text-slate-800"
-                            }`}
+                              }`}
                           >
                             {status}
                           </span>
@@ -471,22 +472,12 @@ export default function OrdersPage() {
             ) : (
               <div className="grid gap-4">
                 {returnRequests.map((request) => {
-                  const productName =
-                    typeof request.productId === "string"
-                      ? request.productId
-                      : request.productId?.name || "Unknown Product";
+                  const productName = request.title;
                   const orderId = request.orderId || "";
                   const shortOrderId =
                     typeof orderId === "string"
                       ? orderId.slice(-8).toUpperCase()
                       : "N/A";
-
-                  // Map action types for display (backward compatible)
-                  const displayActionType = request.actionType === "return_refund" 
-                    ? "Return + Refund" 
-                    : request.actionType === "return"
-                    ? "Return Only"
-                    : request.actionType; // Fallback for legacy data
 
                   return (
                     <div
@@ -503,43 +494,28 @@ export default function OrdersPage() {
                           </p>
                         </div>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            request.status === "pending"
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${request.status === "requested" || request.status === "initiated"
                               ? "bg-yellow-100 text-yellow-800"
-                              : request.status === "approved"
+                              : request.status === "completed"
                                 ? "bg-green-100 text-green-800"
-                                : request.status === "rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-blue-100 text-blue-800"
-                          }`}
+                                : request.status === "in_process"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-slate-100 text-slate-800"
+                            }`}
                         >
-                          {request.status}
+                          {request.status.replace('_', ' ')}
                         </span>
                       </div>
 
                       <div className="border-t border-slate-200 pt-4 space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Action:</span>
+                          <span className="text-slate-600">Return Quantity:</span>
                           <span className="font-medium capitalize">
-                            {displayActionType}
+                            {request.qty}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Issue:</span>
-                          <span className="font-medium capitalize">
-                            {request.issueType.replace("-", " ")}
-                          </span>
-                        </div>
-                        {request.issueDescription && (
-                          <div className="pt-2">
-                            <p className="text-slate-600 mb-1">Description:</p>
-                            <p className="text-slate-900 bg-slate-50 p-2 rounded">
-                              {request.issueDescription}
-                            </p>
-                          </div>
-                        )}
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Submitted:</span>
+                          <span className="text-slate-600">Last Updated:</span>
                           <span className="text-slate-500">
                             {formatDate(request.createdAt)}
                           </span>
@@ -568,10 +544,10 @@ export default function OrdersPage() {
         isOpen={showDemoModal}
         onClose={() => setShowDemoModal(false)}
         orderId="DEMO-ORDER-001"
-        productId="DEMO-PRODUCT-001"
+        itemId="DEMO-ITEM-001"
         productName="Prestige Pressure Cooker (Demo)"
         productPrice={1999}
-        quantity={1}
+        maxQuantity={1}
         onSuccess={fetchOrders}
         isDemo={true}
       />

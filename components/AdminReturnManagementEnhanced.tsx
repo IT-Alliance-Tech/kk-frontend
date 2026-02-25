@@ -10,8 +10,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   adminGetAllReturnRequests,
   adminUpdateReturnStatus,
-  adminGetAllowedStatuses,
-  ReturnRequest,
+  AdminReturnItem,
   ReturnStatus,
 } from "@/lib/api/returns.api";
 import { ApiError } from "@/lib/api";
@@ -27,39 +26,29 @@ import { AdminPagination } from "@/components/admin/ui/AdminPagination";
 import { AdminLoadingState } from "@/components/admin/ui/AdminLoadingState";
 import { AdminModal } from "@/components/admin/ui/AdminModal";
 
-// Status display configuration
 const STATUS_CONFIG: Record<string, { label: string; variant: string; icon: React.ReactNode }> = {
-  return_requested: { label: "Return Requested", variant: "info", icon: <FileText className="w-3 h-3" /> },
-  return_approved: { label: "Return Approved", variant: "success", icon: <CheckCircle className="w-3 h-3" /> },
-  pickup_scheduled: { label: "Pickup Scheduled", variant: "purple", icon: <Truck className="w-3 h-3" /> },
-  product_received: { label: "Product Received", variant: "blue", icon: <Package className="w-3 h-3" /> },
-  refund_initiated: { label: "Refund Initiated", variant: "warning", icon: <Banknote className="w-3 h-3" /> },
-  refund_completed: { label: "Refund Completed", variant: "success", icon: <CheckCircle className="w-3 h-3" /> },
-  return_completed: { label: "Return Completed", variant: "secondary", icon: <CheckCircle className="w-3 h-3" /> },
-  return_rejected: { label: "Return Rejected", variant: "danger", icon: <XCircle className="w-3 h-3" /> },
-  // Legacy
-  pending: { label: "Pending", variant: "info", icon: <Clock className="w-3 h-3" /> },
-  approved: { label: "Approved", variant: "success", icon: <CheckCircle className="w-3 h-3" /> },
-  rejected: { label: "Rejected", variant: "danger", icon: <XCircle className="w-3 h-3" /> },
-  completed: { label: "Completed", variant: "secondary", icon: <CheckCircle className="w-3 h-3" /> },
+  requested: { label: "Requested", variant: "info", icon: <FileText className="w-3 h-3" /> },
+  initiated: { label: "Initiated", variant: "purple", icon: <Truck className="w-3 h-3" /> },
+  in_process: { label: "In Process", variant: "warning", icon: <Banknote className="w-3 h-3" /> },
+  completed: { label: "Completed", variant: "success", icon: <CheckCircle className="w-3 h-3" /> },
 };
 
-const getStatusDisplay = (status: string) => {
-  return STATUS_CONFIG[status] || { label: status, variant: "secondary", icon: <Clock className="w-3 h-3" /> };
+const getStatusDisplay = (status?: string | null) => {
+  if (!status) return { label: "Unknown", variant: "secondary", icon: <Clock className="w-3 h-3" /> };
+  return STATUS_CONFIG[status] || { label: status.replace('_', ' '), variant: "secondary", icon: <Clock className="w-3 h-3" /> };
 };
 
 export default function AdminReturnManagementEnhanced() {
-  const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [returns, setReturns] = useState<AdminReturnItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [filterStatus, setFilterStatus] = useState<string>("");
-  const [filterActionType, setFilterActionType] = useState<string>("");
-  
+  const [filterStatus, setFilterStatus] = useState<ReturnStatus | "">("");
+
   // Selected return for status update
-  const [selectedReturn, setSelectedReturn] = useState<ReturnRequest | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<AdminReturnItem | null>(null);
   const [allowedStatuses, setAllowedStatuses] = useState<ReturnStatus[]>([]);
   const [newStatus, setNewStatus] = useState<string>("");
   const [adminNotes, setAdminNotes] = useState<string>("");
@@ -67,14 +56,12 @@ export default function AdminReturnManagementEnhanced() {
   const [updating, setUpdating] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Load returns with useCallback for performance
-  const loadReturns = useCallback(async (pageNum: number = page) => {
+  const loadReturns = async (pageNum: number = page) => {
     try {
       setLoading(true);
       setError(null);
       const data = await adminGetAllReturnRequests({
-        status: filterStatus || undefined,
-        actionType: filterActionType as any,
+        returnStatus: (filterStatus as ReturnStatus) || undefined,
         page: pageNum,
         limit: 20,
       });
@@ -89,23 +76,24 @@ export default function AdminReturnManagementEnhanced() {
     } finally {
       setLoading(false);
     }
-  }, [page, filterStatus, filterActionType]);
+  };
 
   useEffect(() => {
     loadReturns(1);
-  }, [filterStatus, filterActionType]);
+  }, [filterStatus]);
 
   // Open status update modal
-  const openStatusUpdate = async (returnRequest: ReturnRequest) => {
+  const openStatusUpdate = async (returnRequest: AdminReturnItem) => {
     setSelectedReturn(returnRequest);
     setNewStatus("");
     setAdminNotes("");
     setRefundAmount("");
     setShowConfirmModal(false);
-    
     try {
-      const data = await adminGetAllowedStatuses(returnRequest._id);
-      setAllowedStatuses(data.allowedNextStatuses || []);
+      // Hardcoded forward-only allowed statuses based on the state machine
+      const RETURN_STATUSES = ['none', 'requested', 'initiated', 'in_process', 'completed'];
+      const idx = RETURN_STATUSES.indexOf(returnRequest.returnStatus || 'none');
+      setAllowedStatuses(RETURN_STATUSES.slice(idx + 1) as ReturnStatus[]);
     } catch (err) {
       const apiError = err as ApiError;
       setError(`Failed to load allowed statuses: ${apiError.message}`);
@@ -139,10 +127,9 @@ export default function AdminReturnManagementEnhanced() {
       setUpdating(true);
       setError(null);
       await adminUpdateReturnStatus(
-        selectedReturn._id,
-        newStatus as ReturnStatus,
-        adminNotes || undefined,
-        refundAmount ? parseFloat(refundAmount) : undefined
+        selectedReturn.orderId,
+        selectedReturn.itemId,
+        newStatus as ReturnStatus
       );
       closeModal();
       loadReturns(page);
@@ -162,10 +149,9 @@ export default function AdminReturnManagementEnhanced() {
 
   const handleResetFilters = () => {
     setFilterStatus("");
-    setFilterActionType("");
   };
 
-  const hasActiveFilters = filterStatus || filterActionType;
+  const hasActiveFilters = filterStatus;
 
   // Loading skeleton
   if (loading && returns.length === 0) {
@@ -207,19 +193,19 @@ export default function AdminReturnManagementEnhanced() {
         </div>
         <div className="bg-blue-50 p-4 rounded-xl text-center">
           <p className="text-2xl font-bold text-blue-700">
-            {returns.filter(r => r.status === 'return_requested' || r.status === 'pending').length}
+            {returns.filter(r => r.returnStatus === 'requested').length}
           </p>
           <p className="text-sm text-blue-600">Pending</p>
         </div>
         <div className="bg-amber-50 p-4 rounded-xl text-center">
           <p className="text-2xl font-bold text-amber-700">
-            {returns.filter(r => ['return_approved', 'pickup_scheduled', 'product_received', 'refund_initiated'].includes(r.status)).length}
+            {returns.filter(r => ['initiated', 'in_process'].includes(r.returnStatus)).length}
           </p>
           <p className="text-sm text-amber-600">In Progress</p>
         </div>
         <div className="bg-emerald-50 p-4 rounded-xl text-center">
           <p className="text-2xl font-bold text-emerald-700">
-            {returns.filter(r => r.status === 'return_completed' || r.status === 'completed' || r.status === 'refund_completed').length}
+            {returns.filter(r => r.returnStatus === 'completed').length}
           </p>
           <p className="text-sm text-emerald-600">Completed</p>
         </div>
@@ -230,30 +216,14 @@ export default function AdminReturnManagementEnhanced() {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <AdminFilterSelect
-              value={filterStatus}
-              onChange={setFilterStatus}
+              value={filterStatus as string}
+              onChange={(val) => setFilterStatus(val as ReturnStatus | "")}
               placeholder="All Statuses"
               options={[
-                { value: "return_requested", label: "Return Requested" },
-                { value: "return_approved", label: "Return Approved" },
-                { value: "pickup_scheduled", label: "Pickup Scheduled" },
-                { value: "product_received", label: "Product Received" },
-                { value: "refund_initiated", label: "Refund Initiated" },
-                { value: "refund_completed", label: "Refund Completed" },
-                { value: "return_completed", label: "Return Completed" },
-                { value: "return_rejected", label: "Return Rejected" },
-              ]}
-              className="w-full"
-            />
-          </div>
-          <div className="flex-1">
-            <AdminFilterSelect
-              value={filterActionType}
-              onChange={setFilterActionType}
-              placeholder="All Types"
-              options={[
-                { value: "return", label: "Return Only" },
-                { value: "return_refund", label: "Return + Refund" },
+                { value: "requested", label: "Requested" },
+                { value: "initiated", label: "Initiated" },
+                { value: "in_process", label: "In Process" },
+                { value: "completed", label: "Completed" },
               ]}
               className="w-full"
             />
@@ -308,46 +278,41 @@ export default function AdminReturnManagementEnhanced() {
                 columns={[
                   {
                     key: "id",
-                    header: "Return ID",
-                    render: (r: ReturnRequest) => (
-                      <span className="font-mono text-sm text-slate-600">
-                        #{r._id.slice(-8).toUpperCase()}
-                      </span>
+                    header: "Order / Item ID",
+                    render: (r: AdminReturnItem) => (
+                      <div className="font-mono text-sm text-slate-600 truncate flex flex-col gap-1">
+                        <span title={r.orderId}>#{(r.orderId || '').slice(-6).toUpperCase()}</span>
+                        <span title={r.itemId} className="text-xs text-slate-400">Pt: {(r.itemId || '').slice(-6).toUpperCase()}</span>
+                      </div>
                     ),
                   },
                   {
                     key: "product",
-                    header: "Product",
-                    render: (r: ReturnRequest) => (
-                      <p className="font-medium text-slate-900 truncate max-w-[200px]">
-                        {r.productId?.name || "N/A"}
-                      </p>
+                    header: "Product & Return Qty",
+                    render: (r: AdminReturnItem) => (
+                      <div className="flex flex-col gap-1">
+                        <p className="font-medium text-slate-900 truncate max-w-[150px]" title={r.productTitle}>
+                          {r.productTitle || "N/A"}
+                        </p>
+                        <span className="text-xs text-slate-500 font-medium">Return Qty: {r.returnRequestedQty}</span>
+                      </div>
                     ),
                   },
                   {
                     key: "customer",
                     header: "Customer",
                     className: "hidden md:table-cell",
-                    render: (r: ReturnRequest) => (
+                    render: (r: AdminReturnItem) => (
                       <span className="text-slate-600 text-sm">
-                        {(r as any).userId?.name || "N/A"}
+                        {r.customerName || "N/A"}
                       </span>
-                    ),
-                  },
-                  {
-                    key: "type",
-                    header: "Type",
-                    render: (r: ReturnRequest) => (
-                      <AdminBadge variant={r.actionType === "return_refund" ? "purple" : "blue"}>
-                        {r.actionType === "return_refund" ? "Return + Refund" : "Return Only"}
-                      </AdminBadge>
                     ),
                   },
                   {
                     key: "status",
                     header: "Status",
-                    render: (r: ReturnRequest) => {
-                      const status = getStatusDisplay(r.status);
+                    render: (r: AdminReturnItem) => {
+                      const status = getStatusDisplay(r.returnStatus);
                       return (
                         <AdminBadge variant={status.variant as any} className="flex items-center gap-1">
                           {status.icon}
@@ -360,7 +325,7 @@ export default function AdminReturnManagementEnhanced() {
                     key: "date",
                     header: "Date",
                     className: "hidden lg:table-cell",
-                    render: (r: ReturnRequest) => (
+                    render: (r: AdminReturnItem) => (
                       <span className="text-slate-600 text-sm">
                         {new Date(r.createdAt).toLocaleDateString()}
                       </span>
@@ -370,7 +335,7 @@ export default function AdminReturnManagementEnhanced() {
                     key: "actions",
                     header: "",
                     className: "w-[80px]",
-                    render: (r: ReturnRequest) => (
+                    render: (r: AdminReturnItem) => (
                       <TableActionMenu>
                         <TableActionButton
                           onClick={() => openStatusUpdate(r)}
@@ -382,10 +347,10 @@ export default function AdminReturnManagementEnhanced() {
                   },
                 ]}
                 data={returns}
-                keyExtractor={(r) => r._id}
+                keyExtractor={(r) => r.itemId}
               />
             </div>
-            
+
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="border-t border-slate-200 px-4 py-3">
@@ -407,7 +372,7 @@ export default function AdminReturnManagementEnhanced() {
         isOpen={!!selectedReturn}
         onClose={closeModal}
         title="Update Return Status"
-        description={`Return #${selectedReturn?._id.slice(-8).toUpperCase()}`}
+        description={`Item #${(selectedReturn?.itemId || '').slice(-8).toUpperCase()}`}
         size="lg"
       >
         {selectedReturn && (
@@ -415,53 +380,37 @@ export default function AdminReturnManagementEnhanced() {
             {/* Current Info */}
             <div className="bg-slate-50 p-4 rounded-xl space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-slate-600">Product:</span>
-                <span className="text-slate-900 font-medium">
-                  {selectedReturn.productId?.name || "N/A"}
+                <span className="font-medium text-slate-600">Order ID:</span>
+                <span className="text-slate-900 font-medium font-mono uppercase">
+                  {selectedReturn.orderId}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-slate-600">Type:</span>
-                <AdminBadge variant={selectedReturn.actionType === "return_refund" ? "purple" : "blue"}>
-                  {selectedReturn.actionType === "return_refund" ? "Return + Refund" : "Return Only"}
-                </AdminBadge>
+                <span className="font-medium text-slate-600">Item ID:</span>
+                <span className="text-slate-900 font-medium font-mono uppercase">
+                  {selectedReturn.itemId}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-slate-600">Product:</span>
+                <span className="text-slate-900 font-medium">
+                  {selectedReturn.productTitle || "N/A"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-slate-600">Request Details:</span>
+                <span className="text-slate-900 font-medium">
+                  {selectedReturn.returnRequestedQty} item(s) from Order total ({selectedReturn.qtyOrdered})
+                </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-slate-600">Current Status:</span>
-                <AdminBadge variant={getStatusDisplay(selectedReturn.status).variant as any} className="flex items-center gap-1">
-                  {getStatusDisplay(selectedReturn.status).icon}
-                  {getStatusDisplay(selectedReturn.status).label}
+                <AdminBadge variant={getStatusDisplay(selectedReturn.returnStatus).variant as any} className="flex items-center gap-1">
+                  {getStatusDisplay(selectedReturn.returnStatus).icon}
+                  {getStatusDisplay(selectedReturn.returnStatus).label}
                 </AdminBadge>
               </div>
             </div>
-
-            {/* Status History */}
-            {selectedReturn.statusHistory && selectedReturn.statusHistory.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">Status Timeline</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-3">
-                  {selectedReturn.statusHistory.map((entry, idx) => (
-                    <div key={idx} className="flex items-start gap-3 text-sm">
-                      <div className="w-2 h-2 mt-1.5 rounded-full bg-emerald-500 flex-shrink-0"></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-slate-900">
-                            {getStatusDisplay(entry.status).label}
-                          </span>
-                          <span className="text-slate-400">•</span>
-                          <span className="text-slate-500 text-xs">
-                            {new Date(entry.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                        {entry.notes && (
-                          <p className="text-slate-600 text-xs mt-1">{entry.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* New Status Selection */}
             <div>
@@ -491,44 +440,6 @@ export default function AdminReturnManagementEnhanced() {
               )}
             </div>
 
-            {/* Admin Notes */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Admin Notes <span className="text-slate-400 text-xs font-normal">(Optional)</span>
-              </label>
-              <textarea
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                disabled={updating}
-                rows={3}
-                maxLength={500}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 resize-none"
-                placeholder="Add notes about this status change..."
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                {adminNotes.length}/500 characters
-              </p>
-            </div>
-
-            {/* Refund Amount (if applicable) */}
-            {(newStatus === "refund_initiated" || newStatus === "refund_completed") && (
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Refund Amount (₹) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={refundAmount}
-                  onChange={(e) => setRefundAmount(e.target.value)}
-                  disabled={updating}
-                  step="0.01"
-                  min="0"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50"
-                  placeholder="0.00"
-                />
-              </div>
-            )}
-
             {/* Modal Footer */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
               <button
@@ -540,7 +451,7 @@ export default function AdminReturnManagementEnhanced() {
               </button>
               <button
                 onClick={confirmStatusUpdate}
-                disabled={updating || !newStatus || (["refund_initiated", "refund_completed"].includes(newStatus) && !refundAmount)}
+                disabled={updating || !newStatus}
                 className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
               >
                 {updating ? "Updating..." : "Update Status"}

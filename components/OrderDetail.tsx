@@ -34,6 +34,8 @@ import {
 } from "lucide-react";
 import GlobalLoader from "@/components/common/GlobalLoader";
 import VerifiedReviewModal from "@/components/VerifiedReviewModal";
+import ReturnRequestModal from "@/components/ReturnRequestModal";
+import { RotateCcw } from "lucide-react";
 
 // DEMO PREVIEW MODE — REMOVE AFTER CLIENT DEMO
 // Set to false to use real backend API.
@@ -109,6 +111,16 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const [canReview, setCanReview] = useState(false);
   const [reviewModalItem, setReviewModalItem] = useState<{ productId: string; productName: string } | null>(null);
 
+  // Return state
+  const [returnModalState, setReturnModalState] = useState<{
+    isOpen: boolean;
+    itemId: string;
+    productName: string;
+    productImage?: string;
+    productPrice?: number;
+    maxQuantity?: number;
+  }>({ isOpen: false, itemId: "", productName: "" });
+
   // Fetch order details on mount
   useEffect(() => {
     if (orderId) {
@@ -167,6 +179,26 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const handleReviewSuccess = (productId: string) => {
     setReviewStatus((prev) => ({ ...prev, [productId]: "submitted" }));
     setReviewModalItem(null);
+  };
+
+  const isOrderEligibleForReturns = (): boolean => {
+    if (!order) return false;
+    const ineligibleStatuses = ["cancelled", "rejected", "pending", "processing", "packed", "shipped"];
+    if (ineligibleStatuses.includes(order.status?.toLowerCase() || "")) return false;
+    if ((order as any).deliveryStatus?.toLowerCase() !== "delivered") return false;
+    return true;
+  };
+
+  const openReturnModal = (item: any) => {
+    const returnRequestedQty = item.returnRequestedQty || 0;
+    setReturnModalState({
+      isOpen: true,
+      itemId: item._id || item.id,
+      productName: item.title || item.name || "Product",
+      productImage: item.image,
+      productPrice: item.price,
+      maxQuantity: (item.qty || item.quantity) - returnRequestedQty,
+    });
   };
 
   // Format date
@@ -380,10 +412,9 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                           </p>
                         </div>
                       </div>
-                      {/* Review button per item */}
-                      {canReview && pid && (
-                        <div className="mt-3 pl-20">
-                          {isReviewed ? (
+                      <div className="mt-3 pl-20 flex flex-wrap gap-2">
+                        {canReview && pid && (
+                          isReviewed ? (
                             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
                               <CheckCircle className="w-4 h-4" />
                               Review Submitted ✓
@@ -401,9 +432,49 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                               <Star className="w-4 h-4" />
                               Write a Review
                             </button>
-                          )}
-                        </div>
-                      )}
+                          )
+                        )}
+
+                        {/* Return Button */}
+                        {(() => {
+                          const returnRequestedQty = (item as any).returnRequestedQty || 0;
+                          const returnStatus = (item as any).returnStatus || 'none';
+                          const maxQuantity = (item.qty || (item as any).quantity) - returnRequestedQty;
+
+                          if (returnStatus !== 'none') {
+                            return (
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full border ${returnStatus === 'completed' ? 'text-green-700 bg-green-50 border-green-200' :
+                                  returnStatus === 'in_process' ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                    'text-yellow-700 bg-yellow-50 border-yellow-200'
+                                  }`}>
+                                  Return ({returnRequestedQty}): {returnStatus.replace('_', ' ')}
+                                </span>
+                                {maxQuantity > 0 && isOrderEligibleForReturns() && !USE_MOCK_ORDER_DETAIL_PREVIEW && (
+                                  <button
+                                    onClick={() => openReturnModal(item)}
+                                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full border border-blue-200 hover:border-blue-300 transition-all"
+                                  >
+                                    <RotateCcw className="w-4 h-4" />
+                                    Return More
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          } else if (isOrderEligibleForReturns() && !USE_MOCK_ORDER_DETAIL_PREVIEW) {
+                            return (
+                              <button
+                                onClick={() => openReturnModal(item)}
+                                className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full border border-blue-200 hover:border-blue-300 transition-all"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                                Request Return
+                              </button>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
                     </div>
                   );
                 })
@@ -573,6 +644,21 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           productName={reviewModalItem.productName}
           onClose={() => setReviewModalItem(null)}
           onSuccess={handleReviewSuccess}
+        />
+      )}
+
+      {/* Return Request Modal */}
+      {order && (
+        <ReturnRequestModal
+          isOpen={returnModalState.isOpen}
+          onClose={() => setReturnModalState(prev => ({ ...prev, isOpen: false }))}
+          orderId={order._id || order.id || ""}
+          itemId={returnModalState.itemId}
+          productName={returnModalState.productName}
+          productImage={returnModalState.productImage}
+          productPrice={returnModalState.productPrice}
+          maxQuantity={returnModalState.maxQuantity}
+          onSuccess={() => fetchOrderDetail()}
         />
       )}
     </div>
