@@ -224,10 +224,10 @@ export default function OrdersList() {
           isOpen={showDemoModal}
           onClose={() => setShowDemoModal(false)}
           orderId="DEMO-ORDER-001"
-          productId="DEMO-PRODUCT-001"
+          itemId="DEMO-ITEM-001"
           productName="Prestige Pressure Cooker (Demo)"
           productPrice={1999}
-          quantity={1}
+          maxQuantity={1}
           onSuccess={fetchOrders}
           isDemo={true}
         />

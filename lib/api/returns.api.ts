@@ -1,23 +1,21 @@
 /**
- * Return Requests API client
- * Handles all return and refund related API calls
+ * Return API client (Item-Level)
+ * Handles return requests inline on Order items.
  */
 
 import { apiFetch, ApiError } from "@/lib/api";
-import { getAccessToken } from "@/lib/utils/auth";
-
-const API_BASE_URL = "https://kk-backend-5c11.onrender.com";
+import { API_BASE, buildUrl, getAuthToken } from "@/lib/api";
 
 /**
  * Fetch with authentication and envelope unwrapping
  */
 async function fetchWithAuth(path: string, opts: RequestInit = {}): Promise<any> {
-  const token = getAccessToken();
+  const token = getAuthToken();
   if (!token) {
     throw new ApiError("No token", 401);
   }
 
-  const url = `${API_BASE_URL}${path}`;
+  const url = buildUrl(path);
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -52,6 +50,12 @@ async function fetchWithAuth(path: string, opts: RequestInit = {}): Promise<any>
       throw new ApiError(errMsg, statusCode, details);
     }
 
+    // If the envelope contains pagination fields alongside data,
+    // return the full body so callers can access page/totalPages/totalCount.
+    if ("page" in body || "totalPages" in body || "totalCount" in body) {
+      return body;
+    }
+
     return body.data;
   }
 
@@ -67,71 +71,34 @@ async function fetchWithAuth(path: string, opts: RequestInit = {}): Promise<any>
 }
 
 /**
- * Return request payload type
+ * Return request payload type mappings for the Item-Level API
  */
 export interface CreateReturnRequestPayload {
   orderId: string;
-  productId: string;
-  actionType: "return" | "return_refund";
-  issueType: "damaged" | "wrong-item" | "quality-issue" | "late-delivery" | "others";
-  issueDescription?: string;
-  isDemo?: boolean;
+  itemId: string;
+  qty: number;
 }
 
-/**
- * Return request status type
- * Full lifecycle statuses for return/refund tracking
- */
-export type ReturnStatus = 
-  | "return_requested"    // Initial state when user submits request
-  | "return_approved"     // Admin approves the return
-  | "pickup_scheduled"    // Pickup has been scheduled
-  | "product_received"    // Product has been received back
-  | "refund_initiated"    // Refund process started (only for return_refund)
-  | "refund_completed"    // Refund completed (only for return_refund)
-  | "return_completed"    // Return process completed
-  | "return_rejected"     // Return request rejected
-  // Legacy statuses for backward compatibility
-  | "pending"             // Maps to return_requested
-  | "approved"            // Maps to return_approved
-  | "rejected"            // Maps to return_rejected
-  | "completed";          // Maps to return_completed
+export type ReturnStatus = 'none' | 'requested' | 'initiated' | 'in_process' | 'completed';
 
-/**
- * Status history entry type
- */
-export interface StatusHistoryEntry {
-  status: string;
-  updatedBy: "system" | "admin" | "user";
-  updatedByUserId?: string | null;
-  timestamp: string;
-  notes?: string | null;
-}
-
-/**
- * Return request response type
- */
-export interface ReturnRequest {
-  _id: string;
-  userId: string;
+export interface AdminReturnItem {
   orderId: string;
-  productId: any;
-  actionType: "return" | "return_refund";
-  issueType: "damaged" | "wrong-item" | "quality-issue" | "late-delivery" | "others";
-  issueDescription?: string;
-  status: ReturnStatus;
-  statusHistory?: StatusHistoryEntry[];
-  adminNotes?: string;
-  refundAmount?: number;
+  itemId: string;
+  productId: string;
+  productTitle: string;
+  productImage?: string;
+  qtyOrdered: number;
+  returnRequestedQty: number;
+  returnStatus: ReturnStatus;
+  returnRequestedAt: string;
+  customerName: string;
+  customerPhone?: string;
+  shippingAddress: any;
   createdAt: string;
-  updatedAt: string;
 }
 
-/**
- * Paginated return requests response
- */
-export interface PaginatedReturnRequests {
-  returnRequests: ReturnRequest[];
+export interface PaginatedAdminReturns {
+  returnRequests: AdminReturnItem[];
   pagination: {
     page: number;
     limit: number;
@@ -142,13 +109,13 @@ export interface PaginatedReturnRequests {
 
 /**
  * Create a new return request
- * POST /api/returns
+ * POST /api/returns/request
  */
 export async function createReturnRequest(
   payload: CreateReturnRequestPayload
-): Promise<ReturnRequest> {
+): Promise<any> {
   try {
-    const data = await fetchWithAuth("/api/returns", {
+    const data = await fetchWithAuth("/api/returns/request", {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -165,47 +132,6 @@ export async function createReturnRequest(
 }
 
 /**
- * Get all return requests for the logged-in user (paginated)
- * GET /api/returns/my?page=1&limit=10
- */
-export async function getMyReturnRequests(
-  page: number = 1,
-  limit: number = 10
-): Promise<PaginatedReturnRequests> {
-  try {
-    const data = await fetchWithAuth(`/api/returns/my?page=${page}&limit=${limit}`);
-    return data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(
-      error instanceof Error ? error.message : "Failed to fetch return requests",
-      500
-    );
-  }
-}
-
-/**
- * Get return requests for a specific order
- * GET /api/returns/order/:orderId
- */
-export async function getReturnRequestsByOrder(orderId: string): Promise<ReturnRequest[]> {
-  try {
-    const data = await fetchWithAuth(`/api/returns/order/${orderId}`);
-    return data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(
-      error instanceof Error ? error.message : "Failed to fetch order return requests",
-      500
-    );
-  }
-}
-
-/**
  * ========================================
  * ADMIN API FUNCTIONS
  * ========================================
@@ -213,28 +139,38 @@ export async function getReturnRequestsByOrder(orderId: string): Promise<ReturnR
 
 /**
  * Get all return requests (Admin only)
- * GET /api/admin/returns?status=&actionType=&page=&limit=
+ * GET /api/admin/returns?returnStatus=&page=&limit=
  */
 export async function adminGetAllReturnRequests(
   filters?: {
-    status?: string;
-    actionType?: "return" | "return_refund";
+    returnStatus?: ReturnStatus;
     page?: number;
     limit?: number;
   }
-): Promise<PaginatedReturnRequests> {
+): Promise<PaginatedAdminReturns> {
   try {
     const params = new URLSearchParams();
-    if (filters?.status) params.append("status", filters.status);
-    if (filters?.actionType) params.append("actionType", filters.actionType);
+    if (filters?.returnStatus) params.append("returnStatus", filters.returnStatus);
     if (filters?.page) params.append("page", filters.page.toString());
     if (filters?.limit) params.append("limit", filters.limit.toString());
 
     const queryString = params.toString();
     const path = queryString ? `/api/admin/returns?${queryString}` : "/api/admin/returns";
 
-    const data = await fetchWithAuth(path);
-    return data;
+    // The backend returns:
+    // { data: [...], page, totalPages, totalCount }
+    const res = await fetchWithAuth(path);
+
+    // Map backend response shape to what the UI expects (PaginatedAdminReturns)
+    return {
+      returnRequests: res.data || res || [],
+      pagination: {
+        page: res.page || 1,
+        limit: filters?.limit || 10,
+        total: res.totalCount || 0,
+        totalPages: res.totalPages || 1
+      }
+    };
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -248,22 +184,17 @@ export async function adminGetAllReturnRequests(
 
 /**
  * Update return request status (Admin only)
- * PATCH /api/admin/returns/:id/status
+ * PATCH /api/admin/returns/:orderId/:itemId
  */
 export async function adminUpdateReturnStatus(
-  id: string,
-  status: ReturnStatus,
-  adminNotes?: string,
-  refundAmount?: number
-): Promise<ReturnRequest> {
+  orderId: string,
+  itemId: string,
+  returnStatus: ReturnStatus
+): Promise<any> {
   try {
-    const payload: any = { status };
-    if (adminNotes) payload.adminNotes = adminNotes;
-    if (refundAmount !== undefined) payload.refundAmount = refundAmount;
-
-    const data = await fetchWithAuth(`/api/admin/returns/${id}/status`, {
+    const data = await fetchWithAuth(`/api/admin/returns/${orderId}/${itemId}`, {
       method: "PATCH",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ returnStatus }),
     });
     return data;
   } catch (error) {
@@ -272,31 +203,6 @@ export async function adminUpdateReturnStatus(
     }
     throw new ApiError(
       error instanceof Error ? error.message : "Failed to update return status",
-      500
-    );
-  }
-}
-
-/**
- * Get allowed next statuses for a return request (Admin only)
- * GET /api/admin/returns/:id/allowed-statuses
- */
-export async function adminGetAllowedStatuses(
-  id: string
-): Promise<{
-  currentStatus: ReturnStatus;
-  actionType: "return" | "return_refund";
-  allowedNextStatuses: ReturnStatus[];
-}> {
-  try {
-    const data = await fetchWithAuth(`/api/admin/returns/${id}/allowed-statuses`);
-    return data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(
-      error instanceof Error ? error.message : "Failed to fetch allowed statuses",
       500
     );
   }
