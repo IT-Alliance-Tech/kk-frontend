@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://kk-backend-5c11.onrender.com/api";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const queryString = searchParams.toString();
 
     // Build backend URL with query params
-    const backendUrl = `${BACKEND_URL}/api/products${queryString ? `?${queryString}` : ""}`;
+    const backendUrl = `${BACKEND_URL}/products${queryString ? `?${queryString}` : ""}`;
 
     console.log("➡️ Frontend API: Proxying to backend:", backendUrl);
 
