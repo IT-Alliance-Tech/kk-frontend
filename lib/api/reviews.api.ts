@@ -6,7 +6,7 @@
 import { apiGet, apiPost, ApiError } from "@/lib/api";
 import { getAccessToken } from "@/lib/utils/auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://kk-backend-5c11.onrender.com/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export interface Review {
   _id: string;

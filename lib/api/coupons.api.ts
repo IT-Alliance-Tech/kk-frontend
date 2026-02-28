@@ -3,7 +3,7 @@
  * Admin API functions for managing coupons
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://kk-backend-5c11.onrender.com/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 function getAdminToken() {
   if (typeof window === 'undefined') return null;
