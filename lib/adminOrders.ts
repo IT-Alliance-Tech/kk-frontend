@@ -59,7 +59,7 @@ export async function uploadAdminOrderAttachment(id: string, file: File) {
   const form = new FormData();
   form.append("attachment", file);
 
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}${BASE}/${id}/upload`;
+  const url = `${process.env.NEXT_PUBLIC_API_URL}${BASE}/${id}/upload`;
 
   const res = await fetch(url, {
     method: "POST",

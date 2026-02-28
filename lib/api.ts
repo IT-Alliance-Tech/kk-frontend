@@ -1,5 +1,5 @@
 // normalize base (remove trailing slashes)
-export const API_BASE_RAW = process.env.NEXT_PUBLIC_API_URL || "https://kk-backend-5c11.onrender.com";
+export const API_BASE_RAW = process.env.NEXT_PUBLIC_API_URL || "";
 export const API_BASE = API_BASE_RAW.replace(/\/+$/, "");
 
 /**

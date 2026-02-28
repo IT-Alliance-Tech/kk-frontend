@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
 export async function GET() {
   try {
-    const res = await fetch("https://kk-backend-5c11.onrender.com/api/categories", {
+    const res = await fetch(`${BACKEND_URL}/categories`, {
       cache: "no-store",
     });
 
