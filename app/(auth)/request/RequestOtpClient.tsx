@@ -1,8 +1,8 @@
 // kk-frontend/app/(auth)/request/RequestOtpClient.tsx
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { requestOtp } from "@/lib/api/auth.api";
 import GlobalLoader from "@/components/common/GlobalLoader";
 
@@ -11,12 +11,22 @@ interface RequestOtpClientProps {
   redirectTo?: string;
 }
 
-export default function RequestOtpClient({ purpose, redirectTo }: RequestOtpClientProps) {
+// Inner component that safely uses useSearchParams() — must be wrapped in <Suspense>
+function RequestOtpForm({ purpose, redirectTo }: RequestOtpClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Prefill email if redirected here from the other flow (e.g. login → signup)
+  useEffect(() => {
+    const prefill = searchParams.get("email");
+    if (prefill) {
+      setEmail(decodeURIComponent(prefill));
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,7 +51,26 @@ export default function RequestOtpClient({ purpose, redirectTo }: RequestOtpClie
         router.push(`/auth/verify?email=${encodedEmail}&purpose=${purpose}${redirectParam}`);
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send OTP");
+      const message = err instanceof Error ? err.message : "Failed to send OTP";
+
+      // ── Smart cross-flow redirect on known backend errors ──────────────
+      if (purpose === "login" && message.toLowerCase().includes("not registered")) {
+        // User tried to log in with an unregistered email → send to signup
+        setError("Email not registered. Please create an account.");
+        setTimeout(() => {
+          router.push(`/auth/request?purpose=signup&email=${encodeURIComponent(email)}`);
+        }, 2000);
+      } else if (purpose === "signup" && message.toLowerCase().includes("already registered")) {
+        // User tried to register with an existing email → send to login
+        setError("User already registered. Please login.");
+        setTimeout(() => {
+          router.push(`/auth/request?purpose=login&email=${encodeURIComponent(email)}`);
+        }, 2000);
+      } else {
+        // Generic error — just display it
+        setError(message);
+      }
+      // ────────────────────────────────────────────────────────────────────
     } finally {
       setLoading(false);
     }
@@ -131,5 +160,14 @@ export default function RequestOtpClient({ purpose, redirectTo }: RequestOtpClie
         )}
       </div>
     </div>
+  );
+}
+
+// Suspense boundary required by Next.js 15 for any component using useSearchParams()
+export default function RequestOtpClient(props: RequestOtpClientProps) {
+  return (
+    <Suspense fallback={null}>
+      <RequestOtpForm {...props} />
+    </Suspense>
   );
 }
